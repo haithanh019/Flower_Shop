@@ -1,3 +1,5 @@
+using DataAccess.Data;
+using Microsoft.EntityFrameworkCore;
 
 namespace Flower_Shop_API
 {
@@ -6,7 +8,9 @@ namespace Flower_Shop_API
         public static void Main(string[] args)
         {
             var builder = WebApplication.CreateBuilder(args);
-
+            builder.Services.AddDbContext<FlowerShopDbContext>(options =>
+                options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection"))
+            );
             // Add services to the container.
 
             builder.Services.AddControllers();
@@ -26,7 +30,6 @@ namespace Flower_Shop_API
             app.UseHttpsRedirection();
 
             app.UseAuthorization();
-
 
             app.MapControllers();
 
