@@ -31,7 +31,10 @@ namespace DataAccess.Entities
 
     public enum UserRole
     {
+        [Display(Name = "Customer")]
         Customer = 0,
+
+        [Display(Name = "Admin")]
         Admin = 1,
     }
 }

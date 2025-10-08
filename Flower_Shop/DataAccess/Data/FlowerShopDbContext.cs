@@ -8,15 +8,15 @@ namespace DataAccess.Data
         public FlowerShopDbContext(DbContextOptions<FlowerShopDbContext> options)
             : base(options) { }
 
-        public DbSet<User> Users => Set<User>();
-        public DbSet<Category> Categories => Set<Category>();
-        public DbSet<Product> Products => Set<Product>();
-        public DbSet<ProductImage> ProductImages => Set<ProductImage>();
-        public DbSet<Cart> Carts => Set<Cart>();
-        public DbSet<CartItem> CartItems => Set<CartItem>();
-        public DbSet<Order> Orders => Set<Order>();
-        public DbSet<OrderItem> OrderItems => Set<OrderItem>();
-        public DbSet<Payment> Payments => Set<Payment>();
+        public DbSet<User> Users { get; set; }
+        public DbSet<Category> Categories { get; set; }
+        public DbSet<Product> Products { get; set; }
+        public DbSet<ProductImage> ProductImages { get; set; }
+        public DbSet<Cart> Carts { get; set; }
+        public DbSet<CartItem> CartItems { get; set; }
+        public DbSet<Order> Orders { get; set; }
+        public DbSet<OrderItem> OrderItems { get; set; }
+        public DbSet<Payment> Payments { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -96,7 +96,19 @@ namespace DataAccess.Data
                 .WithOne(p => p.Order)
                 .HasForeignKey<Payment>(p => p.OrderId)
                 .OnDelete(DeleteBehavior.Cascade);
-
+            modelBuilder.Entity<Order>(entity =>
+            {
+                entity.Property(e => e.Status).HasConversion<string>();
+            });
+            modelBuilder.Entity<Payment>(entity =>
+            {
+                entity.Property(e => e.Status).HasConversion<string>();
+                entity.Property(e => e.Method).HasConversion<string>();
+            });
+            modelBuilder.Entity<User>(entity =>
+            {
+                entity.Property(e => e.Role).HasConversion<string>();
+            });
             // Index hỗ trợ search
             modelBuilder.Entity<Product>().HasIndex(p => p.Name);
             modelBuilder.Entity<Product>().HasIndex(p => p.Slug);

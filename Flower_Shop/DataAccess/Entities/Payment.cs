@@ -25,15 +25,25 @@ namespace DataAccess.Entities
 
     public enum PaymentMethod
     {
+        [Display(Name = "CashOnDelivery")]
         CashOnDelivery = 0,
+
+        [Display(Name = "VNPay")]
         VNPay = 1,
     }
 
     public enum PaymentStatus
     {
+        [Display(Name = "Pending")]
         Pending = 0,
+
+        [Display(Name = "Accepted")]
         Accepted = 1,
+
+        [Display(Name = "Delivered")]
         Delivered = 2,
+
+        [Display(Name = "Refunded")]
         Refunded = 3,
     }
 }
