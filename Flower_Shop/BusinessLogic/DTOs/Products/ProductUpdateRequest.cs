@@ -20,7 +20,6 @@ public class ProductUpdateRequest
 
     public bool? IsActive { get; set; }
 
-    // Replace images (if you support full replace on update)
-    public ICollection<string>? ImageUrls { get; set; }
-    public ICollection<string>? ImagePublicIds { get; set; }
+    public List<string>? ImageUrls { get; set; }
+    public List<string>? ImagePublicIds { get; set; }
 }

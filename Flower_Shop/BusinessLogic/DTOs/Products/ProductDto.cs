@@ -15,5 +15,6 @@ public class ProductDto
 
     public DateTime CreatedAt { get; set; }
 
-    public IReadOnlyList<ProductImageDto> Images { get; set; } = Array.Empty<ProductImageDto>();
+    public ICollection<string>? ImageUrls { get; set; }
+    public ICollection<string>? ImagePublicIds { get; set; }
 }

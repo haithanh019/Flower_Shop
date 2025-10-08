@@ -20,7 +20,6 @@ public class ProductCreateRequest
 
     public bool IsActive { get; set; } = true;
 
-    // Upload results from FE
-    public ICollection<string>? ImageUrls { get; set; }
-    public ICollection<string>? ImagePublicIds { get; set; }
+    public required List<string> ImageUrls { get; set; }
+    public required List<string> ImagePublicIds { get; set; }
 }
