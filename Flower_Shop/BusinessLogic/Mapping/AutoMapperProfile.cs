@@ -1,7 +1,6 @@
 ﻿using AutoMapper;
 using DataAccess.Entities;
 using Ultitity.Extensions;
-using static System.Net.Mime.MediaTypeNames;
 
 namespace BusinessLogic.Mapping
 {
