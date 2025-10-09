@@ -11,6 +11,8 @@ namespace DataAccess.Entities
         public Guid UserId { get; set; }
         public User? User { get; set; }
 
+        [MaxLength(100)]
+        public string? SessionId { get; set; }
         public ICollection<CartItem> Items { get; set; } = new List<CartItem>();
     }
 }

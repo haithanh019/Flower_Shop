@@ -6,5 +6,11 @@ namespace BusinessLogic.Services.FacadeService
     {
         ICategoryService CategoryService { get; }
         IProductService ProductService { get; }
+        IAuthService AuthService { get; }
+        ICartService CartService { get; }
+        IOrderService OrderService { get; }
+        IUserService UserService { get; }
+        IPaymentService PaymentService { get; }
+        IUtilityService UtilityService { get; }
     }
 }

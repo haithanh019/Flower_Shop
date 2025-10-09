@@ -1,4 +1,5 @@
 using System.Text;
+using BusinessLogic.Mapping;
 using BusinessLogic.Services.FacadeService;
 using DataAccess.Data;
 using DataAccess.UnitOfWork;
@@ -6,6 +7,8 @@ using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Ultitity.Clients.Groqs;
+using Ultitity.Email;
+using Ultitity.Email.Interface;
 using Ultitity.Exceptions;
 using Ultitity.Options;
 
@@ -19,6 +22,7 @@ namespace Flower_Shop_API
             builder.Services.AddDbContext<FlowerShopDbContext>(options =>
                 options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection"))
             );
+            builder.Services.AddAutoMapper(typeof(AutoMapperProfile));
             // Add services to the container.
             var key = builder.Configuration["Jwt:Key"];
             if (string.IsNullOrEmpty(key))
@@ -58,6 +62,7 @@ namespace Flower_Shop_API
             builder.Services.AddScoped<InfraDependencies>();
             builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
             builder.Services.AddScoped<IFacadeService, FacadeService>();
+            builder.Services.AddSingleton<IEmailQueue, EmailQueue>();
 
             // LLM client
             builder.Services.AddHttpClient<IGroqClient, GroqClient>(client =>
