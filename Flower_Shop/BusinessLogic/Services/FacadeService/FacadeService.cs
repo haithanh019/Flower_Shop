@@ -1,16 +1,22 @@
+using BusinessLogic.Services.Interfaces;
+
 namespace BusinessLogic.Services.FacadeService
 {
     public class FacadeService : IFacadeService
     {
-        //public IServiceRequestService ServiceRequestService { get; }
-        //public IMaterialService MaterialService { get; }
+        public ICategoryService CategoryService { get; }
+        public IProductService ProductService { get; }
 
-
-        public FacadeService(CoreDependencies coreDeps, InfraDependencies infraDeps)
+        public FacadeService(CoreDependencies coreDependencies, InfraDependencies infraDependencies)
         {
-            //CategoryService = new CategoryService(coreDeps.UnitOfWork, coreDeps.Mapper);
-            //BrandService = new BrandService(coreDeps.UnitOfWork, coreDeps.Mapper);
-            //ImageService = new ImageService(coreDeps.UnitOfWork);
+            CategoryService = new CategoryService(
+                coreDependencies.UnitOfWork,
+                coreDependencies.Mapper
+            );
+            ProductService = new ProductService(
+                coreDependencies.UnitOfWork,
+                coreDependencies.Mapper
+            ); // Thêm dòng này
         }
     }
 }
