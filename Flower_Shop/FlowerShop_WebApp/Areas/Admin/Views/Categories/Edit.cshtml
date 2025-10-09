@@ -1,0 +1,18 @@
+﻿@model FlowerShop_WebApp.Models.Categories.CategoryViewModel
+@{
+    ViewData["Title"] = "Edit Category";
+}
+<h1>@ViewData["Title"]</h1>
+<hr />
+<div class="row">
+    <div class="col-md-4">
+        <form asp-action="Edit">
+            <input type="hidden" asp-for="CategoryId" />
+            <partial name="_CategoryFormPartial" model="Model" />
+            <div class="form-group mt-3">
+                <input type="submit" value="Save" class="btn btn-primary" />
+                <a asp-action="Index" class="btn btn-secondary">Back to List</a>
+            </div>
+        </form>
+    </div>
+</div>
