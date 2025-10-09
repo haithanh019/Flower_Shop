@@ -8,7 +8,7 @@ namespace DataAccess.Entities
         public Guid CartId { get; set; } = Guid.NewGuid();
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 
-        public Guid UserId { get; set; }
+        public Guid? UserId { get; set; }
         public User? User { get; set; }
 
         [MaxLength(100)]
