@@ -121,7 +121,7 @@ namespace BusinessLogic.Mapping
             CreateMap<OrderCreateRequest, Order>()
                 .ForMember(d => d.OrderId, opt => opt.Ignore())
                 .ForMember(d => d.CreatedAt, opt => opt.Ignore())
-                .ForMember(d => d.Items, opt => opt.Ignore()) // build từ OrderItemCreateLine ở Service
+                .ForMember(d => d.Items, opt => opt.Ignore())
                 .ForMember(d => d.Payment, opt => opt.Ignore());
 
             CreateMap<OrderUpdateStatusRequest, Order>()

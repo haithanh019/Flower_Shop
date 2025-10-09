@@ -1,16 +1,48 @@
+using BusinessLogic.Services.Interfaces;
+using Microsoft.Extensions.Options;
+using Ultitity.Options;
+
 namespace BusinessLogic.Services.FacadeService
 {
     public class FacadeService : IFacadeService
     {
-        //public IServiceRequestService ServiceRequestService { get; }
-        //public IMaterialService MaterialService { get; }
+        public ICategoryService CategoryService { get; }
+        public IProductService ProductService { get; }
+        public IAuthService AuthService { get; }
+        public ICartService CartService { get; }
+        public IOrderService OrderService { get; }
+        public IUserService UserService { get; }
+        public IPaymentService PaymentService { get; }
+        public IUtilityService UtilityService { get; }
 
-
-        public FacadeService(CoreDependencies coreDeps, InfraDependencies infraDeps)
+        public FacadeService(
+            CoreDependencies coreDependencies,
+            InfraDependencies infraDependencies,
+            IOptions<JwtOptions> jwtOptions
+        )
         {
-            //CategoryService = new CategoryService(coreDeps.UnitOfWork, coreDeps.Mapper);
-            //BrandService = new BrandService(coreDeps.UnitOfWork, coreDeps.Mapper);
-            //ImageService = new ImageService(coreDeps.UnitOfWork);
+            CategoryService = new CategoryService(
+                coreDependencies.UnitOfWork,
+                coreDependencies.Mapper
+            );
+            ProductService = new ProductService(
+                coreDependencies.UnitOfWork,
+                coreDependencies.Mapper
+            );
+            ITokenService tokenService = new TokenService(jwtOptions);
+            AuthService = new AuthService(
+                coreDependencies.UnitOfWork,
+                coreDependencies.Mapper,
+                tokenService
+            );
+            CartService = new CartService(coreDependencies.UnitOfWork, coreDependencies.Mapper);
+            OrderService = new OrderService(coreDependencies.UnitOfWork, coreDependencies.Mapper);
+            UserService = new UserService(coreDependencies.UnitOfWork, coreDependencies.Mapper);
+            PaymentService = new PaymentService(
+                coreDependencies.UnitOfWork,
+                coreDependencies.Mapper
+            );
+            UtilityService = new UtilityService();
         }
     }
 }
