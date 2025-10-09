@@ -11,14 +11,19 @@ namespace FlowerShop_WebApp.Controllers
 {
     public class AccountController : Controller
     {
+        private readonly ILogger<HomeController> _logger;
         private readonly IHttpClientFactory _httpClientFactory;
         private readonly JsonSerializerOptions _jsonOptions = new()
         {
             PropertyNameCaseInsensitive = true,
         };
 
-        public AccountController(IHttpClientFactory httpClientFactory)
+        public AccountController(
+            ILogger<HomeController> logger,
+            IHttpClientFactory httpClientFactory
+        )
         {
+            _logger = logger;
             _httpClientFactory = httpClientFactory;
         }
 
@@ -41,6 +46,9 @@ namespace FlowerShop_WebApp.Controllers
             }
 
             var client = _httpClientFactory.CreateClient("ApiClient");
+
+            _logger.LogInformation($"API BaseAddress: {client.BaseAddress}");
+
             var jsonContent = new StringContent(
                 JsonSerializer.Serialize(model),
                 Encoding.UTF8,
@@ -86,6 +94,8 @@ namespace FlowerShop_WebApp.Controllers
             }
             else
             {
+                var errorContent = await response.Content.ReadAsStringAsync();
+                _logger.LogError($"Login failed: {response.StatusCode} - {errorContent}");
                 // Nếu API trả về lỗi (sai mật khẩu, email không tồn tại)
                 ModelState.AddModelError(string.Empty, "Invalid email or password.");
                 return View(model);

@@ -14,6 +14,12 @@ namespace FlowerShop_WebApp
                 client =>
                 {
                     var baseUrl = builder.Configuration["ApiSettings:BaseUrl"];
+                    if (string.IsNullOrEmpty(baseUrl))
+                    {
+                        throw new InvalidOperationException(
+                            "ApiSettings:BaseUrl is not configured"
+                        );
+                    }
                     client.BaseAddress = new Uri(baseUrl!);
                     client.DefaultRequestHeaders.Accept.Add(
                         new MediaTypeWithQualityHeaderValue("application/json")
@@ -29,7 +35,7 @@ namespace FlowerShop_WebApp
             builder
                 .Services.AddDataProtection()
                 .PersistKeysToFileSystem(new DirectoryInfo("keys"))
-                .SetDefaultKeyLifetime(TimeSpan.FromDays(90));
+                .SetDefaultKeyLifetime(TimeSpan.FromDays(7));
             builder
                 .Services.AddAuthentication("CookieAuth")
                 .AddCookie(

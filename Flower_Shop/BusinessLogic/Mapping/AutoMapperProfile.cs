@@ -1,4 +1,5 @@
 ﻿using AutoMapper;
+using BusinessLogic.DTOs.Auth;
 using BusinessLogic.DTOs.Cart;
 using BusinessLogic.DTOs.Categories;
 using BusinessLogic.DTOs.Orders;
@@ -31,6 +32,7 @@ namespace BusinessLogic.Mapping
             CreateMap<UserUpdateRequest, User>()
                 .ForMember(d => d.UserId, opt => opt.Ignore())
                 .ForAllMembers(opt => opt.Condition((src, dest, val) => val is not null));
+            CreateMap<RegisterRequestDto, User>();
 
             // ========================
             // Categories
