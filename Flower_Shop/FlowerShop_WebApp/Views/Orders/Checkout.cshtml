@@ -1,0 +1,91 @@
+﻿@model FlowerShop_WebApp.Models.Orders.CheckoutViewModel
+@{
+    ViewData["Title"] = "Checkout";
+}
+
+<h1 class="text-center">@ViewData["Title"]</h1>
+
+<form asp-action="PlaceOrder" method="post">
+    <div class="row mt-4">
+        <div class="col-md-7">
+            <div class="card shadow-sm">
+                <div class="card-body">
+                    <h4 class="card-title">Shipping Information</h4>
+                    <hr />
+                    <div asp-validation-summary="ModelOnly" class="text-danger" role="alert"></div>
+
+                    <div class="mb-3">
+                        <label asp-for="ShippingFullName" class="form-label"></label>
+                        <input asp-for="ShippingFullName" class="form-control" />
+                        <span asp-validation-for="ShippingFullName" class="text-danger"></span>
+                    </div>
+                    <div class="mb-3">
+                        <label asp-for="ShippingPhoneNumber" class="form-label"></label>
+                        <input asp-for="ShippingPhoneNumber" class="form-control" />
+                        <span asp-validation-for="ShippingPhoneNumber" class="text-danger"></span>
+                    </div>
+                    <div class="mb-3">
+                        <label asp-for="ShippingAddress" class="form-label"></label>
+                        <input asp-for="ShippingAddress" class="form-control" />
+                        <span asp-validation-for="ShippingAddress" class="text-danger"></span>
+                    </div>
+                    <div class="mb-3">
+                        <label asp-for="CustomerNote" class="form-label"></label>
+                        <textarea asp-for="CustomerNote" class="form-control" rows="3"></textarea>
+                    </div>
+
+                    <h4 class="mt-4">Payment Method</h4>
+                    <hr />
+                    <div class="form-check">
+                        <input class="form-check-input" type="radio" asp-for="PaymentMethod" value="CashOnDelivery" id="cod" checked>
+                        <label class="form-check-label" for="cod">
+                            Cash on Delivery (COD)
+                        </label>
+                    </div>
+                    <div class="form-check">
+                        <input class="form-check-input" type="radio" asp-for="PaymentMethod" value="VNPay" id="vnpay">
+                        <label class="form-check-label" for="vnpay">
+                            VNPay Gateway
+                        </label>
+                    </div>
+                    <span asp-validation-for="PaymentMethod" class="text-danger"></span>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-5">
+            <div class="card shadow-sm">
+                <div class="card-body">
+                    <h4 class="card-title">Order Summary</h4>
+                    <hr />
+                    @if (Model.Cart.Items.Any())
+                    {
+                        <ul class="list-group list-group-flush">
+                            @foreach (var item in Model.Cart.Items)
+                            {
+                                <li class="list-group-item d-flex justify-content-between align-items-center">
+                                    <div>
+                                        <h6 class="my-0">@item.ProductName</h6>
+                                        <small class="text-muted">Quantity: @item.Quantity</small>
+                                    </div>
+                                    <span class="text-muted">@item.LineTotal.ToString("N0") VND</span>
+                                </li>
+                            }
+                            <li class="list-group-item d-flex justify-content-between">
+                                <strong>Subtotal</strong>
+                                <strong>@Model.Cart.SubTotal.ToString("N0") VND</strong>
+                            </li>
+                        </ul>
+                    }
+                    <div class="d-grid mt-4">
+                        <button type="submit" class="btn btn-primary btn-lg">Place Order</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</form>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

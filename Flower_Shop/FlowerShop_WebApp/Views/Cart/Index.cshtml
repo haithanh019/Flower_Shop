@@ -70,7 +70,7 @@
                 @if (Model != null && Model.Items.Any())
                 {
                     <div class="d-grid mt-3">
-                        <a href="#" class="btn btn-primary">Proceed to Checkout</a>
+                        <a asp-controller="Orders" asp-action="Checkout" class="btn btn-primary">Proceed to Checkout</a>
                     </div>
                 }
             </div>

@@ -20,7 +20,7 @@ namespace BusinessLogic.Services
 
         public (string Token, DateTime ExpiresAt) CreateToken(User user)
         {
-            var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_jwtOptions.Key));
+            var key = new SymmetricSecurityKey(Encoding.ASCII.GetBytes(_jwtOptions.Key));
             var creds = new SigningCredentials(key, SecurityAlgorithms.HmacSha512Signature);
             var expiration = DateTime.UtcNow.AddMinutes(_jwtOptions.AccessTokenMinutes);
 
