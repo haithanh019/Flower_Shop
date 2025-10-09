@@ -11,6 +11,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Flower_Shop_API", "Flower_S
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Ultitity", "Ultitity\Ultitity.csproj", "{EB213AEF-C553-C632-0974-BD7214CA7385}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FlowerShop_WebApp", "FlowerShop_WebApp\FlowerShop_WebApp.csproj", "{43265E9A-2EBD-4558-B842-8114FE7B0783}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -33,6 +35,10 @@ Global
 		{EB213AEF-C553-C632-0974-BD7214CA7385}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{EB213AEF-C553-C632-0974-BD7214CA7385}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{EB213AEF-C553-C632-0974-BD7214CA7385}.Release|Any CPU.Build.0 = Release|Any CPU
+		{43265E9A-2EBD-4558-B842-8114FE7B0783}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{43265E9A-2EBD-4558-B842-8114FE7B0783}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{43265E9A-2EBD-4558-B842-8114FE7B0783}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{43265E9A-2EBD-4558-B842-8114FE7B0783}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
