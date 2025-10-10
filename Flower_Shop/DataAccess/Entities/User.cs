@@ -22,11 +22,9 @@ namespace DataAccess.Entities
         [MaxLength(20)]
         public string? PhoneNumber { get; set; }
 
-        [MaxLength(200)]
-        public string? Address { get; set; }
-
         public ICollection<Order> Orders { get; set; } = new List<Order>();
         public Cart? Cart { get; set; }
+        public ICollection<Address> Addresses { get; set; } = new List<Address>();
     }
 
     public enum UserRole

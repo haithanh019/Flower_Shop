@@ -1,4 +1,5 @@
 ﻿using AutoMapper;
+using BusinessLogic.DTOs.Address;
 using BusinessLogic.DTOs.Auth;
 using BusinessLogic.DTOs.Cart;
 using BusinessLogic.DTOs.Categories;
@@ -33,6 +34,7 @@ namespace BusinessLogic.Mapping
                 .ForMember(d => d.UserId, opt => opt.Ignore())
                 .ForAllMembers(opt => opt.Condition((src, dest, val) => val is not null));
             CreateMap<RegisterRequestDto, User>();
+            CreateMap<User, CustomerProfileDto>();
 
             // ========================
             // Categories
@@ -143,6 +145,14 @@ namespace BusinessLogic.Mapping
             CreateMap<PaymentUpdateStatusRequest, Payment>()
                 .ForMember(d => d.PaymentId, opt => opt.Ignore())
                 .ForAllMembers(opt => opt.Condition((src, dest, val) => val is not null));
+
+            // ========================
+            // Address
+            // ========================
+            CreateMap<Address, AddressDto>();
+            CreateMap<AddressCreateRequest, Address>();
+            CreateMap<AddressUpdateRequest, Address>()
+                .ForMember(dest => dest.UserId, opt => opt.Ignore());
         }
 
         // ------------------------

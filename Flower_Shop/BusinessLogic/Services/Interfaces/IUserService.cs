@@ -10,5 +10,11 @@ namespace BusinessLogic.Services.Interfaces
         Task<UserDto> UpdateUserAsync(UserUpdateRequest request);
 
         Task<PagedResultDto<UserDto>> GetAllUsersAsync(QueryParameters queryParams);
+        Task<CustomerProfileDto?> GetCustomerProfileAsync(Guid userId);
+        Task<CustomerProfileDto> UpdateCustomerProfileAsync(
+            Guid userId,
+            CustomerProfileUpdateRequest request
+        );
+        Task<bool> ChangePasswordAsync(Guid userId, CustomerPasswordChangeRequest request);
     }
 }

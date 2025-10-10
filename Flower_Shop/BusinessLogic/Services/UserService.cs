@@ -77,5 +77,63 @@ namespace BusinessLogic.Services
 
             return _mapper.Map<UserDto>(userToUpdate);
         }
+
+        public async Task<CustomerProfileDto?> GetCustomerProfileAsync(Guid userId)
+        {
+            var user = await _unitOfWork.User.GetAsync(u => u.UserId == userId);
+            return user == null ? null : _mapper.Map<CustomerProfileDto>(user);
+        }
+
+        public async Task<CustomerProfileDto> UpdateCustomerProfileAsync(
+            Guid userId,
+            CustomerProfileUpdateRequest request
+        )
+        {
+            var userToUpdate = await _unitOfWork.User.GetAsync(u => u.UserId == userId);
+            if (userToUpdate == null)
+            {
+                throw new KeyNotFoundException($"User with ID {userId} not found.");
+            }
+
+            // Cập nhật thông tin
+            if (!string.IsNullOrEmpty(request.FullName))
+                userToUpdate.FullName = request.FullName;
+
+            if (!string.IsNullOrEmpty(request.PhoneNumber))
+                userToUpdate.PhoneNumber = request.PhoneNumber;
+
+            await _unitOfWork.SaveAsync();
+
+            return _mapper.Map<CustomerProfileDto>(userToUpdate);
+        }
+
+        public async Task<bool> ChangePasswordAsync(
+            Guid userId,
+            CustomerPasswordChangeRequest request
+        )
+        {
+            var user = await _unitOfWork.User.GetAsync(u => u.UserId == userId);
+            if (user == null)
+            {
+                throw new KeyNotFoundException($"User with ID {userId} not found.");
+            }
+
+            // Kiểm tra mật khẩu hiện tại
+            if (!BCrypt.Net.BCrypt.Verify(request.CurrentPassword, user.PasswordHash))
+            {
+                throw new CustomValidationException(
+                    new Dictionary<string, string[]>
+                    {
+                        { "CurrentPassword", new[] { "Current password is incorrect." } },
+                    }
+                );
+            }
+
+            // Cập nhật mật khẩu mới
+            user.PasswordHash = BCrypt.Net.BCrypt.HashPassword(request.NewPassword);
+            await _unitOfWork.SaveAsync();
+
+            return true;
+        }
     }
 }

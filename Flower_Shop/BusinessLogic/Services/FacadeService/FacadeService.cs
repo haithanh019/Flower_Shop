@@ -15,6 +15,7 @@ namespace BusinessLogic.Services.FacadeService
         public IPaymentService PaymentService { get; }
         public IUtilityService UtilityService { get; }
         public IDashboardService DashboardService { get; }
+        public IAddressService AddressService { get; }
 
         public FacadeService(
             CoreDependencies coreDependencies,
@@ -45,6 +46,10 @@ namespace BusinessLogic.Services.FacadeService
             );
             UtilityService = new UtilityService();
             DashboardService = new DashboardService(coreDependencies.UnitOfWork);
+            AddressService = new AddressService(
+                coreDependencies.UnitOfWork,
+                coreDependencies.Mapper
+            );
         }
     }
 }

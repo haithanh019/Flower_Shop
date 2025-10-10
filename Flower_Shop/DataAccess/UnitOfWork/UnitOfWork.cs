@@ -19,6 +19,7 @@ namespace DataAccess.UnitOfWork
         public IProductRepository Product { get; private set; }
         public IProductImageRepository ProductImage { get; private set; }
         public IUserRepository User { get; private set; }
+        public IAddressRepository Address { get; private set; }
 
         public UnitOfWork(FlowerShopDbContext db, IOptions<CloudinaryOptions> cloudaryOptions)
         {
@@ -32,6 +33,7 @@ namespace DataAccess.UnitOfWork
             Product = new ProductRepository(_db);
             ProductImage = new ProductImageRepository(_db, cloudaryOptions);
             User = new UserRepository(_db);
+            Address = new AddressRepository(_db);
         }
 
         public async Task SaveAsync()
