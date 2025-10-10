@@ -39,7 +39,7 @@ namespace Flower_Shop_API.Controllers
         // Các endpoint dưới đây yêu cầu quyền Admin
         [HttpPost]
         [Authorize(Roles = "Admin")]
-        public async Task<IActionResult> CreateProduct([FromBody] ProductCreateRequest request)
+        public async Task<IActionResult> CreateProduct([FromForm] ProductCreateRequest request)
         {
             var newProduct = await _facadeService.ProductService.CreateProductAsync(request);
             return CreatedAtAction(
@@ -49,10 +49,17 @@ namespace Flower_Shop_API.Controllers
             );
         }
 
-        [HttpPut]
+        [HttpPut("{id}")]
         [Authorize(Roles = "Admin")]
-        public async Task<IActionResult> UpdateProduct([FromBody] ProductUpdateRequest request)
+        public async Task<IActionResult> UpdateProduct(
+            Guid id,
+            [FromForm] ProductUpdateRequest request
+        )
         {
+            if (id != request.ProductId)
+            {
+                return BadRequest("Product ID mismatch.");
+            }
             await _facadeService.ProductService.UpdateProductAsync(request);
             return NoContent();
         }

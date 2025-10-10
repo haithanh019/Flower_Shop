@@ -64,27 +64,41 @@ namespace FlowerShop_WebApp.Areas.Admin.Controllers
             if (ModelState.IsValid)
             {
                 var client = CreateApiClient();
-                var apiRequest = new
-                {
-                    model.Name,
-                    model.Description,
-                    model.Price,
-                    model.CategoryId,
-                    model.StockQuantity,
-                    model.IsActive,
-                    ImageUrls = new List<string>(), // Tạm thời để trống
-                    ImagePublicIds = new List<string>(), // Tạm thời để trống
-                };
 
-                var response = await client.PostAsJsonAsync("api/products", apiRequest);
+                // Sử dụng MultipartFormDataContent để gửi cả dữ liệu form và file
+                using var formData = new MultipartFormDataContent();
+
+                // Thêm các thuộc tính của model vào form data
+                formData.Add(new StringContent(model.Name), "Name");
+                formData.Add(new StringContent(model.Description ?? ""), "Description");
+                formData.Add(new StringContent(model.Price.ToString()), "Price");
+                formData.Add(new StringContent(model.CategoryId.ToString()), "CategoryId");
+                formData.Add(new StringContent(model.StockQuantity.ToString()), "StockQuantity");
+                formData.Add(new StringContent(model.IsActive.ToString()), "IsActive");
+
+                // Thêm các file hình ảnh
+                if (model.ImageFiles != null)
+                {
+                    foreach (var file in model.ImageFiles)
+                    {
+                        var streamContent = new StreamContent(file.OpenReadStream());
+                        streamContent.Headers.ContentType =
+                            new System.Net.Http.Headers.MediaTypeHeaderValue(file.ContentType);
+                        formData.Add(streamContent, "ImageFiles", file.FileName);
+                    }
+                }
+
+                // API endpoint cần được cập nhật để nhận multipart/form-data
+                var response = await client.PostAsync("api/products", formData);
 
                 if (response.IsSuccessStatusCode)
                 {
+                    TempData["SuccessMessage"] = "Product created successfully!";
                     return RedirectToAction(nameof(Index));
                 }
                 ModelState.AddModelError(
                     string.Empty,
-                    "Error creating product. Please check the data."
+                    "Error creating product. Please check API logs."
                 );
             }
             model.CategoryList = await GetCategorySelectListAsync();
@@ -115,6 +129,7 @@ namespace FlowerShop_WebApp.Areas.Admin.Controllers
                     StockQuantity = product.StockQuantity,
                     IsActive = product.IsActive,
                     CategoryList = await GetCategorySelectListAsync(product.CategoryId),
+                    ExistingImageUrls = product.ImageUrls,
                 };
                 return View(model);
             }
@@ -132,23 +147,33 @@ namespace FlowerShop_WebApp.Areas.Admin.Controllers
             if (ModelState.IsValid)
             {
                 var client = CreateApiClient();
-                var apiRequest = new
-                {
-                    model.ProductId,
-                    model.Name,
-                    model.Description,
-                    model.Price,
-                    model.CategoryId,
-                    model.StockQuantity,
-                    model.IsActive,
-                    ImageUrls = new List<string>(), // Tạm thời
-                    ImagePublicIds = new List<string>(), // Tạm thời
-                };
+                using var formData = new MultipartFormDataContent();
 
-                var response = await client.PutAsJsonAsync("api/products", apiRequest);
+                formData.Add(new StringContent(model.ProductId.ToString()), "ProductId");
+                formData.Add(new StringContent(model.Name), "Name");
+                formData.Add(new StringContent(model.Description ?? ""), "Description");
+                formData.Add(new StringContent(model.Price.ToString()), "Price");
+                formData.Add(new StringContent(model.CategoryId.ToString()), "CategoryId");
+                formData.Add(new StringContent(model.StockQuantity.ToString()), "StockQuantity");
+                formData.Add(new StringContent(model.IsActive.ToString()), "IsActive");
+
+                if (model.ImageFiles != null)
+                {
+                    foreach (var file in model.ImageFiles)
+                    {
+                        var streamContent = new StreamContent(file.OpenReadStream());
+                        streamContent.Headers.ContentType =
+                            new System.Net.Http.Headers.MediaTypeHeaderValue(file.ContentType);
+                        formData.Add(streamContent, "ImageFiles", file.FileName);
+                    }
+                }
+
+                // API endpoint cho Update cũng cần được cập nhật
+                var response = await client.PutAsync($"api/products/{id}", formData);
 
                 if (response.IsSuccessStatusCode)
                 {
+                    TempData["SuccessMessage"] = "Product updated successfully!";
                     return RedirectToAction(nameof(Index));
                 }
                 ModelState.AddModelError(string.Empty, "Error updating product.");
@@ -179,6 +204,10 @@ namespace FlowerShop_WebApp.Areas.Admin.Controllers
         {
             var client = CreateApiClient();
             var response = await client.DeleteAsync($"api/products/{id}");
+            if (response.IsSuccessStatusCode)
+            {
+                TempData["SuccessMessage"] = "Product deleted successfully!";
+            }
             if (!response.IsSuccessStatusCode)
             {
                 TempData["ErrorMessage"] = "Error deleting product.";

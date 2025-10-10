@@ -3,6 +3,7 @@ using BusinessLogic.DTOs;
 using BusinessLogic.DTOs.Products;
 using BusinessLogic.Services.Interfaces;
 using DataAccess.Entities;
+using DataAccess.Repositories.Interfaces;
 using DataAccess.UnitOfWork;
 using Microsoft.EntityFrameworkCore;
 using Ultitity.Exceptions;
@@ -38,7 +39,7 @@ namespace BusinessLogic.Services
         public async Task<ProductDto> CreateProductAsync(ProductCreateRequest createRequest)
         {
             // Kiểm tra nghiệp vụ: Giới hạn tối đa 5 ảnh
-            if (createRequest.ImageUrls != null && createRequest.ImageUrls.Count > 5)
+            if (createRequest.ImageFiles != null && createRequest.ImageFiles.Count > 5)
             {
                 throw new CustomValidationException(
                     new Dictionary<string, string[]>
@@ -76,20 +77,14 @@ namespace BusinessLogic.Services
 
             var newProduct = _mapper.Map<Product>(createRequest);
 
-            if (createRequest.ImageUrls != null && createRequest.ImageUrls.Count > 0)
+            if (createRequest.ImageFiles != null && createRequest.ImageFiles.Count > 0)
             {
-                for (int i = 0; i < createRequest.ImageUrls.Count; i++)
+                foreach (var file in createRequest.ImageFiles)
                 {
-                    var imageUrl = createRequest.ImageUrls[i];
-                    var publicId =
-                        (
-                            createRequest.ImagePublicIds != null
-                            && i < createRequest.ImagePublicIds.Count
-                        )
-                            ? createRequest.ImagePublicIds[i]
-                            : null;
-
-                    newProduct.Images.Add(new ProductImage { Url = imageUrl, PublicId = publicId });
+                    var image = new ProductImage();
+                    // Giả sử bạn có một thư mục "flower_shop" trên Cloudinary
+                    await _unitOfWork.ProductImage.UploadImageAsync(file, "flower_shop", image);
+                    newProduct.Images.Add(image);
                 }
             }
 
@@ -102,7 +97,7 @@ namespace BusinessLogic.Services
         public async Task UpdateProductAsync(ProductUpdateRequest updateRequest)
         {
             // Kiểm tra nghiệp vụ: Giới hạn tối đa 5 ảnh khi cập nhật
-            if (updateRequest.ImageUrls != null && updateRequest.ImageUrls.Count > 5)
+            if (updateRequest.ImageFiles != null && updateRequest.ImageFiles.Count > 5)
             {
                 throw new CustomValidationException(
                     new Dictionary<string, string[]>
@@ -126,23 +121,24 @@ namespace BusinessLogic.Services
 
             _mapper.Map(updateRequest, productToUpdate);
 
-            if (updateRequest.ImageUrls != null)
+            // Xử lý ảnh: Xóa ảnh cũ và thêm ảnh mới nếu có
+            if (updateRequest.ImageFiles != null && updateRequest.ImageFiles.Count > 0)
             {
-                _unitOfWork.ProductImage.RemoveRange(productToUpdate.Images);
-
-                for (int i = 0; i < updateRequest.ImageUrls.Count; i++)
+                // Xóa tất cả ảnh cũ trên Cloudinary và DB
+                foreach (var oldImage in productToUpdate.Images)
                 {
-                    var imageUrl = updateRequest.ImageUrls[i];
-                    var publicId =
-                        (
-                            updateRequest.ImagePublicIds != null
-                            && i < updateRequest.ImagePublicIds.Count
-                        )
-                            ? updateRequest.ImagePublicIds[i]
-                            : null;
-                    productToUpdate.Images.Add(
-                        new ProductImage { Url = imageUrl, PublicId = publicId }
-                    );
+                    if (!string.IsNullOrEmpty(oldImage.PublicId))
+                    {
+                        await _unitOfWork.ProductImage.DeleteImageAsync(oldImage.PublicId);
+                    }
+                }
+
+                // Upload ảnh mới
+                foreach (var file in updateRequest.ImageFiles)
+                {
+                    var newImage = new ProductImage();
+                    await _unitOfWork.ProductImage.UploadImageAsync(file, "flower_shop", newImage);
+                    productToUpdate.Images.Add(newImage);
                 }
             }
 

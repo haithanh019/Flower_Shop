@@ -8,7 +8,7 @@
 <hr />
 <div class="row">
     <div class="col-md-6">
-        <form asp-action="Create">
+        <form asp-action="Create" enctype="multipart/form-data">
             <div asp-validation-summary="ModelOnly" class="text-danger"></div>
 
             <div class="mb-3">
@@ -42,7 +42,11 @@
                 <input class="form-check-input" asp-for="IsActive" />
                 <label class="form-check-label" asp-for="IsActive"></label>
             </div>
-
+            <div class="mb-3">
+                <label asp-for="ImageFiles" class="control-label"></label>
+                <input asp-for="ImageFiles" class="form-control" type="file" multiple />
+                <span asp-validation-for="ImageFiles" class="text-danger"></span>
+            </div>
             <div class="form-group">
                 <input type="submit" value="Create" class="btn btn-primary" />
                 <a asp-action="Index" class="btn btn-secondary">Back to List</a>

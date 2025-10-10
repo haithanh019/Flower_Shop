@@ -26,5 +26,8 @@ namespace FlowerShop_WebApp.Areas.Admin.Models.Products
 
         // Dùng để hiển thị dropdown, không gửi đi
         public SelectList? CategoryList { get; set; }
+
+        [Display(Name = "Product Images")]
+        public List<IFormFile>? ImageFiles { get; set; }
     }
 }

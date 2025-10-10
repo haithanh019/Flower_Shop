@@ -8,7 +8,7 @@
 <hr />
 <div class="row">
     <div class="col-md-6">
-        <form asp-action="Edit">
+        <form asp-action="Edit" enctype="multipart/form-data">
             <input type="hidden" asp-for="ProductId" />
             <div asp-validation-summary="ModelOnly" class="text-danger"></div>
 
@@ -42,6 +42,25 @@
             <div class="mb-3 form-check">
                 <input class="form-check-input" asp-for="IsActive" />
                 <label class="form-check-label" asp-for="IsActive"></label>
+            </div>
+            <div class="mb-3">
+                <label class="control-label">Current Images</label>
+                @if (Model.ExistingImageUrls != null && Model.ExistingImageUrls.Any())
+                {
+                    <div class="d-flex flex-wrap">
+                        @foreach (var imageUrl in Model.ExistingImageUrls)
+                        {
+                            <div class="me-2 mb-2">
+                                <img src="@imageUrl" class="img-thumbnail" style="width: 100px; height: 100px; object-fit: cover;" alt="Product Image" />
+                            </div>
+                        }
+                    </div>
+                    <small class="form-text text-muted">Uploading new images will replace all current images.</small>
+                }
+                else
+                {
+                    <p class="text-muted">This product currently has no images.</p>
+                }
             </div>
 
             <div class="form-group">

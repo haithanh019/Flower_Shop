@@ -66,6 +66,7 @@ namespace FlowerShop_WebApp.Areas.Admin.Controllers
                 var response = await client.PostAsync("api/categories", jsonContent);
                 if (response.IsSuccessStatusCode)
                 {
+                    TempData["SuccessMessage"] = "Category created successfully!";
                     return RedirectToAction(nameof(Index));
                 }
                 ModelState.AddModelError(
@@ -122,6 +123,7 @@ namespace FlowerShop_WebApp.Areas.Admin.Controllers
 
                 if (response.IsSuccessStatusCode)
                 {
+                    TempData["SuccessMessage"] = "Category updated successfully!";
                     return RedirectToAction(nameof(Index));
                 }
                 ModelState.AddModelError(string.Empty, "Error updating category.");
@@ -153,7 +155,10 @@ namespace FlowerShop_WebApp.Areas.Admin.Controllers
         {
             var client = CreateApiClient();
             var response = await client.DeleteAsync($"api/categories/{id}");
-
+            if (response.IsSuccessStatusCode)
+            {
+                TempData["SuccessMessage"] = "Category deleted successfully!";
+            }
             if (!response.IsSuccessStatusCode)
             {
                 TempData["ErrorMessage"] =
