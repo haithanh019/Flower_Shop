@@ -25,7 +25,7 @@ namespace Ultitity.Email
             var smtpPort = int.Parse(_configuration["EmailSettings:SmtpPort"] ?? "587");
 
             var message = new MimeMessage();
-            message.From.Add(new MailboxAddress("HomeCareDN", smtpUser));
+            message.From.Add(new MailboxAddress("Mỹ Hồng Shop", smtpUser));
             message.To.Add(MailboxAddress.Parse(email));
             message.Subject = subject;
 

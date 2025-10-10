@@ -82,7 +82,6 @@ namespace FlowerShop_WebApp.Controllers
         {
             var client = await CreateApiClientAsync();
 
-            // Nếu không có địa chỉ nào được chọn
             if (model.SelectedAddressId == Guid.Empty)
             {
                 ModelState.AddModelError("SelectedAddressId", "Please select a shipping address.");
@@ -114,11 +113,19 @@ namespace FlowerShop_WebApp.Controllers
                 AddressId = model.SelectedAddressId,
             };
 
+            // --- BẮT ĐẦU THAY ĐỔI ---
+            // Cấu hình serializer để sử dụng camelCase
+            var serializerOptions = new JsonSerializerOptions
+            {
+                PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
+            };
             var jsonContent = new StringContent(
-                JsonSerializer.Serialize(orderRequest),
+                JsonSerializer.Serialize(orderRequest, serializerOptions), // Áp dụng cấu hình tại đây
                 Encoding.UTF8,
                 "application/json"
             );
+            // --- KẾT THÚC THAY ĐỔI ---
+
             var response = await client.PostAsync("api/orders", jsonContent);
 
             if (response.IsSuccessStatusCode)

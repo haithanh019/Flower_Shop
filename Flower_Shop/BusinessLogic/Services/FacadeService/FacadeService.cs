@@ -38,7 +38,11 @@ namespace BusinessLogic.Services.FacadeService
                 tokenService
             );
             CartService = new CartService(coreDependencies.UnitOfWork, coreDependencies.Mapper);
-            OrderService = new OrderService(coreDependencies.UnitOfWork, coreDependencies.Mapper);
+            OrderService = new OrderService(
+                coreDependencies.UnitOfWork,
+                coreDependencies.Mapper,
+                infraDependencies.EmailQueue
+            );
             UserService = new UserService(coreDependencies.UnitOfWork, coreDependencies.Mapper);
             PaymentService = new PaymentService(
                 coreDependencies.UnitOfWork,

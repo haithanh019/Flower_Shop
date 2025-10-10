@@ -5,6 +5,7 @@ using BusinessLogic.Services.Interfaces;
 using DataAccess.Entities;
 using DataAccess.UnitOfWork;
 using Microsoft.EntityFrameworkCore;
+using Ultitity.Email.Interface;
 using Ultitity.Exceptions;
 
 namespace BusinessLogic.Services
@@ -13,11 +14,13 @@ namespace BusinessLogic.Services
     {
         private readonly IUnitOfWork _unitOfWork;
         private readonly IMapper _mapper;
+        private readonly IEmailQueue _emailQueue;
 
-        public OrderService(IUnitOfWork unitOfWork, IMapper mapper)
+        public OrderService(IUnitOfWork unitOfWork, IMapper mapper, IEmailQueue emailQueue)
         {
             _unitOfWork = unitOfWork;
             _mapper = mapper;
+            _emailQueue = emailQueue;
         }
 
         // Thêm phương thức này vào lớp OrderService
@@ -57,7 +60,7 @@ namespace BusinessLogic.Services
             OrderCreateRequest request
         )
         {
-            // 1. Lấy giỏ hàng của người dùng (giữ nguyên)
+            // 1. Lấy giỏ hàng của người dùng
             var cart = await _unitOfWork.Cart.GetAsync(c => c.UserId == userId, "Items.Product");
             if (cart == null || !cart.Items.Any())
             {
@@ -66,9 +69,14 @@ namespace BusinessLogic.Services
                 );
             }
 
-            // --- BẮT ĐẦU CẬP NHẬT LOGIC ---
+            // 1.1 Lấy thông tin người dùng
+            var user = await _unitOfWork.User.GetAsync(u => u.UserId == userId);
+            if (user == null)
+            {
+                throw new KeyNotFoundException("User not found.");
+            }
 
-            // 1.1 Lấy địa chỉ từ AddressId
+            // 1.2 Lấy địa chỉ từ AddressId
             var address = await _unitOfWork.Address.GetAsync(a =>
                 a.AddressId == request.AddressId && a.UserId == userId
             );
@@ -81,18 +89,15 @@ namespace BusinessLogic.Services
                     }
                 );
             }
-            // Tạo chuỗi địa chỉ đầy đủ từ đối tượng address
             var fullShippingAddress =
                 $"{address.Detail}, {address.Ward}, {address.District}, {address.City}";
-
-            // --- KẾT THÚC CẬP NHẬT LOGIC ---
 
             // 2. Tạo đối tượng Order và OrderItems
             var newOrder = new Order
             {
                 UserId = userId,
                 PhoneNumber = request.ShippingPhoneNumber,
-                ShippingAddress = fullShippingAddress, // Sử dụng chuỗi địa chỉ vừa tạo
+                ShippingAddress = fullShippingAddress,
                 Status = OrderStatus.Pending,
                 OrderNumber = Guid.NewGuid().ToString("N").Substring(0, 8).ToUpper(),
             };
@@ -102,9 +107,7 @@ namespace BusinessLogic.Services
             {
                 if (cartItem.Product == null)
                 {
-                    throw new InvalidOperationException(
-                        $"Product details missing for cart item {cartItem.CartItemId}."
-                    );
+                    continue; // Bỏ qua nếu sản phẩm không còn tồn tại
                 }
                 if (cartItem.Product.StockQuantity < cartItem.Quantity)
                 {
@@ -153,9 +156,26 @@ namespace BusinessLogic.Services
             // 4. Xóa các sản phẩm trong giỏ hàng
             _unitOfWork.CartItem.RemoveRange(cart.Items);
 
-            // 5. Lưu tất cả thay đổi
+            // 5. Lưu tất cả thay đổi vào database
             await _unitOfWork.SaveAsync();
 
+            // 6. Gửi email xác nhận sau khi đã lưu thành công
+            var createdOrder = await _unitOfWork.Order.GetAsync(
+                o => o.OrderId == newOrder.OrderId,
+                includeProperties: "Items.Product,User" // Nạp lại đầy đủ thông tin
+            );
+
+            if (createdOrder != null && createdOrder.User != null)
+            {
+                var subject = $"[FlowerShop] Xác nhận đơn hàng #{createdOrder.OrderNumber}";
+                var htmlMessage = EmailTemplateService.OrderConfirmationEmail(
+                    createdOrder,
+                    createdOrder.User
+                );
+                _emailQueue.QueueEmail(createdOrder.User.Email, subject, htmlMessage);
+            }
+
+            // 7. Trả về kết quả
             return _mapper.Map<OrderDto>(newOrder);
         }
 

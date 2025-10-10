@@ -73,6 +73,8 @@ namespace Flower_Shop_API
             builder.Services.AddScoped<InfraDependencies>();
             builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
             builder.Services.AddScoped<IFacadeService, FacadeService>();
+            builder.Services.AddSingleton<EmailSender>();
+            builder.Services.AddHostedService<BackgroundEmailSender>();
             builder.Services.AddSingleton<IEmailQueue, EmailQueue>();
 
             // LLM client
