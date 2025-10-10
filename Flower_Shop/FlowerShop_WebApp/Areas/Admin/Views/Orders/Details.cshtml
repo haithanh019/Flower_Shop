@@ -56,6 +56,10 @@
                         <span>Order Date:</span>
                         <span>@Model.CreatedAt.ToString("f")</span>
                     </li>
+                    <li class="list-group-item">
+                        <span>Shipping Address:</span>
+                        <div class="fw-bold text-end">@Model.ShippingAddress</div>
+                    </li>
                     <li class="list-group-item d-flex justify-content-between">
                         <span>Payment Method:</span>
                         <span>@Model.PaymentMethod</span>

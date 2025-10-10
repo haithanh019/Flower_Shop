@@ -9,10 +9,13 @@
         public IReadOnlyList<OrderItemViewModel> Items { get; set; } =
             Array.Empty<OrderItemViewModel>();
         public decimal SubTotal => Items.Sum(i => i.LineTotal);
-        public decimal Total => SubTotal; // Sẽ cộng thêm phí ship/giảm giá nếu có
+        public decimal Total => SubTotal;
         public DateTime CreatedAt { get; set; }
         public string? PaymentStatus { get; set; }
         public string? PaymentMethod { get; set; }
         public DateTime? PaymentDate { get; set; }
+
+        // Thêm thuộc tính ShippingAddress
+        public string? ShippingAddress { get; set; }
     }
 }

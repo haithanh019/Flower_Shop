@@ -116,7 +116,7 @@ namespace BusinessLogic.Mapping
                     opt => opt.MapFrom(s => s.User != null ? s.User.Email : null)
                 )
                 .ForMember(d => d.Items, opt => opt.MapFrom(s => s.Items))
-                // summary từ Payment (nếu có)
+                .ForMember(d => d.ShippingAddress, opt => opt.MapFrom(s => s.ShippingAddress))
                 .ForMember(
                     d => d.TransactionId,
                     opt => opt.MapFrom(s => s.Payment != null ? s.Payment.TransactionId : null)
