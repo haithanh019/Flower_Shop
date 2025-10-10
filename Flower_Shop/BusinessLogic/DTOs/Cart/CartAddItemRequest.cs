@@ -9,7 +9,4 @@ public class CartAddItemRequest
 
     [Range(1, int.MaxValue)]
     public int Quantity { get; set; } = 1;
-
-    // Guest support
-    public string? SessionId { get; set; }
 }

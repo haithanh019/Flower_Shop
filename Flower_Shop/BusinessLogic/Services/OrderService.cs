@@ -44,8 +44,8 @@ namespace BusinessLogic.Services
             var newOrder = new Order
             {
                 UserId = userId,
-                PhoneNumber = user.PhoneNumber,
-                ShippingAddress = user.Address,
+                PhoneNumber = request.ShippingPhoneNumber,
+                ShippingAddress = request.ShippingAddress,
                 Status = OrderStatus.Pending,
                 OrderNumber = Guid.NewGuid().ToString("N").Substring(0, 8).ToUpper(),
             };

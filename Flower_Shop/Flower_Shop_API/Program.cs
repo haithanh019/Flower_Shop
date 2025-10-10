@@ -1,4 +1,4 @@
-using System.Text;
+﻿using System.Text;
 using BusinessLogic.Mapping;
 using BusinessLogic.Services.FacadeService;
 using DataAccess.Data;
@@ -44,7 +44,18 @@ namespace Flower_Shop_API
                         IssuerSigningKey = new SymmetricSecurityKey(Encoding.ASCII.GetBytes(key)),
                     };
                 });
-            builder.Services.AddControllers();
+            builder
+                .Services.AddControllers()
+                .AddJsonOptions(options =>
+                {
+                    // Cấu hình này sẽ bảo API luôn xử lý tên thuộc tính JSON
+                    // dưới dạng camelCase, ví dụ: "productId" thay vì "ProductId".
+                    options.JsonSerializerOptions.PropertyNamingPolicy = System
+                        .Text
+                        .Json
+                        .JsonNamingPolicy
+                        .CamelCase;
+                });
             // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
             builder.Services.AddEndpointsApiExplorer();
             builder.Services.AddSwaggerGen();

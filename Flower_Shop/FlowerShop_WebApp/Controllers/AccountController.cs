@@ -1,14 +1,10 @@
-﻿using System.Collections.Generic; // Thêm using
-using System.IdentityModel.Tokens.Jwt;
-using System.Linq; // Thêm using
+﻿using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
 using System.Text.Json;
-using System.Threading.Tasks; // Thêm using
 using FlowerShop_WebApp.Models.Auth;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.Extensions.Logging;
 
 namespace FlowerShop_WebApp.Controllers
 {

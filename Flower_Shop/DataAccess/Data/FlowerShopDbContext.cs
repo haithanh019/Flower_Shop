@@ -27,12 +27,11 @@ namespace DataAccess.Data
 
             // User (1) - (1) Cart
             modelBuilder
-                .Entity<Cart>()
-                .HasOne(c => c.User)
-                .WithOne(u => u.Cart)
+                .Entity<User>()
+                .HasOne(u => u.Cart)
+                .WithOne(c => c.User)
                 .HasForeignKey<Cart>(c => c.UserId)
-                .OnDelete(DeleteBehavior.Cascade)
-                .IsRequired(false);
+                .OnDelete(DeleteBehavior.Cascade);
 
             // Category (1) - (n) Product
             modelBuilder

@@ -78,7 +78,9 @@ namespace FlowerShop_WebApp.Controllers
             {
                 CustomerNote = model.CustomerNote,
                 PaymentMethod = model.PaymentMethod,
-                // Thông tin địa chỉ giao hàng sẽ được lấy từ profile user ở phía API
+                ShippingFullName = model.ShippingFullName,
+                ShippingPhoneNumber = model.ShippingPhoneNumber,
+                ShippingAddress = model.ShippingAddress,
             };
 
             var jsonContent = new StringContent(
