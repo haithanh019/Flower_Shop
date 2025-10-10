@@ -1,11 +1,11 @@
 ﻿using System.ComponentModel.DataAnnotations;
-using FlowerShop_WebApp.Models.Categories;
 using Microsoft.AspNetCore.Mvc.Rendering;
 
-namespace FlowerShop_WebApp.Areas.Admin.Models
+namespace FlowerShop_WebApp.Areas.Admin.Models.Products
 {
-    public class ProductEditViewModel
+    public class ProductUpdateRequest
     {
+        [Required]
         public Guid ProductId { get; set; }
 
         [Required]
@@ -17,15 +17,16 @@ namespace FlowerShop_WebApp.Areas.Admin.Models
         public decimal Price { get; set; }
 
         [Display(Name = "Category")]
+        [Required(ErrorMessage = "Please select a category.")]
         public Guid CategoryId { get; set; }
 
         [Range(0, int.MaxValue, ErrorMessage = "Stock must be a non-negative number.")]
         public int StockQuantity { get; set; }
 
         [Display(Name = "Is Active?")]
-        public bool IsActive { get; set; } = true;
+        public bool IsActive { get; set; }
 
-        // Dùng để hiển thị dropdown chọn category
+        // Dùng để hiển thị dropdown, không gửi đi
         public SelectList? CategoryList { get; set; }
     }
 }

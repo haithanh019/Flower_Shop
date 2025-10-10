@@ -1,6 +1,7 @@
 ﻿using System.Net.Http.Headers;
 using System.Text;
 using System.Text.Json;
+using FlowerShop_WebApp.Areas.Admin.Models.Categories;
 using FlowerShop_WebApp.Models.Categories;
 using Microsoft.AspNetCore.Mvc;
 
@@ -13,16 +14,21 @@ namespace FlowerShop_WebApp.Areas.Admin.Controllers
         {
             PropertyNameCaseInsensitive = true,
         };
+        private readonly ILogger<CategoriesController> _logger;
 
-        public CategoriesController(IHttpClientFactory httpClientFactory)
+        public CategoriesController(
+            IHttpClientFactory httpClientFactory,
+            ILogger<CategoriesController> logger
+        )
         {
             _httpClientFactory = httpClientFactory;
+            _logger = logger;
         }
 
         // GET: /Admin/Categories
         public async Task<IActionResult> Index()
         {
-            var client = await CreateApiClientAsync();
+            var client = CreateApiClient();
             var response = await client.GetAsync("api/categories");
 
             if (response.IsSuccessStatusCode)
@@ -40,20 +46,19 @@ namespace FlowerShop_WebApp.Areas.Admin.Controllers
         // GET: /Admin/Categories/Create
         public IActionResult Create()
         {
-            return View();
+            return View(new CategoryCreateRequest());
         }
 
         // POST: /Admin/Categories/Create
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Create(CategoryViewModel model)
+        public async Task<IActionResult> Create(CategoryCreateRequest model)
         {
             if (ModelState.IsValid)
             {
-                var client = await CreateApiClientAsync();
-                var createRequest = new { model.Name, model.Description };
+                var client = CreateApiClient();
                 var jsonContent = new StringContent(
-                    JsonSerializer.Serialize(createRequest),
+                    JsonSerializer.Serialize(model),
                     Encoding.UTF8,
                     "application/json"
                 );
@@ -74,7 +79,7 @@ namespace FlowerShop_WebApp.Areas.Admin.Controllers
         // GET: /Admin/Categories/Edit/{id}
         public async Task<IActionResult> Edit(Guid id)
         {
-            var client = await CreateApiClientAsync();
+            var client = CreateApiClient();
             var response = await client.GetAsync($"api/categories/{id}");
             if (response.IsSuccessStatusCode)
             {
@@ -83,7 +88,16 @@ namespace FlowerShop_WebApp.Areas.Admin.Controllers
                     jsonString,
                     _jsonOptions
                 );
-                return View(category);
+                if (category == null)
+                    return NotFound();
+
+                var model = new CategoryUpdateRequest
+                {
+                    CategoryId = category.CategoryId,
+                    Name = category.Name,
+                    Description = category.Description,
+                };
+                return View(model);
             }
             return NotFound();
         }
@@ -91,22 +105,16 @@ namespace FlowerShop_WebApp.Areas.Admin.Controllers
         // POST: /Admin/Categories/Edit/{id}
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Edit(Guid id, CategoryViewModel model)
+        public async Task<IActionResult> Edit(Guid id, CategoryUpdateRequest model)
         {
             if (id != model.CategoryId)
                 return BadRequest();
 
             if (ModelState.IsValid)
             {
-                var client = await CreateApiClientAsync();
-                var updateRequest = new
-                {
-                    model.CategoryId,
-                    model.Name,
-                    model.Description,
-                };
+                var client = CreateApiClient();
                 var jsonContent = new StringContent(
-                    JsonSerializer.Serialize(updateRequest),
+                    JsonSerializer.Serialize(model),
                     Encoding.UTF8,
                     "application/json"
                 );
@@ -124,7 +132,7 @@ namespace FlowerShop_WebApp.Areas.Admin.Controllers
         // GET: /Admin/Categories/Delete/{id}
         public async Task<IActionResult> Delete(Guid id)
         {
-            var client = await CreateApiClientAsync();
+            var client = CreateApiClient();
             var response = await client.GetAsync($"api/categories/{id}");
             if (response.IsSuccessStatusCode)
             {
@@ -143,7 +151,7 @@ namespace FlowerShop_WebApp.Areas.Admin.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> DeleteConfirmed(Guid id)
         {
-            var client = await CreateApiClientAsync();
+            var client = CreateApiClient();
             var response = await client.DeleteAsync($"api/categories/{id}");
 
             if (!response.IsSuccessStatusCode)
@@ -154,18 +162,31 @@ namespace FlowerShop_WebApp.Areas.Admin.Controllers
             return RedirectToAction(nameof(Index));
         }
 
-        private Task<HttpClient> CreateApiClientAsync()
+        // --- PHƯƠNG THỨC HỖ TRỢ ---
+        // Phương thức này tạo HttpClient và đính kèm token từ Session
+        private HttpClient CreateApiClient()
         {
             var client = _httpClientFactory.CreateClient("ApiClient");
             var token = HttpContext.Session.GetString("JWToken");
-            if (!string.IsNullOrEmpty(token))
+
+            // *** THÊM LOG CHI TIẾT Ở ĐÂY ***
+            if (string.IsNullOrEmpty(token))
             {
+                _logger.LogError("CreateApiClient: Token is NULL or EMPTY in session!");
+            }
+            else
+            {
+                _logger.LogInformation(
+                    "CreateApiClient: Attaching token to request: {Token}",
+                    token
+                );
                 client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue(
                     "Bearer",
                     token
                 );
             }
-            return Task.FromResult(client);
+
+            return client;
         }
     }
 }

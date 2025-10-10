@@ -1,67 +1,70 @@
-﻿using System.Net.Http.Headers;
+﻿using System;
+using System.Collections.Generic;
+using System.Net.Http.Headers;
 using System.Text;
 using System.Text.Json;
-using FlowerShop_WebApp.Areas.Admin.Models;
+using System.Threading.Tasks;
+using FlowerShop_WebApp.Areas.Admin.Models.Products; // Using mới
 using FlowerShop_WebApp.Models.Categories;
 using FlowerShop_WebApp.Models.Products;
 using FlowerShop_WebApp.Models.Shared;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
+using Microsoft.Extensions.Logging;
 
 namespace FlowerShop_WebApp.Areas.Admin.Controllers
 {
     public class ProductsController : BaseAdminController
     {
         private readonly IHttpClientFactory _httpClientFactory;
+        private readonly ILogger<ProductsController> _logger;
         private readonly JsonSerializerOptions _jsonOptions = new()
         {
             PropertyNameCaseInsensitive = true,
         };
 
-        public ProductsController(IHttpClientFactory httpClientFactory)
+        public ProductsController(
+            IHttpClientFactory httpClientFactory,
+            ILogger<ProductsController> logger
+        )
         {
             _httpClientFactory = httpClientFactory;
+            _logger = logger;
         }
 
-        // GET: /Admin/Products
         public async Task<IActionResult> Index()
         {
-            var client = await CreateApiClientAsync();
-            var response = await client.GetAsync("api/products?pageSize=100"); // Lấy nhiều sản phẩm để quản lý
-
+            var client = CreateApiClient();
+            var response = await client.GetAsync("api/products?pageSize=100");
             if (response.IsSuccessStatusCode)
             {
-                var jsonString = await response.Content.ReadAsStringAsync();
-                var pagedResult = JsonSerializer.Deserialize<
+                var pagedResult = await response.Content.ReadFromJsonAsync<
                     PagedResultViewModel<ProductViewModel>
-                >(jsonString, _jsonOptions);
-                return View(pagedResult?.Items);
+                >(_jsonOptions);
+                return View(pagedResult?.Items ?? new List<ProductViewModel>());
             }
             return View(new List<ProductViewModel>());
         }
 
-        // Tạm thời để trống các action Create, Edit, Delete.
-        // Chúng ta sẽ tạo View trước rồi quay lại hoàn thiện logic sau.
-
         // GET: /Admin/Products/Create
         public async Task<IActionResult> Create()
         {
-            var model = new ProductEditViewModel
+            var model = new ProductCreateRequest
             {
                 CategoryList = await GetCategorySelectListAsync(),
             };
             return View(model);
         }
 
+        // POST: /Admin/Products/Create
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Create(ProductEditViewModel model)
+        public async Task<IActionResult> Create(ProductCreateRequest model)
         {
             if (ModelState.IsValid)
             {
-                var client = await CreateApiClientAsync();
-                // Lưu ý: ImageUrls và ImagePublicIds đang để trống vì chưa làm chức năng upload ảnh
-                var createRequest = new
+                var client = CreateApiClient();
+                var apiRequest = new
                 {
                     model.Name,
                     model.Description,
@@ -69,46 +72,40 @@ namespace FlowerShop_WebApp.Areas.Admin.Controllers
                     model.CategoryId,
                     model.StockQuantity,
                     model.IsActive,
-                    ImageUrls = new List<string>(),
-                    ImagePublicIds = new List<string>(),
+                    ImageUrls = new List<string>(), // Tạm thời để trống
+                    ImagePublicIds = new List<string>(), // Tạm thời để trống
                 };
-                var jsonContent = new StringContent(
-                    JsonSerializer.Serialize(createRequest),
-                    Encoding.UTF8,
-                    "application/json"
-                );
 
-                var response = await client.PostAsync("api/products", jsonContent);
+                var response = await client.PostAsJsonAsync("api/products", apiRequest);
 
                 if (response.IsSuccessStatusCode)
                 {
                     return RedirectToAction(nameof(Index));
                 }
-                ModelState.AddModelError(string.Empty, "Error creating product.");
+                ModelState.AddModelError(
+                    string.Empty,
+                    "Error creating product. Please check the data."
+                );
             }
-
             model.CategoryList = await GetCategorySelectListAsync();
             return View(model);
         }
 
-        // GET: /Admin/Products/Edit/5
+        // GET: /Admin/Products/Edit/{id}
         public async Task<IActionResult> Edit(Guid id)
         {
-            var client = await CreateApiClientAsync();
+            var client = CreateApiClient();
             var response = await client.GetAsync($"api/products/{id}");
 
             if (response.IsSuccessStatusCode)
             {
-                var jsonString = await response.Content.ReadAsStringAsync();
-                var product = JsonSerializer.Deserialize<ProductViewModel>(
-                    jsonString,
+                var product = await response.Content.ReadFromJsonAsync<ProductViewModel>(
                     _jsonOptions
                 );
                 if (product == null)
-                {
                     return NotFound();
-                }
-                var model = new ProductEditViewModel
+
+                var model = new ProductUpdateRequest
                 {
                     ProductId = product.ProductId,
                     Name = product.Name,
@@ -117,7 +114,7 @@ namespace FlowerShop_WebApp.Areas.Admin.Controllers
                     CategoryId = product.CategoryId,
                     StockQuantity = product.StockQuantity,
                     IsActive = product.IsActive,
-                    CategoryList = await GetCategorySelectListAsync(),
+                    CategoryList = await GetCategorySelectListAsync(product.CategoryId),
                 };
                 return View(model);
             }
@@ -127,16 +124,15 @@ namespace FlowerShop_WebApp.Areas.Admin.Controllers
         // POST: /Admin/Products/Edit/{id}
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Edit(Guid id, ProductEditViewModel model)
+        public async Task<IActionResult> Edit(Guid id, ProductUpdateRequest model)
         {
             if (id != model.ProductId)
                 return BadRequest();
 
             if (ModelState.IsValid)
             {
-                var client = await CreateApiClientAsync();
-                // Tương tự Create, ImageUrls tạm để trống
-                var updateRequest = new
+                var client = CreateApiClient();
+                var apiRequest = new
                 {
                     model.ProductId,
                     model.Name,
@@ -145,16 +141,11 @@ namespace FlowerShop_WebApp.Areas.Admin.Controllers
                     model.CategoryId,
                     model.StockQuantity,
                     model.IsActive,
-                    ImageUrls = new List<string>(),
-                    ImagePublicIds = new List<string>(),
+                    ImageUrls = new List<string>(), // Tạm thời
+                    ImagePublicIds = new List<string>(), // Tạm thời
                 };
-                var jsonContent = new StringContent(
-                    JsonSerializer.Serialize(updateRequest),
-                    Encoding.UTF8,
-                    "application/json"
-                );
 
-                var response = await client.PutAsync("api/products", jsonContent);
+                var response = await client.PutAsJsonAsync("api/products", apiRequest);
 
                 if (response.IsSuccessStatusCode)
                 {
@@ -162,22 +153,18 @@ namespace FlowerShop_WebApp.Areas.Admin.Controllers
                 }
                 ModelState.AddModelError(string.Empty, "Error updating product.");
             }
-
-            model.CategoryList = await GetCategorySelectListAsync();
+            model.CategoryList = await GetCategorySelectListAsync(model.CategoryId);
             return View(model);
         }
 
-        // GET: /Admin/Products/Delete/5
+        // GET: /Admin/Products/Delete/{id}
         public async Task<IActionResult> Delete(Guid id)
         {
-            var client = await CreateApiClientAsync();
+            var client = CreateApiClient();
             var response = await client.GetAsync($"api/products/{id}");
-
             if (response.IsSuccessStatusCode)
             {
-                var jsonString = await response.Content.ReadAsStringAsync();
-                var product = JsonSerializer.Deserialize<ProductViewModel>(
-                    jsonString,
+                var product = await response.Content.ReadFromJsonAsync<ProductViewModel>(
                     _jsonOptions
                 );
                 return View(product);
@@ -185,50 +172,50 @@ namespace FlowerShop_WebApp.Areas.Admin.Controllers
             return NotFound();
         }
 
+        // POST: /Admin/Products/Delete/{id}
         [HttpPost, ActionName("Delete")]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> DeleteConfirmed(Guid id)
         {
-            var client = await CreateApiClientAsync();
+            var client = CreateApiClient();
             var response = await client.DeleteAsync($"api/products/{id}");
-
-            if (response.IsSuccessStatusCode)
+            if (!response.IsSuccessStatusCode)
             {
-                return RedirectToAction(nameof(Index));
+                TempData["ErrorMessage"] = "Error deleting product.";
             }
-            // Có thể thêm TempData để hiển thị lỗi ở trang Index
-            TempData["ErrorMessage"] = "Error deleting product.";
             return RedirectToAction(nameof(Index));
         }
 
-        // === Helper Methods ===
-        private async Task<SelectList> GetCategorySelectListAsync()
-        {
-            var client = _httpClientFactory.CreateClient("ApiClient");
-            var categoriesResponse = await client.GetAsync("api/categories");
-            if (categoriesResponse.IsSuccessStatusCode)
-            {
-                var jsonString = await categoriesResponse.Content.ReadAsStringAsync();
-                var categories =
-                    JsonSerializer.Deserialize<List<CategoryViewModel>>(jsonString, _jsonOptions)
-                    ?? new List<CategoryViewModel>();
-                return new SelectList(categories, "CategoryId", "Name");
-            }
-            return new SelectList(new List<CategoryViewModel>());
-        }
-
-        private Task<HttpClient> CreateApiClientAsync()
+        private HttpClient CreateApiClient()
         {
             var client = _httpClientFactory.CreateClient("ApiClient");
             var token = HttpContext.Session.GetString("JWToken");
-            if (!string.IsNullOrEmpty(token))
+            if (string.IsNullOrEmpty(token))
+            {
+                _logger.LogError("ADMIN ACTION: Token is NULL or EMPTY in session!");
+            }
+            else
             {
                 client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue(
                     "Bearer",
                     token
                 );
             }
-            return Task.FromResult(client);
+            return client;
+        }
+
+        private async Task<SelectList> GetCategorySelectListAsync(object? selectedValue = null)
+        {
+            var client = CreateApiClient();
+            var response = await client.GetAsync("api/categories");
+            if (response.IsSuccessStatusCode)
+            {
+                var categories = await response.Content.ReadFromJsonAsync<List<CategoryViewModel>>(
+                    _jsonOptions
+                );
+                return new SelectList(categories, "CategoryId", "Name", selectedValue);
+            }
+            return new SelectList(new List<CategoryViewModel>());
         }
     }
 }

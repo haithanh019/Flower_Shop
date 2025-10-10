@@ -1,33 +1,35 @@
-﻿using System.IdentityModel.Tokens.Jwt;
-using System.Net.Http.Headers;
+﻿using System.Collections.Generic; // Thêm using
+using System.IdentityModel.Tokens.Jwt;
+using System.Linq; // Thêm using
 using System.Security.Claims;
 using System.Text;
 using System.Text.Json;
+using System.Threading.Tasks; // Thêm using
 using FlowerShop_WebApp.Models.Auth;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Logging;
 
 namespace FlowerShop_WebApp.Controllers
 {
     public class AccountController : Controller
     {
-        private readonly ILogger<HomeController> _logger;
         private readonly IHttpClientFactory _httpClientFactory;
         private readonly JsonSerializerOptions _jsonOptions = new()
         {
             PropertyNameCaseInsensitive = true,
         };
+        private readonly ILogger<AccountController> _logger;
 
         public AccountController(
-            ILogger<HomeController> logger,
-            IHttpClientFactory httpClientFactory
+            IHttpClientFactory httpClientFactory,
+            ILogger<AccountController> logger
         )
         {
-            _logger = logger;
             _httpClientFactory = httpClientFactory;
+            _logger = logger;
         }
 
-        // Action hiển thị form đăng nhập
         [HttpGet]
         public IActionResult Login(string? returnUrl = null)
         {
@@ -35,27 +37,18 @@ namespace FlowerShop_WebApp.Controllers
             return View();
         }
 
-        // Action xử lý khi người dùng nhấn nút "Login"
         [HttpPost]
         public async Task<IActionResult> Login(LoginViewModel model, string? returnUrl = null)
         {
-            ViewData["ReturnUrl"] = returnUrl;
             if (!ModelState.IsValid)
-            {
                 return View(model);
-            }
 
             var client = _httpClientFactory.CreateClient("ApiClient");
-
-            _logger.LogInformation($"API BaseAddress: {client.BaseAddress}");
-
             var jsonContent = new StringContent(
                 JsonSerializer.Serialize(model),
                 Encoding.UTF8,
                 "application/json"
             );
-
-            // 1. Gửi yêu cầu đăng nhập đến API
             var response = await client.PostAsync("api/auth/login", jsonContent);
 
             if (response.IsSuccessStatusCode)
@@ -66,58 +59,38 @@ namespace FlowerShop_WebApp.Controllers
                     _jsonOptions
                 );
 
-                if (loginResponse == null || string.IsNullOrEmpty(loginResponse.AccessToken))
+                if (loginResponse != null && !string.IsNullOrEmpty(loginResponse.AccessToken))
                 {
-                    ModelState.AddModelError(
-                        string.Empty,
-                        "Login failed: Invalid response from server."
+                    _logger.LogWarning(
+                        "[LOGIN SUCCESS] Token received: {Token}",
+                        loginResponse.AccessToken
                     );
-                    return View(model);
+                    HttpContext.Session.SetString("JWToken", loginResponse.AccessToken);
+
+                    var claimsPrincipal = CreateClaimsPrincipalFromToken(loginResponse.AccessToken);
+                    await HttpContext.SignInAsync(
+                        "CookieAuth",
+                        claimsPrincipal,
+                        new AuthenticationProperties { IsPersistent = true }
+                    );
+
+                    return RedirectToLocal(returnUrl);
                 }
-
-                // 2. Lưu JWT Token vào Session để dùng cho các lời gọi API sau này
-                HttpContext.Session.SetString("JWToken", loginResponse.AccessToken);
-
-                // 3. Đọc thông tin từ JWT và tạo Cookie xác thực cho WebApp
-                var claimsPrincipal = CreateClaimsPrincipalFromToken(loginResponse.AccessToken);
-                await HttpContext.SignInAsync(
-                    "CookieAuth",
-                    claimsPrincipal,
-                    new AuthenticationProperties
-                    {
-                        IsPersistent = true, // Ghi nhớ đăng nhập
-                        ExpiresUtc = DateTimeOffset.UtcNow.AddDays(7),
-                    }
-                );
-
-                return RedirectToLocal(returnUrl);
             }
-            else
-            {
-                var errorContent = await response.Content.ReadAsStringAsync();
-                _logger.LogError($"Login failed: {response.StatusCode} - {errorContent}");
-                // Nếu API trả về lỗi (sai mật khẩu, email không tồn tại)
-                ModelState.AddModelError(string.Empty, "Invalid email or password.");
-                return View(model);
-            }
+
+            ModelState.AddModelError(string.Empty, "Invalid email or password.");
+            return View(model);
         }
 
-        // Action hiển thị form đăng ký
+        // Các action Register, Logout, và helper methods khác
         [HttpGet]
-        public IActionResult Register()
-        {
-            return View();
-        }
+        public IActionResult Register() => View();
 
-        // Action xử lý khi người dùng nhấn nút "Register"
         [HttpPost]
         public async Task<IActionResult> Register(RegisterViewModel model)
         {
             if (!ModelState.IsValid)
-            {
                 return View(model);
-            }
-
             var client = _httpClientFactory.CreateClient("ApiClient");
             var requestBody = new
             {
@@ -131,55 +104,32 @@ namespace FlowerShop_WebApp.Controllers
                 Encoding.UTF8,
                 "application/json"
             );
-
-            // 1. Gửi yêu cầu đăng ký đến API
             var response = await client.PostAsync("api/auth/register", jsonContent);
-
             if (response.IsSuccessStatusCode)
             {
-                // 2. Nếu đăng ký thành công, API sẽ trả về token, tiến hành đăng nhập luôn
                 var jsonString = await response.Content.ReadAsStringAsync();
                 var registerResponse = JsonSerializer.Deserialize<LoginResponseViewModel>(
                     jsonString,
                     _jsonOptions
                 );
-
-                if (registerResponse == null || string.IsNullOrEmpty(registerResponse.AccessToken))
+                if (registerResponse != null && !string.IsNullOrEmpty(registerResponse.AccessToken))
                 {
-                    ModelState.AddModelError(
-                        string.Empty,
-                        "Registration failed: Invalid response from server."
+                    HttpContext.Session.SetString("JWToken", registerResponse.AccessToken);
+                    var claimsPrincipal = CreateClaimsPrincipalFromToken(
+                        registerResponse.AccessToken
                     );
-                    return View(model);
+                    await HttpContext.SignInAsync(
+                        "CookieAuth",
+                        claimsPrincipal,
+                        new AuthenticationProperties { IsPersistent = true }
+                    );
+                    return RedirectToAction("Index", "Home");
                 }
-
-                // Lưu JWT và tạo cookie (giống hệt logic của Login)
-                HttpContext.Session.SetString("JWToken", registerResponse.AccessToken);
-                var claimsPrincipal = CreateClaimsPrincipalFromToken(registerResponse.AccessToken);
-                await HttpContext.SignInAsync(
-                    "CookieAuth",
-                    claimsPrincipal,
-                    new AuthenticationProperties
-                    {
-                        IsPersistent = true,
-                        ExpiresUtc = DateTimeOffset.UtcNow.AddDays(7),
-                    }
-                );
-
-                return RedirectToAction("Index", "Home");
             }
-            else
-            {
-                // 3. Nếu API trả về lỗi (ví dụ: email đã tồn tại)
-                ModelState.AddModelError(
-                    string.Empty,
-                    "Registration failed. The email might already be in use."
-                );
-                return View(model);
-            }
+            ModelState.AddModelError(string.Empty, "Registration failed.");
+            return View(model);
         }
 
-        // Action Đăng xuất
         [HttpPost]
         public async Task<IActionResult> Logout()
         {
@@ -188,7 +138,7 @@ namespace FlowerShop_WebApp.Controllers
             return RedirectToAction("Index", "Home");
         }
 
-        // Helper method để tạo ClaimsPrincipal từ JWT
+        // PHỤC HỒI PHƯƠNG THỨC ĐỌC CLAIM ĐÚNG
         private ClaimsPrincipal CreateClaimsPrincipalFromToken(string token)
         {
             var tokenHandler = new JwtSecurityTokenHandler();
@@ -196,24 +146,18 @@ namespace FlowerShop_WebApp.Controllers
 
             var claims = new List<Claim>
             {
-                // Lấy các claim cần thiết từ token để định danh người dùng trong WebApp
                 new(
                     ClaimTypes.NameIdentifier,
-                    jwtToken
-                        .Claims.FirstOrDefault(c => c.Type == JwtRegisteredClaimNames.NameId)
-                        ?.Value ?? ""
+                    jwtToken.Claims.FirstOrDefault(c => c.Type == "nameid")?.Value ?? ""
                 ),
                 new(
                     ClaimTypes.Email,
-                    jwtToken
-                        .Claims.FirstOrDefault(c => c.Type == JwtRegisteredClaimNames.Email)
-                        ?.Value ?? ""
+                    jwtToken.Claims.FirstOrDefault(c => c.Type == "email")?.Value ?? ""
                 ),
                 new(
                     ClaimTypes.Role,
                     jwtToken.Claims.FirstOrDefault(c => c.Type == "role")?.Value ?? ""
                 ),
-                // Thêm các claim khác nếu cần
             };
 
             var claimsIdentity = new ClaimsIdentity(claims, "CookieAuth");
@@ -223,13 +167,8 @@ namespace FlowerShop_WebApp.Controllers
         private IActionResult RedirectToLocal(string? returnUrl)
         {
             if (Url.IsLocalUrl(returnUrl))
-            {
                 return Redirect(returnUrl);
-            }
-            else
-            {
-                return RedirectToAction(nameof(HomeController.Index), "Home");
-            }
+            return RedirectToAction(nameof(HomeController.Index), "Home");
         }
     }
 }
