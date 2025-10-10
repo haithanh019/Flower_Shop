@@ -21,7 +21,8 @@ namespace BusinessLogic.Services.FacadeService
             CoreDependencies coreDependencies,
             InfraDependencies infraDependencies,
             IOptions<JwtOptions> jwtOptions,
-            IVietQRService vietQRService
+            IVietQRService vietQRService,
+            IHttpClientFactory httpClientFactory
         )
         {
             CategoryService = new CategoryService(
@@ -43,7 +44,9 @@ namespace BusinessLogic.Services.FacadeService
                 coreDependencies.UnitOfWork,
                 coreDependencies.Mapper,
                 infraDependencies.EmailQueue,
-                vietQRService
+                vietQRService,
+                httpClientFactory,
+                infraDependencies.Configuration
             );
             UserService = new UserService(coreDependencies.UnitOfWork, coreDependencies.Mapper);
             PaymentService = new PaymentService(

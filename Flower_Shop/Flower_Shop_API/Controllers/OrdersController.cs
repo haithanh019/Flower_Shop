@@ -73,6 +73,18 @@ namespace Flower_Shop_API.Controllers
             return Ok(updatedOrder);
         }
 
+        [HttpPost("check-payment/{orderId}")]
+        [AllowAnonymous] // Cho phép gọi mà không cần đăng nhập, vì webhook/polling không có token
+        public async Task<IActionResult> CheckPaymentStatus(Guid orderId)
+        {
+            var result = await _facadeService.OrderService.VerifyVietQRPaymentAsync(orderId);
+            if (result)
+            {
+                return Ok(new { success = true, message = "Payment confirmed." });
+            }
+            return Ok(new { success = false, message = "Payment not yet confirmed." });
+        }
+
         private Guid GetUserIdFromClaims()
         {
             var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;

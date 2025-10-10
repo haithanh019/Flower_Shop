@@ -225,6 +225,28 @@ namespace FlowerShop_WebApp.Controllers
             return NotFound();
         }
 
+        [HttpPost]
+        public async Task<IActionResult> CheckPaymentStatus(Guid orderId)
+        {
+            var client = await CreateApiClientAsync();
+
+            // Gọi đến endpoint kiểm tra của API
+            // API yêu cầu phương thức POST, chúng ta không cần gửi body nên để là null
+            var response = await client.PostAsync($"api/orders/check-payment/{orderId}", null);
+
+            if (response.IsSuccessStatusCode)
+            {
+                // Đọc kết quả JSON từ API ({ "success": true/false })
+                var jsonString = await response.Content.ReadAsStringAsync();
+
+                // Trả thẳng kết quả JSON này về cho JavaScript ở Front-end
+                return Content(jsonString, "application/json");
+            }
+
+            // Nếu gọi API thất bại, trả về trạng thái chưa thành công
+            return Json(new { success = false, message = "Error calling API to check status." });
+        }
+
         // Helper method để tạo HttpClient đã đính kèm JWT Token
         private Task<HttpClient> CreateApiClientAsync()
         {

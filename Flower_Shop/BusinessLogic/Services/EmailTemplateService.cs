@@ -47,15 +47,38 @@ namespace BusinessLogic.Services
         }
         #endregion
 
-        #region Order Confirmation Email
-        public static string OrderConfirmationEmail(Order order, User user)
-        {
-            var title = $"Xác nhận đơn hàng #{order.OrderNumber}";
+        #region Email Templates
 
+        public static string PaymentSuccessEmail(Order order, User user)
+        {
+            var title = $"Thanh toán thành công đơn hàng #{order.OrderNumber}";
+            var content =
+                $@"
+                <p>Xin chào <strong>{user.FullName}</strong>,</p>
+                <p>Cảm ơn bạn! FlowerShop đã xác nhận thanh toán thành công cho đơn hàng của bạn. Chúng tôi đang tiến hành chuẩn bị đơn hàng và sẽ giao đến bạn trong thời gian sớm nhất.</p>
+                {BuildOrderDetailsHtml(order)}
+                <p>Trân trọng,<br>Đội ngũ FlowerShop</p>";
+
+            return BuildBaseEmail(title, content);
+        }
+
+        public static string OrderConfirmedEmail(Order order, User user)
+        {
+            var title = $"Đơn hàng #{order.OrderNumber} đã được xác nhận";
+            var content =
+                $@"
+                <p>Xin chào <strong>{user.FullName}</strong>,</p>
+                <p>Đơn hàng của bạn đã được xác nhận và đang trong quá trình chuẩn bị. Vui lòng chuẩn bị số tiền <strong>{order.TotalAmount:N0} VND</strong> để thanh toán khi nhận hàng.</p>
+                {BuildOrderDetailsHtml(order)}
+                <p>Trân trọng,<br>Đội ngũ FlowerShop</p>";
+            return BuildBaseEmail(title, content);
+        }
+
+        private static string BuildOrderDetailsHtml(Order order)
+        {
             var itemsHtml = new StringBuilder();
             foreach (var item in order.Items)
             {
-                // Giả định rằng 'item.Product' đã được include khi lấy dữ liệu 'order'
                 var productName = item.Product?.Name ?? "Sản phẩm không xác định";
                 itemsHtml.Append(
                     $@"
@@ -68,11 +91,7 @@ namespace BusinessLogic.Services
                 );
             }
 
-            var content =
-                $@"
-                <p>Xin chào <strong>{user.FullName}</strong>,</p>
-                <p>Cảm ơn bạn đã tin tưởng và đặt hàng tại FlowerShop. Chúng tôi đã nhận được đơn hàng của bạn và sẽ xử lý trong thời gian sớm nhất.</p>
-                
+            return $@"
                 <h3 style='border-bottom: 2px solid #ffc0cb; padding-bottom: 5px; margin-top: 25px;'>Chi tiết đơn hàng</h3>
                 <p><strong>Mã đơn hàng:</strong> #{order.OrderNumber}</p>
                 <p><strong>Ngày đặt:</strong> {order.CreatedAt:dd/MM/yyyy}</p>
@@ -94,13 +113,9 @@ namespace BusinessLogic.Services
                             <td style='padding: 12px; border: 1px solid #eee; text-align: right;'>{order.TotalAmount:N0} VND</td>
                         </tr>
                     </tbody>
-                </table>
-
-                <p style='margin-top: 25px;'>Chúng tôi sẽ thông báo cho bạn khi đơn hàng bắt đầu được giao. Cảm ơn bạn một lần nữa!</p>
-                <p>Trân trọng,<br>Đội ngũ FlowerShop</p>";
-
-            return BuildBaseEmail(title, content);
+                </table>";
         }
+
         #endregion
     }
 }
