@@ -57,7 +57,7 @@ namespace BusinessLogic.Services
             OrderCreateRequest request
         )
         {
-            // 1. Lấy giỏ hàng của người dùng
+            // 1. Lấy giỏ hàng của người dùng (giữ nguyên)
             var cart = await _unitOfWork.Cart.GetAsync(c => c.UserId == userId, "Items.Product");
             if (cart == null || !cart.Items.Any())
             {
@@ -66,18 +66,33 @@ namespace BusinessLogic.Services
                 );
             }
 
-            var user = await _unitOfWork.User.GetAsync(u => u.UserId == userId);
-            if (user == null)
+            // --- BẮT ĐẦU CẬP NHẬT LOGIC ---
+
+            // 1.1 Lấy địa chỉ từ AddressId
+            var address = await _unitOfWork.Address.GetAsync(a =>
+                a.AddressId == request.AddressId && a.UserId == userId
+            );
+            if (address == null)
             {
-                throw new KeyNotFoundException("User not found.");
+                throw new CustomValidationException(
+                    new Dictionary<string, string[]>
+                    {
+                        { "AddressId", new[] { "Invalid or unauthorized address." } },
+                    }
+                );
             }
+            // Tạo chuỗi địa chỉ đầy đủ từ đối tượng address
+            var fullShippingAddress =
+                $"{address.Detail}, {address.Ward}, {address.District}, {address.City}";
+
+            // --- KẾT THÚC CẬP NHẬT LOGIC ---
 
             // 2. Tạo đối tượng Order và OrderItems
             var newOrder = new Order
             {
                 UserId = userId,
                 PhoneNumber = request.ShippingPhoneNumber,
-                ShippingAddress = request.ShippingAddress,
+                ShippingAddress = fullShippingAddress, // Sử dụng chuỗi địa chỉ vừa tạo
                 Status = OrderStatus.Pending,
                 OrderNumber = Guid.NewGuid().ToString("N").Substring(0, 8).ToUpper(),
             };
@@ -91,7 +106,6 @@ namespace BusinessLogic.Services
                         $"Product details missing for cart item {cartItem.CartItemId}."
                     );
                 }
-                // Kiểm tra số lượng tồn kho
                 if (cartItem.Product.StockQuantity < cartItem.Quantity)
                 {
                     throw new CustomValidationException(
@@ -108,7 +122,6 @@ namespace BusinessLogic.Services
                     );
                 }
 
-                // Trừ số lượng tồn kho
                 cartItem.Product.StockQuantity -= cartItem.Quantity;
 
                 var orderItem = new OrderItem
@@ -123,7 +136,7 @@ namespace BusinessLogic.Services
             }
 
             newOrder.Subtotal = subtotal;
-            newOrder.TotalAmount = subtotal; // Tạm thời chưa có phí ship/giảm giá
+            newOrder.TotalAmount = subtotal;
 
             await _unitOfWork.Order.AddAsync(newOrder);
 
@@ -140,7 +153,7 @@ namespace BusinessLogic.Services
             // 4. Xóa các sản phẩm trong giỏ hàng
             _unitOfWork.CartItem.RemoveRange(cart.Items);
 
-            // 5. Lưu tất cả thay đổi vào database trong một transaction
+            // 5. Lưu tất cả thay đổi
             await _unitOfWork.SaveAsync();
 
             return _mapper.Map<OrderDto>(newOrder);

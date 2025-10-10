@@ -17,7 +17,7 @@ public class OrderCreateRequest
     public required string ShippingPhoneNumber { get; set; }
 
     [Required]
-    public required string ShippingAddress { get; set; }
+    public Guid AddressId { get; set; }
     public List<OrderItemCreateLine>? Items { get; set; }
 }
 

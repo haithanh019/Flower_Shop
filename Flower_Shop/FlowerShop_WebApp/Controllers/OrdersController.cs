@@ -3,6 +3,7 @@ using System.Text;
 using System.Text.Json;
 using FlowerShop_WebApp.Models.Cart;
 using FlowerShop_WebApp.Models.Orders;
+using FlowerShop_WebApp.Models.Profile;
 using FlowerShop_WebApp.Models.Shared;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -28,18 +29,14 @@ namespace FlowerShop_WebApp.Controllers
         public async Task<IActionResult> Checkout()
         {
             var client = await CreateApiClientAsync();
+            var cartResponse = await client.GetAsync("api/cart");
 
-            // Lấy thông tin giỏ hàng hiện tại của người dùng
-            var response = await client.GetAsync("api/cart");
-
-            if (!response.IsSuccessStatusCode)
+            if (!cartResponse.IsSuccessStatusCode)
             {
-                // Nếu không lấy được giỏ hàng, có thể giỏ hàng trống, chuyển về trang giỏ hàng để hiển thị thông báo
                 return RedirectToAction("Index", "Cart");
             }
 
-            var jsonString = await response.Content.ReadAsStringAsync();
-            var cart = JsonSerializer.Deserialize<CartViewModel>(jsonString, _jsonOptions);
+            var cart = await cartResponse.Content.ReadFromJsonAsync<CartViewModel>(_jsonOptions);
 
             if (cart == null || !cart.Items.Any())
             {
@@ -47,10 +44,33 @@ namespace FlowerShop_WebApp.Controllers
                 return RedirectToAction("Index", "Cart");
             }
 
+            // Lấy thông tin profile để điền tên và SĐT
+            var profileResponse = await client.GetAsync("api/profile");
+            var userProfile = new CustomerProfileViewModel();
+            if (profileResponse.IsSuccessStatusCode)
+            {
+                userProfile =
+                    await profileResponse.Content.ReadFromJsonAsync<CustomerProfileViewModel>(
+                        _jsonOptions
+                    );
+            }
+
+            // Lấy danh sách địa chỉ đã lưu
+            var addressResponse = await client.GetAsync("api/address");
+            var savedAddresses = new List<AddressViewModel>();
+            if (addressResponse.IsSuccessStatusCode)
+            {
+                savedAddresses = await addressResponse.Content.ReadFromJsonAsync<
+                    List<AddressViewModel>
+                >(_jsonOptions);
+            }
+
             var checkoutViewModel = new CheckoutViewModel
             {
                 Cart = cart,
-                // TODO: Có thể lấy thông tin giao hàng mặc định từ profile người dùng ở đây
+                ShippingFullName = userProfile?.FullName ?? "",
+                ShippingPhoneNumber = userProfile?.PhoneNumber ?? "",
+                SavedAddresses = savedAddresses ?? new List<AddressViewModel>(),
             };
 
             return View(checkoutViewModel);
@@ -62,25 +82,36 @@ namespace FlowerShop_WebApp.Controllers
         {
             var client = await CreateApiClientAsync();
 
-            // Lấy lại thông tin giỏ hàng để đảm bảo dữ liệu nhất quán
-            var cartResponse = await client.GetAsync("api/cart");
-            var cartJsonString = await cartResponse.Content.ReadAsStringAsync();
-            var cart = JsonSerializer.Deserialize<CartViewModel>(cartJsonString, _jsonOptions);
-            model.Cart = cart ?? new CartViewModel();
+            // Nếu không có địa chỉ nào được chọn
+            if (model.SelectedAddressId == Guid.Empty)
+            {
+                ModelState.AddModelError("SelectedAddressId", "Please select a shipping address.");
+            }
 
             if (!ModelState.IsValid)
             {
-                return View("Checkout", model); // Nếu form không hợp lệ, trả về trang checkout với lỗi
+                // Nạp lại dữ liệu cần thiết nếu form không hợp lệ
+                var cartResponse = await client.GetAsync("api/cart");
+                model.Cart =
+                    await cartResponse.Content.ReadFromJsonAsync<CartViewModel>(_jsonOptions)
+                    ?? new CartViewModel();
+
+                var addressResponse = await client.GetAsync("api/address");
+                model.SavedAddresses =
+                    await addressResponse.Content.ReadFromJsonAsync<List<AddressViewModel>>(
+                        _jsonOptions
+                    ) ?? new List<AddressViewModel>();
+
+                return View("Checkout", model);
             }
 
-            // Tạo request body để gửi đến API
             var orderRequest = new
             {
-                CustomerNote = model.CustomerNote,
-                PaymentMethod = model.PaymentMethod,
-                ShippingFullName = model.ShippingFullName,
-                ShippingPhoneNumber = model.ShippingPhoneNumber,
-                ShippingAddress = model.ShippingAddress,
+                model.CustomerNote,
+                model.PaymentMethod,
+                model.ShippingFullName,
+                model.ShippingPhoneNumber,
+                AddressId = model.SelectedAddressId,
             };
 
             var jsonContent = new StringContent(
@@ -88,19 +119,25 @@ namespace FlowerShop_WebApp.Controllers
                 Encoding.UTF8,
                 "application/json"
             );
-
-            // Gọi API để tạo đơn hàng
             var response = await client.PostAsync("api/orders", jsonContent);
 
             if (response.IsSuccessStatusCode)
             {
-                // Nếu thành công, chuyển hướng đến trang lịch sử đơn hàng
-                // TODO: Có thể tạo một trang "Đặt hàng thành công" riêng
                 return RedirectToAction("History");
             }
             else
             {
-                // Nếu API trả về lỗi (ví dụ: hết hàng), hiển thị lỗi cho người dùng
+                // Nạp lại dữ liệu cho view nếu có lỗi từ API
+                var cartResponse = await client.GetAsync("api/cart");
+                model.Cart =
+                    await cartResponse.Content.ReadFromJsonAsync<CartViewModel>(_jsonOptions)
+                    ?? new CartViewModel();
+                var addressResponse = await client.GetAsync("api/address");
+                model.SavedAddresses =
+                    await addressResponse.Content.ReadFromJsonAsync<List<AddressViewModel>>(
+                        _jsonOptions
+                    ) ?? new List<AddressViewModel>();
+
                 ModelState.AddModelError(
                     string.Empty,
                     "An error occurred while placing your order. Please try again."

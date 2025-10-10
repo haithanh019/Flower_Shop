@@ -24,19 +24,34 @@ namespace FlowerShop_WebApp.Controllers
         public async Task<IActionResult> Index()
         {
             var client = CreateApiClient();
-            var response = await client.GetAsync("api/profile");
+            var profileResponse = await client.GetAsync("api/profile");
 
-            if (response.IsSuccessStatusCode)
+            if (!profileResponse.IsSuccessStatusCode)
             {
-                var jsonString = await response.Content.ReadAsStringAsync();
-                var profile = JsonSerializer.Deserialize<CustomerProfileViewModel>(
-                    jsonString,
-                    _jsonOptions
-                );
-                return View(profile);
+                return View(new CustomerProfileViewModel());
             }
 
-            return View(new CustomerProfileViewModel());
+            var profileJsonString = await profileResponse.Content.ReadAsStringAsync();
+            var profile = JsonSerializer.Deserialize<CustomerProfileViewModel>(
+                profileJsonString,
+                _jsonOptions
+            );
+
+            var addressResponse = await client.GetAsync("api/address");
+            if (addressResponse.IsSuccessStatusCode)
+            {
+                var addressJsonString = await addressResponse.Content.ReadAsStringAsync();
+                var addresses = JsonSerializer.Deserialize<List<AddressViewModel>>(
+                    addressJsonString,
+                    _jsonOptions
+                );
+                if (profile != null)
+                {
+                    profile.Addresses = addresses ?? new List<AddressViewModel>();
+                }
+            }
+
+            return View(profile);
         }
 
         [HttpPost]
@@ -44,7 +59,7 @@ namespace FlowerShop_WebApp.Controllers
         {
             if (!ModelState.IsValid)
             {
-                return View("Index", model);
+                return RedirectToAction("Index");
             }
 
             var client = CreateApiClient();
@@ -59,11 +74,12 @@ namespace FlowerShop_WebApp.Controllers
             if (response.IsSuccessStatusCode)
             {
                 TempData["SuccessMessage"] = "Profile updated successfully!";
-                return RedirectToAction("Index");
             }
-
-            TempData["ErrorMessage"] = "Failed to update profile.";
-            return View("Index", model);
+            else
+            {
+                TempData["ErrorMessage"] = "Failed to update profile.";
+            }
+            return RedirectToAction("Index");
         }
 
         public IActionResult ChangePassword()
@@ -97,6 +113,76 @@ namespace FlowerShop_WebApp.Controllers
             TempData["ErrorMessage"] =
                 "Failed to change password. Please check your current password.";
             return View(model);
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> AddAddress(AddressViewModel model)
+        {
+            if (ModelState.IsValid)
+            {
+                var client = CreateApiClient();
+                var jsonContent = new StringContent(
+                    JsonSerializer.Serialize(model),
+                    Encoding.UTF8,
+                    "application/json"
+                );
+
+                var response = await client.PostAsync("api/address", jsonContent);
+
+                if (response.IsSuccessStatusCode)
+                {
+                    TempData["SuccessMessage"] = "Address added successfully!";
+                }
+                else
+                {
+                    TempData["ErrorMessage"] = "Failed to add address.";
+                }
+            }
+            return RedirectToAction("Index");
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> EditAddress(AddressViewModel model)
+        {
+            if (ModelState.IsValid)
+            {
+                var client = CreateApiClient();
+                var jsonContent = new StringContent(
+                    JsonSerializer.Serialize(model),
+                    Encoding.UTF8,
+                    "application/json"
+                );
+
+                var response = await client.PutAsync($"api/address/{model.AddressId}", jsonContent);
+
+                if (response.IsSuccessStatusCode)
+                {
+                    TempData["SuccessMessage"] = "Address updated successfully!";
+                }
+                else
+                {
+                    TempData["ErrorMessage"] = "Failed to update address.";
+                }
+            }
+            return RedirectToAction("Index");
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> DeleteAddress(Guid addressId)
+        {
+            var client = CreateApiClient();
+            var response = await client.DeleteAsync($"api/address/{addressId}");
+
+            if (response.IsSuccessStatusCode)
+            {
+                TempData["SuccessMessage"] = "Address deleted successfully!";
+            }
+            else
+            {
+                TempData["ErrorMessage"] = "Failed to delete address.";
+            }
+
+            return RedirectToAction("Index");
         }
 
         private HttpClient CreateApiClient()

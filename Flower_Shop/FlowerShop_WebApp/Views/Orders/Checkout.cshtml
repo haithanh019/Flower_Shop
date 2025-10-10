@@ -24,11 +24,30 @@
                         <input asp-for="ShippingPhoneNumber" class="form-control" />
                         <span asp-validation-for="ShippingPhoneNumber" class="text-danger"></span>
                     </div>
-                    <div class="mb-3">
-                        <label asp-for="ShippingAddress" class="form-label"></label>
-                        <input asp-for="ShippingAddress" class="form-control" />
-                        <span asp-validation-for="ShippingAddress" class="text-danger"></span>
-                    </div>
+
+                    @if (Model.SavedAddresses.Any())
+                    {
+                        <div class="mb-3">
+                            <label asp-for="SelectedAddressId" class="form-label"></label>
+                            <select asp-for="SelectedAddressId" class="form-select">
+                                <option value="">-- Select a saved address --</option>
+                                @foreach (var address in Model.SavedAddresses)
+                                {
+                                    <option value="@address.AddressId">
+                                        @address.Detail, @address.Ward, @address.District, @address.City
+                                    </option>
+                                }
+                            </select>
+                            <span asp-validation-for="SelectedAddressId" class="text-danger"></span>
+                        </div>
+                    }
+                    else
+                    {
+                        <div class="alert alert-warning">
+                            You have no saved addresses. Please <a asp-controller="Profile" asp-action="Index">go to your profile</a> to add an address first.
+                        </div>
+                    }
+
                     <div class="mb-3">
                         <label asp-for="CustomerNote" class="form-label"></label>
                         <textarea asp-for="CustomerNote" class="form-control" rows="3"></textarea>
@@ -78,7 +97,14 @@
                         </ul>
                     }
                     <div class="d-grid mt-4">
-                        <button type="submit" class="btn btn-primary btn-lg">Place Order</button>
+                        @if (Model.SavedAddresses.Any())
+                        {
+                            <button type="submit" class="btn btn-primary btn-lg">Place Order</button>
+                        }
+                        else
+                        {
+                            <button type="submit" class="btn btn-primary btn-lg" disabled>Place Order</button>
+                        }
                     </div>
                 </div>
             </div>

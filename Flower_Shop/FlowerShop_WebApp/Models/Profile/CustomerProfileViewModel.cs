@@ -17,5 +17,7 @@ namespace FlowerShop_WebApp.Models.Profile
         public string? Address { get; set; }
 
         public DateTime CreatedAt { get; set; }
+
+        public List<AddressViewModel> Addresses { get; set; } = new List<AddressViewModel>();
     }
 }
