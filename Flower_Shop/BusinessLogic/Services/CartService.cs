@@ -8,7 +8,6 @@ using Ultitity.Exceptions;
 
 namespace BusinessLogic.Services
 {
-    // PHIÊN BẢN HOÀN THIỆN CUỐI CÙNG - SỬA LỖI CONCURRENCY
     public class CartService : ICartService
     {
         private readonly IUnitOfWork _unitOfWork;
@@ -60,14 +59,16 @@ namespace BusinessLogic.Services
                             { "Quantity", new[] { "Not enough stock." } },
                         }
                     );
-                cart.Items.Add(
-                    new CartItem
-                    {
-                        ProductId = request.ProductId,
-                        Quantity = request.Quantity,
-                        UnitPrice = product.Price,
-                    }
-                );
+
+                var newCartItem = new CartItem
+                {
+                    CartId = cart.CartId,
+                    ProductId = request.ProductId,
+                    Quantity = request.Quantity,
+                    UnitPrice = product.Price,
+                };
+
+                await _unitOfWork.CartItem.AddAsync(newCartItem);
             }
 
             await _unitOfWork.SaveAsync();
@@ -114,11 +115,8 @@ namespace BusinessLogic.Services
 
         private async Task<Cart> GetOrCreateCartAsync(Guid userId)
         {
-            // Luôn sử dụng AsTracking khi chúng ta có ý định sửa đổi dữ liệu
-            var cart = await _unitOfWork
-                .Cart.GetQueryable("Items")
-                .AsTracking()
-                .FirstOrDefaultAsync(c => c.UserId == userId);
+            // Sử dụng GetAsync để đảm bảo các đối tượng được DbContext theo dõi
+            var cart = await _unitOfWork.Cart.GetAsync(c => c.UserId == userId, "Items");
 
             if (cart == null)
             {
