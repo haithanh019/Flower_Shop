@@ -12,5 +12,6 @@ namespace BusinessLogic.Services.Interfaces
         Task<OrderDto?> GetOrderDetailsAsync(Guid orderId);
 
         Task<OrderDto> UpdateOrderStatusAsync(OrderUpdateStatusRequest request);
+        Task<PagedResultDto<OrderDto>> GetAllOrdersAsync(QueryParameters queryParams);
     }
 }

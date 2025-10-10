@@ -19,6 +19,14 @@ namespace Flower_Shop_API.Controllers
             _facadeService = facadeService;
         }
 
+        [HttpGet("all")] // Route mới cho admin
+        [Authorize(Roles = "Admin")] // Chỉ Admin mới có quyền truy cập
+        public async Task<IActionResult> GetAllOrders([FromQuery] QueryParameters queryParams)
+        {
+            var orders = await _facadeService.OrderService.GetAllOrdersAsync(queryParams);
+            return Ok(orders);
+        }
+
         [HttpPost]
         public async Task<IActionResult> CreateOrder([FromBody] OrderCreateRequest request)
         {

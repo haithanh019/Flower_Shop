@@ -20,6 +20,38 @@ namespace BusinessLogic.Services
             _mapper = mapper;
         }
 
+        // Thêm phương thức này vào lớp OrderService
+        public async Task<PagedResultDto<OrderDto>> GetAllOrdersAsync(QueryParameters queryParams)
+        {
+            var query = _unitOfWork.Order.GetQueryable("Items,Payment,User");
+
+            // Thêm logic lọc theo trạng thái (sử dụng thuộc tính Search)
+            if (!string.IsNullOrEmpty(queryParams.Search))
+            {
+                if (Enum.TryParse<OrderStatus>(queryParams.Search, true, out var status))
+                {
+                    query = query.Where(o => o.Status == status);
+                }
+            }
+
+            query = query.OrderByDescending(o => o.CreatedAt);
+
+            var totalCount = await query.CountAsync();
+            var orders = await query
+                .Skip((queryParams.PageNumber - 1) * queryParams.PageSize)
+                .Take(queryParams.PageSize)
+                .ToListAsync();
+
+            return new PagedResultDto<OrderDto>
+            {
+                Items = _mapper.Map<IEnumerable<OrderDto>>(orders),
+                TotalCount = totalCount,
+                PageNumber = queryParams.PageNumber,
+                PageSize = queryParams.PageSize,
+            };
+        }
+
+        //...
         public async Task<OrderDto> CreateOrderFromCartAsync(
             Guid userId,
             OrderCreateRequest request

@@ -1,5 +1,9 @@
-﻿using System.Net.Http.Headers;
+﻿using System.Collections.Generic;
+using System.Linq;
+using System.Net.Http.Headers;
 using System.Text.Json;
+using System.Threading.Tasks;
+using FlowerShop_WebApp.Models; // Ensure this using directive is present
 using FlowerShop_WebApp.Models.Orders;
 using FlowerShop_WebApp.Models.Shared;
 using Microsoft.AspNetCore.Mvc;
@@ -25,25 +29,55 @@ namespace FlowerShop_WebApp.Areas.Admin.Controllers
         }
 
         // GET: /Admin/Orders
-        public async Task<IActionResult> Index()
+        // GET: /Admin/Orders
+        public async Task<IActionResult> Index(string statusFilter, int pageNumber = 1)
         {
             var client = CreateApiClient();
-            // Lấy tất cả đơn hàng, có thể thêm phân trang sau
-            var response = await client.GetAsync("api/orders?pageSize=100");
+            var pageSize = 10; // Số đơn hàng trên mỗi trang
+
+            var apiUrl = $"api/orders/all?pageNumber={pageNumber}&pageSize={pageSize}";
+            if (!string.IsNullOrEmpty(statusFilter))
+            {
+                apiUrl += $"&search={statusFilter}";
+            }
+
+            var response = await client.GetAsync(apiUrl);
 
             if (response.IsSuccessStatusCode)
             {
                 var pagedResult = await response.Content.ReadFromJsonAsync<
                     PagedResultViewModel<OrderViewModel>
                 >(_jsonOptions);
-                return View(pagedResult?.Items ?? new List<OrderViewModel>());
+
+                // Truyền dữ liệu phân trang và bộ lọc về View
+                ViewBag.CurrentPage = pageNumber;
+                ViewBag.TotalPages = (int)
+                    Math.Ceiling((pagedResult?.TotalCount ?? 0) / (double)pageSize);
+                ViewBag.CurrentStatusFilter = statusFilter;
+
+                // Lấy danh sách trạng thái cho dropdown
+                var enumsResponse = await client.GetAsync("api/utility/enums");
+                if (enumsResponse.IsSuccessStatusCode)
+                {
+                    var enums = await enumsResponse.Content.ReadFromJsonAsync<AllEnumsResponse>(
+                        _jsonOptions
+                    );
+                    ViewBag.OrderStatuses =
+                        enums?.OrderStatus.Select(e => e.Value).ToList() ?? new List<string>();
+                }
+                else
+                {
+                    ViewBag.OrderStatuses = new List<string>();
+                }
+
+                return View(pagedResult); // Truyền cả đối tượng pagedResult về View
             }
 
             _logger.LogError(
                 "Failed to fetch orders from API. Status code: {StatusCode}",
                 response.StatusCode
             );
-            return View(new List<OrderViewModel>());
+            return View(new PagedResultViewModel<OrderViewModel>()); // Trả về model trống
         }
 
         // GET: /Admin/Orders/Details/{id}
@@ -58,16 +92,28 @@ namespace FlowerShop_WebApp.Areas.Admin.Controllers
                 if (order == null)
                     return NotFound();
 
-                // Lấy danh sách các trạng thái đơn hàng để hiển thị dropdown
-                // Giả định bạn có một endpoint để lấy các Enums, nếu không, bạn có thể hard-code
-                ViewBag.OrderStatuses = new List<string>
+                // Lấy danh sách các trạng thái đơn hàng từ API
+                var enumsResponse = await client.GetAsync("api/utility/enums");
+                if (enumsResponse.IsSuccessStatusCode)
                 {
-                    "Pending",
-                    "Confirmed",
-                    "Shipping",
-                    "Completed",
-                    "Cancelled",
-                };
+                    var enums = await enumsResponse.Content.ReadFromJsonAsync<AllEnumsResponse>(
+                        _jsonOptions
+                    );
+                    ViewBag.OrderStatuses =
+                        enums?.OrderStatus.Select(e => e.Value).ToList() ?? new List<string>();
+                }
+                else
+                {
+                    // Fallback to a hard-coded list if the API call fails
+                    ViewBag.OrderStatuses = new List<string>
+                    {
+                        "Pending",
+                        "Confirmed",
+                        "Shipping",
+                        "Completed",
+                        "Cancelled",
+                    };
+                }
 
                 return View(order);
             }
@@ -122,5 +168,21 @@ namespace FlowerShop_WebApp.Areas.Admin.Controllers
             }
             return client;
         }
+    }
+
+    // You might need to add this class if it's not accessible
+    // or referenced from another project
+    public class AllEnumsResponse
+    {
+        public List<EnumDto> OrderStatus { get; set; } = new();
+        public List<EnumDto> PaymentMethod { get; set; } = new();
+        public List<EnumDto> PaymentStatus { get; set; } = new();
+        public List<EnumDto> UserRole { get; set; } = new();
+    }
+
+    public class EnumDto
+    {
+        public string Value { get; set; } = string.Empty;
+        public string DisplayName { get; set; } = string.Empty;
     }
 }

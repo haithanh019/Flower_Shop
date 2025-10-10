@@ -1,34 +1,102 @@
-﻿@model IEnumerable<FlowerShop_WebApp.Models.Orders.OrderViewModel>
+﻿@model PagedResultViewModel<OrderViewModel>
 @{
     ViewData["Title"] = "Manage Orders";
+    var currentPage = (int)ViewBag.CurrentPage;
+    var totalPages = (int)ViewBag.TotalPages;
+    var currentStatusFilter = ViewBag.CurrentStatusFilter as string;
+    var orderStatuses = ViewBag.OrderStatuses as List<string> ?? new List<string>();
+
+    Func<string, string> getStatusBadgeClass = status => status switch
+    {
+        "Pending" => "bg-warning text-dark",
+        "Confirmed" => "bg-info text-dark",
+        "Shipping" => "bg-primary",
+        "Completed" => "bg-success",
+        "Cancelled" => "bg-danger",
+        _ => "bg-secondary"
+    };
 }
 
-<h1>@ViewData["Title"]</h1>
+<div class="d-flex justify-content-between align-items-center pt-3 pb-2 mb-3 border-bottom">
+    <h1 class="h2"><i class="fas fa-receipt me-2"></i>@ViewData["Title"]</h1>
+</div>
 
-<table class="table table-striped table-bordered">
-    <thead class="table-light">
-        <tr>
-            <th>Order ID</th>
-            <th>Customer Email</th>
-            <th>Date</th>
-            <th>Total</th>
-            <th>Status</th>
-            <th></th>
-        </tr>
-    </thead>
-    <tbody>
-        @foreach (var order in Model)
-        {
-            <tr>
-                <td><code>#@order.OrderId.ToString().Substring(0, 8)</code></td>
-                <td>@order.CustomerEmail</td>
-                <td>@order.CreatedAt.ToString("g")</td>
-                <td>@order.Total.ToString("N0") VND</td>
-                <td><span class="badge bg-info text-dark rounded-pill">@order.Status</span></td>
-                <td>
-                    <a asp-action="Details" asp-route-id="@order.OrderId" class="btn btn-sm btn-outline-primary">View Details</a>
-                </td>
-            </tr>
-        }
-    </tbody>
-</table>
+<div class="card shadow-sm">
+    <div class="card-header">
+        <form asp-action="Index" method="get" class="d-flex justify-content-end">
+            <div class="input-group w-50">
+                <select name="statusFilter" class="form-select" onchange="this.form.submit()">
+                    <option value="">-- Filter by Status --</option>
+                    @foreach (var status in orderStatuses)
+                    {
+                        <option value="@status" selected="@(status == currentStatusFilter)">@status</option>
+                    }
+                </select>
+                <a asp-action="Index" class="btn btn-outline-secondary" title="Clear Filter"><i class="fas fa-times"></i></a>
+            </div>
+        </form>
+    </div>
+    <div class="card-body">
+        <table class="table table-striped table-hover">
+            <thead class="table-light">
+                <tr>
+                    <th>Order ID</th>
+                    <th>Customer Email</th>
+                    <th>Date</th>
+                    <th>Total</th>
+                    <th>Status</th>
+                    <th></th>
+                </tr>
+            </thead>
+            <tbody>
+                @if (Model.Items.Any())
+                {
+                    @foreach (var order in Model.Items)
+                    {
+                        <tr>
+                            <td><code>#@order.OrderId.ToString().Substring(0, 8)</code></td>
+                            <td>@order.CustomerEmail</td>
+                            <td>@order.CreatedAt.ToString("g")</td>
+                            <td>@order.Total.ToString("N0") VND</td>
+                            <td><span class="badge @getStatusBadgeClass(order.Status) rounded-pill">@order.Status</span></td>
+                            <td class="text-end">
+                                <a asp-action="Details" asp-route-id="@order.OrderId" class="btn btn-sm btn-outline-primary">View Details</a>
+                            </td>
+                        </tr>
+                    }
+                }
+                else
+                {
+                    <tr><td colspan="6" class="text-center">No orders found.</td></tr>
+                }
+            </tbody>
+        </table>
+    </div>
+    @if (totalPages > 1)
+    {
+        <div class="card-footer">
+            <nav>
+                <ul class="pagination justify-content-center mb-0">
+                    <li class="page-item @(currentPage == 1 ? "disabled" : "")">
+                        <a class="page-link" asp-action="Index" asp-route-pageNumber="1" asp-route-statusFilter="@currentStatusFilter">First</a>
+                    </li>
+                    <li class="page-item @(currentPage == 1 ? "disabled" : "")">
+                        <a class="page-link" asp-action="Index" asp-route-pageNumber="@(currentPage - 1)" asp-route-statusFilter="@currentStatusFilter">Previous</a>
+                    </li>
+                    @for (int i = 1; i <= totalPages; i++)
+                    {
+                        <li class="page-item @(i == currentPage ? "active" : "")">
+                            <a class="page-link" asp-action="Index" asp-route-pageNumber="@i" asp-route-statusFilter="@currentStatusFilter">@i</a>
+                        </li>
+                    }
+                    <li class="page-item @(currentPage == totalPages ? "disabled" : "")">
+                        <a class="page-link" asp-action="Index" asp-route-pageNumber="@(currentPage + 1)" asp-route-statusFilter="@currentStatusFilter">Next</a>
+                    </li>
+                    <li class="page-item @(currentPage == totalPages ? "disabled" : "")">
+                        <a class="page-link" asp-action="Index" asp-route-pageNumber="@totalPages" asp-route-statusFilter="@currentStatusFilter">Last</a>
+                    </li>
+                </ul>
+            </nav>
+        </div>
+    }
+</div>

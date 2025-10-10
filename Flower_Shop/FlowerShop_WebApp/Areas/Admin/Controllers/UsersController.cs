@@ -25,16 +25,28 @@ namespace FlowerShop_WebApp.Areas.Admin.Controllers
         }
 
         // GET: /Admin/Users
-        public async Task<IActionResult> Index()
+        public async Task<IActionResult> Index(string searchString)
         {
             var client = CreateApiClient();
-            var response = await client.GetAsync("api/users?pageSize=100");
+
+            // Xây dựng URL động để bao gồm cả từ khóa tìm kiếm nếu có
+            var apiUrl = "api/users?pageSize=100";
+            if (!string.IsNullOrEmpty(searchString))
+            {
+                apiUrl += $"&search={searchString}";
+            }
+
+            var response = await client.GetAsync(apiUrl);
 
             if (response.IsSuccessStatusCode)
             {
                 var pagedResult = await response.Content.ReadFromJsonAsync<
                     PagedResultViewModel<UserViewModel>
                 >(_jsonOptions);
+
+                // Gửi lại từ khóa tìm kiếm về view
+                ViewBag.CurrentFilter = searchString;
+
                 return View(pagedResult?.Items ?? new List<UserViewModel>());
             }
 
