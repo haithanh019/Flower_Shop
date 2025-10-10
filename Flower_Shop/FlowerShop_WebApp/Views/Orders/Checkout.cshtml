@@ -53,18 +53,18 @@
                         <textarea asp-for="CustomerNote" class="form-control" rows="3"></textarea>
                     </div>
 
-                    <h4 class="mt-4">Payment Method</h4>
+                    <h4 class="mt-4">Phương thức thanh toán</h4>
                     <hr />
                     <div class="form-check">
                         <input class="form-check-input" type="radio" asp-for="PaymentMethod" value="CashOnDelivery" id="cod" checked>
                         <label class="form-check-label" for="cod">
-                            Cash on Delivery (COD)
+                            Thanh toán khi nhận hàng (COD)
                         </label>
                     </div>
                     <div class="form-check">
-                        <input class="form-check-input" type="radio" asp-for="PaymentMethod" value="VNPay" id="vnpay">
-                        <label class="form-check-label" for="vnpay">
-                            VNPay Gateway
+                        <input class="form-check-input" type="radio" asp-for="PaymentMethod" value="VietQR" id="vietqr">
+                        <label class="form-check-label" for="vietqr">
+                            Thanh toán bằng VietQR
                         </label>
                     </div>
                     <span asp-validation-for="PaymentMethod" class="text-danger"></span>

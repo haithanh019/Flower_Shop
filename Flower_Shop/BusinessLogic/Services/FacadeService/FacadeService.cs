@@ -20,7 +20,8 @@ namespace BusinessLogic.Services.FacadeService
         public FacadeService(
             CoreDependencies coreDependencies,
             InfraDependencies infraDependencies,
-            IOptions<JwtOptions> jwtOptions
+            IOptions<JwtOptions> jwtOptions,
+            IVietQRService vietQRService
         )
         {
             CategoryService = new CategoryService(
@@ -41,7 +42,8 @@ namespace BusinessLogic.Services.FacadeService
             OrderService = new OrderService(
                 coreDependencies.UnitOfWork,
                 coreDependencies.Mapper,
-                infraDependencies.EmailQueue
+                infraDependencies.EmailQueue,
+                vietQRService
             );
             UserService = new UserService(coreDependencies.UnitOfWork, coreDependencies.Mapper);
             PaymentService = new PaymentService(

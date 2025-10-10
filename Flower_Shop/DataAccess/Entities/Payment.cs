@@ -18,8 +18,6 @@ namespace DataAccess.Entities
         [Precision(18, 2)]
         public decimal Amount { get; set; }
         public DateTime? PaidAt { get; set; }
-
-        [MaxLength(100)]
         public string? TransactionId { get; set; }
     }
 
@@ -28,8 +26,8 @@ namespace DataAccess.Entities
         [Display(Name = "CashOnDelivery")]
         CashOnDelivery = 0,
 
-        [Display(Name = "VNPay")]
-        VNPay = 1,
+        [Display(Name = "VietQR")]
+        VietQR = 1,
     }
 
     public enum PaymentStatus

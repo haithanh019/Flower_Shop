@@ -15,7 +15,7 @@
         public string? PaymentMethod { get; set; }
         public DateTime? PaymentDate { get; set; }
 
-        // Thêm thuộc tính ShippingAddress
+        public string? TransactionId { get; set; }
         public string? ShippingAddress { get; set; }
     }
 }

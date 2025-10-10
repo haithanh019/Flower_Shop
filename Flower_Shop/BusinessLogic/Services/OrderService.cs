@@ -15,12 +15,19 @@ namespace BusinessLogic.Services
         private readonly IUnitOfWork _unitOfWork;
         private readonly IMapper _mapper;
         private readonly IEmailQueue _emailQueue;
+        private readonly IVietQRService _vietQRService;
 
-        public OrderService(IUnitOfWork unitOfWork, IMapper mapper, IEmailQueue emailQueue)
+        public OrderService(
+            IUnitOfWork unitOfWork,
+            IMapper mapper,
+            IEmailQueue emailQueue,
+            IVietQRService vietQRService
+        )
         {
             _unitOfWork = unitOfWork;
             _mapper = mapper;
             _emailQueue = emailQueue;
+            _vietQRService = vietQRService;
         }
 
         // Thêm phương thức này vào lớp OrderService
@@ -162,19 +169,31 @@ namespace BusinessLogic.Services
             // 6. Gửi email xác nhận sau khi đã lưu thành công
             var createdOrder = await _unitOfWork.Order.GetAsync(
                 o => o.OrderId == newOrder.OrderId,
-                includeProperties: "Items.Product,User" // Nạp lại đầy đủ thông tin
+                includeProperties: "Items.Product,User,Payment" // Nạp lại đầy đủ thông tin
             );
 
-            if (createdOrder != null && createdOrder.User != null)
+            if (createdOrder != null)
             {
-                var subject = $"[FlowerShop] Xác nhận đơn hàng #{createdOrder.OrderNumber}";
-                var htmlMessage = EmailTemplateService.OrderConfirmationEmail(
-                    createdOrder,
-                    createdOrder.User
-                );
-                _emailQueue.QueueEmail(createdOrder.User.Email, subject, htmlMessage);
-            }
+                if (createdOrder.Payment?.Method == PaymentMethod.VietQR)
+                {
+                    var qrDataURL = await _vietQRService.GenerateQRCode(createdOrder);
+                    if (!string.IsNullOrEmpty(qrDataURL) && createdOrder.Payment != null)
+                    {
+                        createdOrder.Payment.TransactionId = qrDataURL;
+                        await _unitOfWork.SaveAsync();
+                    }
+                }
 
+                if (createdOrder.User != null)
+                {
+                    var subject = $"[FlowerShop] Xác nhận đơn hàng #{createdOrder.OrderNumber}";
+                    var htmlMessage = EmailTemplateService.OrderConfirmationEmail(
+                        createdOrder,
+                        createdOrder.User
+                    );
+                    _emailQueue.QueueEmail(createdOrder.User.Email, subject, htmlMessage);
+                }
+            }
             // 7. Trả về kết quả
             return _mapper.Map<OrderDto>(newOrder);
         }

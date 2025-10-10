@@ -130,6 +130,22 @@ namespace FlowerShop_WebApp.Controllers
 
             if (response.IsSuccessStatusCode)
             {
+                var jsonString = await response.Content.ReadAsStringAsync();
+                var createdOrder = JsonSerializer.Deserialize<OrderViewModel>(
+                    jsonString,
+                    _jsonOptions
+                );
+
+                if (
+                    model.PaymentMethod.Equals("VietQR", StringComparison.OrdinalIgnoreCase)
+                    && createdOrder != null
+                )
+                {
+                    return RedirectToAction(
+                        "AwaitingPayment",
+                        new { orderId = createdOrder.OrderId }
+                    );
+                }
                 return RedirectToAction("History");
             }
             else
@@ -151,6 +167,25 @@ namespace FlowerShop_WebApp.Controllers
                 );
                 return View("Checkout", model);
             }
+        }
+
+        [HttpGet]
+        public async Task<IActionResult> AwaitingPayment(Guid orderId)
+        {
+            var client = await CreateApiClientAsync();
+            var response = await client.GetAsync($"api/orders/{orderId}");
+
+            if (response.IsSuccessStatusCode)
+            {
+                var order = await response.Content.ReadFromJsonAsync<OrderViewModel>(_jsonOptions);
+                if (order == null)
+                    return NotFound();
+
+                // Đổi tên view để phù hợp
+                return View("PaymentPage", order);
+            }
+
+            return NotFound();
         }
 
         // TODO: Action History() để xem lịch sử đơn hàng

@@ -1,6 +1,8 @@
 ﻿using System.Text;
 using BusinessLogic.Mapping;
+using BusinessLogic.Services;
 using BusinessLogic.Services.FacadeService;
+using BusinessLogic.Services.Interfaces;
 using DataAccess.Data;
 using DataAccess.UnitOfWork;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
@@ -76,6 +78,7 @@ namespace Flower_Shop_API
             builder.Services.AddSingleton<EmailSender>();
             builder.Services.AddHostedService<BackgroundEmailSender>();
             builder.Services.AddSingleton<IEmailQueue, EmailQueue>();
+            builder.Services.AddScoped<IVietQRService, VietQRService>();
 
             // LLM client
             builder.Services.AddHttpClient<IGroqClient, GroqClient>(client =>
