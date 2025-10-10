@@ -78,6 +78,7 @@ namespace Flower_Shop_API
             builder.Services.AddSingleton<EmailSender>();
             builder.Services.AddHostedService<BackgroundEmailSender>();
             builder.Services.AddSingleton<IEmailQueue, EmailQueue>();
+            builder.Services.AddScoped<IPayOSService, PayOSService>();
             builder.Services.AddScoped<IVietQRService, VietQRService>();
 
             // LLM client
@@ -91,6 +92,7 @@ namespace Flower_Shop_API
             });
 
             builder.Services.AddDistributedMemoryCache();
+            builder.WebHost.UseUrls("http://*:5035", "https://*:7260");
             var app = builder.Build();
 
             // Configure the HTTP request pipeline.

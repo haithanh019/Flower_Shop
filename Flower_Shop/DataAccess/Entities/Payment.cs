@@ -26,8 +26,8 @@ namespace DataAccess.Entities
         [Display(Name = "CashOnDelivery")]
         CashOnDelivery = 0,
 
-        [Display(Name = "VietQR")]
-        VietQR = 1,
+        [Display(Name = "PayOS")]
+        PayOS = 1,
     }
 
     public enum PaymentStatus

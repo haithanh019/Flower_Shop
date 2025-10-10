@@ -9,6 +9,7 @@ using DataAccess.UnitOfWork;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
+using Net.payOS.Types;
 using Ultitity.Email.Interface;
 using Ultitity.Exceptions;
 
@@ -19,7 +20,7 @@ namespace BusinessLogic.Services
         private readonly IUnitOfWork _unitOfWork;
         private readonly IMapper _mapper;
         private readonly IEmailQueue _emailQueue;
-        private readonly IVietQRService _vietQRService;
+        private readonly IPayOSService _payOSService;
         private readonly IHttpClientFactory _httpClientFactory;
         private readonly IConfiguration _configuration;
         private readonly ILogger<OrderService> _logger; // Thêm logger
@@ -29,7 +30,7 @@ namespace BusinessLogic.Services
             IUnitOfWork unitOfWork,
             IMapper mapper,
             IEmailQueue emailQueue,
-            IVietQRService vietQRService,
+            IPayOSService payOSService, // Thay đổi
             IHttpClientFactory httpClientFactory,
             IConfiguration configuration,
             ILogger<OrderService> logger // Thêm logger
@@ -38,7 +39,7 @@ namespace BusinessLogic.Services
             _unitOfWork = unitOfWork;
             _mapper = mapper;
             _emailQueue = emailQueue;
-            _vietQRService = vietQRService;
+            _payOSService = payOSService; // Thay đổi
             _httpClientFactory = httpClientFactory;
             _configuration = configuration;
             _logger = logger; // Gán logger
@@ -166,12 +167,12 @@ namespace BusinessLogic.Services
                 includeProperties: "Payment"
             );
 
-            if (createdOrder?.Payment?.Method == PaymentMethod.VietQR)
+            if (createdOrder?.Payment?.Method == PaymentMethod.PayOS)
             {
-                var qrDataURL = await _vietQRService.GenerateQRCode(createdOrder);
-                if (!string.IsNullOrEmpty(qrDataURL) && createdOrder.Payment != null)
+                var paymentResult = await _payOSService.CreatePaymentLink(createdOrder);
+                if (paymentResult != null && createdOrder.Payment != null)
                 {
-                    createdOrder.Payment.TransactionId = qrDataURL;
+                    createdOrder.Payment.TransactionId = paymentResult.checkoutUrl;
                     await _unitOfWork.SaveAsync();
                 }
             }
@@ -229,10 +230,9 @@ namespace BusinessLogic.Services
                 var oldStatus = orderToUpdate.Status;
                 if (newStatus == OrderStatus.Confirmed && oldStatus != OrderStatus.Confirmed)
                 {
-                    // Chỉ gửi mail cho các trường hợp không phải VietQR ở đây
                     if (
                         orderToUpdate.User != null
-                        && orderToUpdate.Payment?.Method != PaymentMethod.VietQR
+                        && orderToUpdate.Payment?.Method != PaymentMethod.PayOS
                     )
                     {
                         var subject =
@@ -260,113 +260,44 @@ namespace BusinessLogic.Services
             return _mapper.Map<OrderDto>(orderToUpdate);
         }
 
-        public async Task<bool> VerifyVietQRPaymentAsync(Guid orderId)
+        public async Task HandlePayOSWebhook(WebhookData data)
         {
-            var order = await _unitOfWork.Order.GetAsync(o => o.OrderId == orderId, "Payment,User");
-
-            // Nếu đơn hàng không tồn tại hoặc đã được xác nhận (hoặc thanh toán đã xong) thì không cần xử lý nữa
-            if (
-                order == null
-                || order.Status == OrderStatus.Confirmed
-                || order.Payment?.Status == PaymentStatus.Accepted
-            )
-            {
-                // Trả về true để client biết rằng thanh toán đã hoàn tất và dừng polling.
-                return true;
-            }
-
-            var client = _httpClientFactory.CreateClient();
-            var apiUrl = _configuration["VietQR:ApiUrl"] + "transactions";
-            var request = new HttpRequestMessage(HttpMethod.Post, apiUrl);
-            request.Headers.Add("x-client-id", _configuration["VietQR:ClientId"]);
-            request.Headers.Add("x-api-key", _configuration["VietQR:ApiKey"]);
-            var payload = new
-            {
-                accountNo = _configuration["VietQR:AccountNumber"],
-                acqId = _configuration["VietQR:BankBin"],
-            };
-            request.Content = new StringContent(
-                JsonSerializer.Serialize(payload),
-                Encoding.UTF8,
-                "application/json"
+            var order = await _unitOfWork.Order.GetAsync(
+                o => o.OrderId.GetHashCode() == data.orderCode,
+                "Payment,User"
             );
 
-            var response = await client.SendAsync(request);
-            if (!response.IsSuccessStatusCode)
+            if (order != null && order.Payment?.Status != PaymentStatus.Accepted)
             {
-                _logger.LogError(
-                    "Failed to fetch transactions from VietQR API. Status: {StatusCode}",
-                    response.StatusCode
-                );
-                return false;
-            }
-
-            var jsonString = await response.Content.ReadAsStringAsync();
-            using var doc = JsonDocument.Parse(jsonString);
-
-            if (!doc.RootElement.TryGetProperty("data", out var transactions))
-            {
-                _logger.LogWarning("VietQR transaction response does not contain 'data' property.");
-                return false;
-            }
-
-            foreach (var transaction in transactions.EnumerateArray())
-            {
-                var amount = transaction.GetProperty("amount").GetInt32();
-                var description = transaction.GetProperty("description").GetString() ?? "";
-
                 _logger.LogInformation(
-                    "Checking transaction: Amount='{Amount}', Description='{Description}' for OrderNumber='{OrderNumber}'",
-                    amount,
-                    description,
-                    order.OrderNumber
+                    "Webhook received for Order ID {OrderId}. Updating status to Confirmed/Accepted.",
+                    order.OrderId
                 );
 
-                // --- SỬA LỖI LOGIC TẠI ĐÂY ---
-                if (
-                    amount == (int)order.TotalAmount
-                    && description.Equals(order.OrderNumber, StringComparison.OrdinalIgnoreCase)
-                )
+                order.Status = OrderStatus.Confirmed;
+                if (order.Payment != null)
                 {
-                    _logger.LogInformation(
-                        "Payment match found for Order ID {OrderId}. Updating status.",
-                        order.OrderId
-                    );
-
-                    // 1. Cập nhật trạng thái Order
-                    order.Status = OrderStatus.Confirmed;
-
-                    // 2. Cập nhật trạng thái Payment
-                    if (order.Payment != null)
-                    {
-                        order.Payment.Status = PaymentStatus.Accepted;
-                        order.Payment.PaidAt = DateTime.UtcNow;
-                    }
-
-                    // 3. Gửi email xác nhận thanh toán thành công
-                    if (order.User != null)
-                    {
-                        var subject =
-                            $"[FlowerShop] Thanh toán thành công cho đơn hàng #{order.OrderNumber}";
-                        var htmlMessage = EmailTemplateService.PaymentSuccessEmail(
-                            order,
-                            order.User
-                        );
-                        _emailQueue.QueueEmail(order.User.Email, subject, htmlMessage);
-                        _logger.LogInformation(
-                            "Queued payment success email for Order ID {OrderId} to {Email}",
-                            order.OrderId,
-                            order.User.Email
-                        );
-                    }
-
-                    // 4. Lưu tất cả thay đổi vào CSDL
-                    await _unitOfWork.SaveAsync();
-
-                    return true; // Tìm thấy, đã xử lý, trả về true
+                    order.Payment.Status = PaymentStatus.Accepted;
+                    order.Payment.PaidAt = DateTime.UtcNow;
                 }
+
+                if (order.User != null)
+                {
+                    var subject =
+                        $"[FlowerShop] Thanh toán thành công cho đơn hàng #{order.OrderNumber}";
+                    var htmlMessage = EmailTemplateService.PaymentSuccessEmail(order, order.User);
+                    _emailQueue.QueueEmail(order.User.Email, subject, htmlMessage);
+                }
+
+                await _unitOfWork.SaveAsync();
             }
-            return false; // Không tìm thấy giao dịch khớp
+            else
+            {
+                _logger.LogWarning(
+                    "Webhook received but no matching order found or order already processed for orderCode {orderCode}",
+                    data.orderCode
+                );
+            }
         }
     }
 }

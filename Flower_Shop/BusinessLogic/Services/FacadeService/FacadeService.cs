@@ -17,11 +17,13 @@ namespace BusinessLogic.Services.FacadeService
         public IUtilityService UtilityService { get; }
         public IDashboardService DashboardService { get; }
         public IAddressService AddressService { get; }
+        public IPayOSService PayOSService { get; }
 
         public FacadeService(
             CoreDependencies coreDependencies,
             InfraDependencies infraDependencies,
             IOptions<JwtOptions> jwtOptions,
+            IPayOSService payOSService,
             IVietQRService vietQRService,
             IHttpClientFactory httpClientFactory,
             ILogger<OrderService> logger
@@ -42,11 +44,12 @@ namespace BusinessLogic.Services.FacadeService
                 tokenService
             );
             CartService = new CartService(coreDependencies.UnitOfWork, coreDependencies.Mapper);
+            PayOSService = payOSService;
             OrderService = new OrderService(
                 coreDependencies.UnitOfWork,
                 coreDependencies.Mapper,
                 infraDependencies.EmailQueue,
-                vietQRService,
+                payOSService,
                 httpClientFactory,
                 infraDependencies.Configuration,
                 logger

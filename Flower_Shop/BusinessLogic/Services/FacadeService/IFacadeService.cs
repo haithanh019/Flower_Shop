@@ -14,5 +14,6 @@ namespace BusinessLogic.Services.FacadeService
         IUtilityService UtilityService { get; }
         IDashboardService DashboardService { get; }
         IAddressService AddressService { get; }
+        IPayOSService PayOSService { get; }
     }
 }

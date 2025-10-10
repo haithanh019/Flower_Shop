@@ -135,17 +135,15 @@ namespace FlowerShop_WebApp.Controllers
                     jsonString,
                     _jsonOptions
                 );
-
                 if (
-                    model.PaymentMethod.Equals("VietQR", StringComparison.OrdinalIgnoreCase)
+                    model.PaymentMethod.Equals("PayOS", StringComparison.OrdinalIgnoreCase)
                     && createdOrder != null
+                    && !string.IsNullOrEmpty(createdOrder.TransactionId)
                 )
                 {
-                    return RedirectToAction(
-                        "AwaitingPayment",
-                        new { orderId = createdOrder.OrderId }
-                    );
+                    return Redirect(createdOrder.TransactionId);
                 }
+
                 return RedirectToAction("History");
             }
             else
@@ -167,25 +165,6 @@ namespace FlowerShop_WebApp.Controllers
                 );
                 return View("Checkout", model);
             }
-        }
-
-        [HttpGet]
-        public async Task<IActionResult> AwaitingPayment(Guid orderId)
-        {
-            var client = await CreateApiClientAsync();
-            var response = await client.GetAsync($"api/orders/{orderId}");
-
-            if (response.IsSuccessStatusCode)
-            {
-                var order = await response.Content.ReadFromJsonAsync<OrderViewModel>(_jsonOptions);
-                if (order == null)
-                    return NotFound();
-
-                // Đổi tên view để phù hợp
-                return View("PaymentPage", order);
-            }
-
-            return NotFound();
         }
 
         // TODO: Action History() để xem lịch sử đơn hàng
@@ -225,28 +204,18 @@ namespace FlowerShop_WebApp.Controllers
             return NotFound();
         }
 
-        [HttpPost]
-        // --- SỬA LỖI TẠI ĐÂY ---
-        // Đổi tên tham số từ "orderId" thành "id" để khớp với routing mặc định
-        public async Task<IActionResult> CheckPaymentStatus(Guid id)
+        [HttpGet]
+        public IActionResult PaymentSuccess()
         {
-            var client = await CreateApiClientAsync();
+            TempData["SuccessMessage"] = "Thanh toán thành công! Đơn hàng của bạn đang được xử lý.";
+            return RedirectToAction("History");
+        }
 
-            // Gọi đến endpoint kiểm tra của API
-            // API yêu cầu phương thức POST, chúng ta không cần gửi body nên để là null
-            var response = await client.PostAsync($"api/orders/check-payment/{id}", null);
-
-            if (response.IsSuccessStatusCode)
-            {
-                // Đọc kết quả JSON từ API ({ "success": true/false })
-                var jsonString = await response.Content.ReadAsStringAsync();
-
-                // Trả thẳng kết quả JSON này về cho JavaScript ở Front-end
-                return Content(jsonString, "application/json");
-            }
-
-            // Nếu gọi API thất bại, trả về trạng thái chưa thành công
-            return Json(new { success = false, message = "Error calling API to check status." });
+        [HttpGet]
+        public IActionResult PaymentCancelled()
+        {
+            TempData["ErrorMessage"] = "Thanh toán đã bị hủy. Bạn có thể thử lại từ giỏ hàng.";
+            return RedirectToAction("Index", "Cart");
         }
 
         // Helper method để tạo HttpClient đã đính kèm JWT Token

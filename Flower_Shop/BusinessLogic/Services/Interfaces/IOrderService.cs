@@ -1,5 +1,6 @@
 ﻿using BusinessLogic.DTOs;
 using BusinessLogic.DTOs.Orders;
+using Net.payOS.Types;
 
 namespace BusinessLogic.Services.Interfaces
 {
@@ -13,6 +14,6 @@ namespace BusinessLogic.Services.Interfaces
 
         Task<OrderDto> UpdateOrderStatusAsync(OrderUpdateStatusRequest request);
         Task<PagedResultDto<OrderDto>> GetAllOrdersAsync(QueryParameters queryParams);
-        Task<bool> VerifyVietQRPaymentAsync(Guid orderId);
+        Task HandlePayOSWebhook(WebhookData data);
     }
 }
