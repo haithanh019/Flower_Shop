@@ -69,7 +69,7 @@ namespace Flower_Shop_API
                 builder.Configuration.GetSection("Cloudinary")
             );
             builder.Services.Configure<GoogleOptions>(builder.Configuration.GetSection("Google"));
-
+            builder.Services.AddLogging();
             /// Register services
             builder.Services.AddScoped<CoreDependencies>();
             builder.Services.AddScoped<InfraDependencies>();

@@ -226,13 +226,15 @@ namespace FlowerShop_WebApp.Controllers
         }
 
         [HttpPost]
-        public async Task<IActionResult> CheckPaymentStatus(Guid orderId)
+        // --- SỬA LỖI TẠI ĐÂY ---
+        // Đổi tên tham số từ "orderId" thành "id" để khớp với routing mặc định
+        public async Task<IActionResult> CheckPaymentStatus(Guid id)
         {
             var client = await CreateApiClientAsync();
 
             // Gọi đến endpoint kiểm tra của API
             // API yêu cầu phương thức POST, chúng ta không cần gửi body nên để là null
-            var response = await client.PostAsync($"api/orders/check-payment/{orderId}", null);
+            var response = await client.PostAsync($"api/orders/check-payment/{id}", null);
 
             if (response.IsSuccessStatusCode)
             {

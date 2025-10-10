@@ -8,6 +8,7 @@ using DataAccess.Entities;
 using DataAccess.UnitOfWork;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Logging;
 using Ultitity.Email.Interface;
 using Ultitity.Exceptions;
 
@@ -21,15 +22,17 @@ namespace BusinessLogic.Services
         private readonly IVietQRService _vietQRService;
         private readonly IHttpClientFactory _httpClientFactory;
         private readonly IConfiguration _configuration;
+        private readonly ILogger<OrderService> _logger; // Thêm logger
 
-        // Cập nhật hàm khởi tạo để nhận các dependency mới
+        // Cập nhật hàm khởi tạo để nhận ILogger
         public OrderService(
             IUnitOfWork unitOfWork,
             IMapper mapper,
             IEmailQueue emailQueue,
             IVietQRService vietQRService,
             IHttpClientFactory httpClientFactory,
-            IConfiguration configuration
+            IConfiguration configuration,
+            ILogger<OrderService> logger // Thêm logger
         )
         {
             _unitOfWork = unitOfWork;
@@ -38,6 +41,7 @@ namespace BusinessLogic.Services
             _vietQRService = vietQRService;
             _httpClientFactory = httpClientFactory;
             _configuration = configuration;
+            _logger = logger; // Gán logger
         }
 
         // ... (Các phương thức GetAllOrdersAsync, CreateOrderFromCartAsync, GetOrderDetailsAsync, GetUserOrdersAsync không thay đổi)
@@ -222,34 +226,21 @@ namespace BusinessLogic.Services
 
             if (Enum.TryParse<OrderStatus>(request.Status, true, out var newStatus))
             {
-                if (
-                    newStatus == OrderStatus.Confirmed
-                    && orderToUpdate.Status != OrderStatus.Confirmed
-                )
+                var oldStatus = orderToUpdate.Status;
+                if (newStatus == OrderStatus.Confirmed && oldStatus != OrderStatus.Confirmed)
                 {
-                    if (orderToUpdate.User != null)
+                    // Chỉ gửi mail cho các trường hợp không phải VietQR ở đây
+                    if (
+                        orderToUpdate.User != null
+                        && orderToUpdate.Payment?.Method != PaymentMethod.VietQR
+                    )
                     {
-                        string subject;
-                        string htmlMessage;
-
-                        if (orderToUpdate.Payment?.Method == PaymentMethod.VietQR)
-                        {
-                            subject =
-                                $"[FlowerShop] Thanh toán thành công cho đơn hàng #{orderToUpdate.OrderNumber}";
-                            htmlMessage = EmailTemplateService.PaymentSuccessEmail(
-                                orderToUpdate,
-                                orderToUpdate.User
-                            );
-                        }
-                        else
-                        {
-                            subject =
-                                $"[FlowerShop] Đơn hàng #{orderToUpdate.OrderNumber} đã được xác nhận";
-                            htmlMessage = EmailTemplateService.OrderConfirmedEmail(
-                                orderToUpdate,
-                                orderToUpdate.User
-                            );
-                        }
+                        var subject =
+                            $"[FlowerShop] Đơn hàng #{orderToUpdate.OrderNumber} đã được xác nhận";
+                        var htmlMessage = EmailTemplateService.OrderConfirmedEmail(
+                            orderToUpdate,
+                            orderToUpdate.User
+                        );
                         _emailQueue.QueueEmail(orderToUpdate.User.Email, subject, htmlMessage);
                     }
                 }
@@ -269,12 +260,18 @@ namespace BusinessLogic.Services
             return _mapper.Map<OrderDto>(orderToUpdate);
         }
 
-        // Phương thức mới để kiểm tra thanh toán VietQR
         public async Task<bool> VerifyVietQRPaymentAsync(Guid orderId)
         {
             var order = await _unitOfWork.Order.GetAsync(o => o.OrderId == orderId, "Payment,User");
-            if (order == null || order.Status == OrderStatus.Confirmed)
+
+            // Nếu đơn hàng không tồn tại hoặc đã được xác nhận (hoặc thanh toán đã xong) thì không cần xử lý nữa
+            if (
+                order == null
+                || order.Status == OrderStatus.Confirmed
+                || order.Payment?.Status == PaymentStatus.Accepted
+            )
             {
+                // Trả về true để client biết rằng thanh toán đã hoàn tất và dừng polling.
                 return true;
             }
 
@@ -297,6 +294,10 @@ namespace BusinessLogic.Services
             var response = await client.SendAsync(request);
             if (!response.IsSuccessStatusCode)
             {
+                _logger.LogError(
+                    "Failed to fetch transactions from VietQR API. Status: {StatusCode}",
+                    response.StatusCode
+                );
                 return false;
             }
 
@@ -305,6 +306,7 @@ namespace BusinessLogic.Services
 
             if (!doc.RootElement.TryGetProperty("data", out var transactions))
             {
+                _logger.LogWarning("VietQR transaction response does not contain 'data' property.");
                 return false;
             }
 
@@ -313,19 +315,58 @@ namespace BusinessLogic.Services
                 var amount = transaction.GetProperty("amount").GetInt32();
                 var description = transaction.GetProperty("description").GetString() ?? "";
 
-                if (amount == (int)order.TotalAmount && description.Contains(order.OrderNumber))
+                _logger.LogInformation(
+                    "Checking transaction: Amount='{Amount}', Description='{Description}' for OrderNumber='{OrderNumber}'",
+                    amount,
+                    description,
+                    order.OrderNumber
+                );
+
+                // --- SỬA LỖI LOGIC TẠI ĐÂY ---
+                if (
+                    amount == (int)order.TotalAmount
+                    && description.Equals(order.OrderNumber, StringComparison.OrdinalIgnoreCase)
+                )
                 {
-                    await UpdateOrderStatusAsync(
-                        new OrderUpdateStatusRequest
-                        {
-                            OrderId = orderId,
-                            Status = OrderStatus.Confirmed.ToString(),
-                        }
+                    _logger.LogInformation(
+                        "Payment match found for Order ID {OrderId}. Updating status.",
+                        order.OrderId
                     );
-                    return true;
+
+                    // 1. Cập nhật trạng thái Order
+                    order.Status = OrderStatus.Confirmed;
+
+                    // 2. Cập nhật trạng thái Payment
+                    if (order.Payment != null)
+                    {
+                        order.Payment.Status = PaymentStatus.Accepted;
+                        order.Payment.PaidAt = DateTime.UtcNow;
+                    }
+
+                    // 3. Gửi email xác nhận thanh toán thành công
+                    if (order.User != null)
+                    {
+                        var subject =
+                            $"[FlowerShop] Thanh toán thành công cho đơn hàng #{order.OrderNumber}";
+                        var htmlMessage = EmailTemplateService.PaymentSuccessEmail(
+                            order,
+                            order.User
+                        );
+                        _emailQueue.QueueEmail(order.User.Email, subject, htmlMessage);
+                        _logger.LogInformation(
+                            "Queued payment success email for Order ID {OrderId} to {Email}",
+                            order.OrderId,
+                            order.User.Email
+                        );
+                    }
+
+                    // 4. Lưu tất cả thay đổi vào CSDL
+                    await _unitOfWork.SaveAsync();
+
+                    return true; // Tìm thấy, đã xử lý, trả về true
                 }
             }
-            return false;
+            return false; // Không tìm thấy giao dịch khớp
         }
     }
 }

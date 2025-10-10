@@ -1,4 +1,5 @@
-using BusinessLogic.Services.Interfaces;
+﻿using BusinessLogic.Services.Interfaces;
+using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Ultitity.Options;
 
@@ -22,7 +23,8 @@ namespace BusinessLogic.Services.FacadeService
             InfraDependencies infraDependencies,
             IOptions<JwtOptions> jwtOptions,
             IVietQRService vietQRService,
-            IHttpClientFactory httpClientFactory
+            IHttpClientFactory httpClientFactory,
+            ILogger<OrderService> logger
         )
         {
             CategoryService = new CategoryService(
@@ -46,7 +48,8 @@ namespace BusinessLogic.Services.FacadeService
                 infraDependencies.EmailQueue,
                 vietQRService,
                 httpClientFactory,
-                infraDependencies.Configuration
+                infraDependencies.Configuration,
+                logger
             );
             UserService = new UserService(coreDependencies.UnitOfWork, coreDependencies.Mapper);
             PaymentService = new PaymentService(
