@@ -1,0 +1,73 @@
+﻿/*
+ * CSS chung cho các trang quản lý (Products, Categories, Orders, Users)
+*/
+
+/* --- Card chứa nội dung chính --- */
+.management-card {
+    background-color: #fff;
+    border-radius: .35rem;
+}
+
+    .management-card .card-header {
+        background-color: #f8f9fc;
+        border-bottom: 1px solid var(--admin-border-color);
+        padding: 1rem 1.5rem;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+
+        .management-card .card-header .card-title {
+            margin: 0;
+            font-size: 1.2rem;
+            font-weight: 700;
+            color: var(--admin-primary);
+        }
+
+    .management-card .card-body {
+        padding: 1.5rem;
+    }
+
+/* --- Bảng dữ liệu --- */
+.table th {
+    white-space: nowrap;
+}
+
+.table .product-image-thumb {
+    width: 50px;
+    height: 50px;
+    object-fit: cover;
+    border-radius: .35rem;
+}
+
+/* --- Form --- */
+.form-card {
+    background-color: #fff;
+    border-radius: .35rem;
+}
+
+    .form-card .card-header {
+        background-color: #f8f9fc;
+        border-bottom: 1px solid var(--admin-border-color);
+        padding: 1rem 1.5rem;
+    }
+
+        .form-card .card-header .card-title {
+            margin: 0;
+            font-size: 1.2rem;
+            font-weight: 700;
+            color: var(--admin-primary);
+        }
+
+    .form-card .card-body {
+        padding: 1.5rem;
+    }
+
+/* --- Trang chi tiết đơn hàng (Admin) --- */
+.order-detail-admin .list-group-item strong {
+    color: var(--admin-text-dark);
+}
+
+.order-detail-admin .update-status-card {
+    background-color: #f8f9fc;
+}

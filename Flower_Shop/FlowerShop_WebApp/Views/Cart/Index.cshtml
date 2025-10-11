@@ -1,79 +1,115 @@
 ﻿@model FlowerShop_WebApp.Models.Cart.CartViewModel
 @{
-    ViewData["Title"] = "Your Shopping Cart";
+    ViewData["Title"] = "Giỏ hàng của bạn";
 }
 
-<h1 class="mb-4">@ViewData["Title"]</h1>
+<div class="container mt-5">
+    <h1 class="page-section-title">@ViewData["Title"]</h1>
 
-<div class="row">
-    <div class="col-md-8">
+    <div class="row">
         @if (Model != null && Model.Items.Any())
         {
-            @foreach (var item in Model.Items)
-            {
-                <div class="card mb-3">
-                    <div class="row g-0">
-                        <div class="col-md-2">
-                            <img src="@(item.ProductThumbnailUrl ?? "https://via.placeholder.com/150")" class="img-fluid rounded-start" alt="@item.ProductName">
-                        </div>
-                        <div class="col-md-10">
-                            <div class="card-body">
-                                <div class="d-flex justify-content-between">
-                                    <h5 class="card-title">@item.ProductName</h5>
-                                    <h5>@item.LineTotal.ToString("N0") VND</h5>
-                                </div>
-                                <p class="card-text"><small class="text-muted">Unit Price: @item.UnitPrice.ToString("N0") VND</small></p>
+            <div class="col-lg-8">
+                <div class="cart-table">
+                    <table class="table align-middle">
+                        <thead>
+                            <tr>
+                                <th scope="col" style="width: 40%;">Sản phẩm</th>
+                                <th scope="col" class="text-center">Giá</th>
+                                <th scope="col" class="text-center">Số lượng</th>
+                                <th scope="col" class="text-end">Tạm tính</th>
+                                <th scope="col"></th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var item in Model.Items)
+                            {
+                                <tr>
+                                    <td>
+                                        <div class="product-info">
+                                            <img src="@(item.ProductThumbnailUrl ?? "https://via.placeholder.com/150")" class="product-image" alt="@item.ProductName">
+                                            <div>
+                                                <a class="text-decoration-none" asp-controller="Home" asp-action="ProductDetail" asp-route-id="@item.ProductId">
+                                                    <span class="product-name">@item.ProductName</span>
+                                                </a>
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td class="text-center">
+                                        <span class="unit-price">@item.UnitPrice.ToString("N0")</span>
+                                    </td>
+                                    <td>
+                                        <form asp-action="UpdateQuantity" method="post" class="quantity-form">
+                                            <input type="hidden" name="cartItemId" value="@item.CartItemId" />
+                                            <div class="quantity-adjuster">
+                                                <button type="button" class="btn-quantity btn-decrease">-</button>
+                                                <input type="number" id="quantity-@item.CartItemId" name="quantity" value="@item.Quantity" class="form-control quantity-input" min="1" />
+                                                <button type="button" class="btn-quantity btn-increase">+</button>
+                                            </div>
+                                        </form>
+                                    </td>
+                                    <td class="text-end">
+                                        <span class="line-total">@item.LineTotal.ToString("N0") VND</span>
+                                    </td>
+                                    <td class="text-center">
+                                        <form asp-action="RemoveFromCart" method="post">
+                                            <input type="hidden" name="cartItemId" value="@item.CartItemId" />
+                                            <button type="submit" class="btn-remove" title="Xóa sản phẩm">
+                                                <i class="fas fa-times"></i>
+                                            </button>
+                                        </form>
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            </div>
 
-                                <div class="d-flex align-items-center">
-                                    <form asp-action="UpdateQuantity" method="post" class="d-flex align-items-center me-3">
-                                        <input type="hidden" name="cartItemId" value="@item.CartItemId" />
-                                        <input type="number" name="quantity" value="@item.Quantity" class="form-control" style="width: 70px;" min="1" />
-                                        <button type="submit" class="btn btn-sm btn-outline-secondary ms-2">Update</button>
-                                    </form>
-                                    <form asp-action="RemoveFromCart" method="post">
-                                        <input type="hidden" name="cartItemId" value="@item.CartItemId" />
-                                        <button type="submit" class="btn btn-sm btn-outline-danger">Remove</button>
-                                    </form>
-                                </div>
-                            </div>
-                        </div>
+            <div class="col-lg-4">
+                <div class="order-summary-card">
+                    <h5>Tóm tắt đơn hàng</h5>
+                    <ul>
+                        <li>
+                            <span>Tạm tính</span>
+                            <span>@(Model?.SubTotal.ToString("N0") ?? "0") VND</span>
+                        </li>
+                        <li>
+                            <span>Phí vận chuyển</span>
+                            <span>Miễn phí</span>
+                        </li>
+                        <li class="total-row">
+                            <span>Tổng cộng</span>
+                            <span>@(Model?.SubTotal.ToString("N0") ?? "0") VND</span>
+                        </li>
+                    </ul>
+                    <div class="d-grid mt-4">
+                        <a asp-controller="Orders" asp-action="Checkout" class="btn btn-primary btn-lg">
+                            Tiến hành thanh toán <i class="fas fa-arrow-right ms-2"></i>
+                        </a>
                     </div>
                 </div>
-            }
+            </div>
         }
         else
         {
-            <div class="alert alert-info" role="alert">
-                Your cart is empty. <a asp-controller="Home" asp-action="Index" class="alert-link">Continue shopping</a>.
+            <div class="col-12 text-center py-5">
+                <i class="fas fa-shopping-cart fa-4x text-muted mb-3"></i>
+                <h4 class="text-muted">Giỏ hàng của bạn đang trống</h4>
+                <p>Hãy khám phá cửa hàng và chọn cho mình những sản phẩm ưng ý nhé!</p>
+                <a asp-controller="Products" asp-action="Index" class="btn btn-primary mt-3">
+                    <i class="fas fa-store me-2"></i>Về trang cửa hàng
+                </a>
             </div>
         }
     </div>
-
-    <div class="col-md-4">
-        <div class="card shadow-sm">
-            <div class="card-body">
-                <h5 class="card-title">Order Summary</h5>
-                <ul class="list-group list-group-flush">
-                    <li class="list-group-item d-flex justify-content-between">
-                        <span>Subtotal</span>
-                        <strong>@(Model?.SubTotal.ToString("N0") ?? "0") VND</strong>
-                    </li>
-                    <li class="list-group-item d-flex justify-content-between">
-                        <span>Shipping</span>
-                        <span>Free</span>
-                    </li>
-                    <li class="list-group-item d-flex justify-content-between">
-                        <strong>Total</strong>
-                        <strong>@(Model?.SubTotal.ToString("N0") ?? "0") VND</strong>
-                    </li>
-                </ul>
-                @if (Model != null && Model.Items.Any())
-                {
-                    <div class="d-grid mt-3">
-                        <a asp-controller="Orders" asp-action="Checkout" class="btn btn-primary">Proceed to Checkout</a>
-                    </div>
-                }
-            </div>
-        </div>
-    </div>
 </div>
+
+
+@section Styles {
+    <link rel="stylesheet" href="~/css/cart.css" asp-append-version="true" />
+}
+
+@section Scripts {
+    <script src="~/js/cart.js" asp-append-version="true"></script>
+}

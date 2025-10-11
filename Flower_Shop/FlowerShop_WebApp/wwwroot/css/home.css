@@ -1,0 +1,86 @@
+﻿/*
+ * CSS dành riêng cho Trang chủ (Home)
+*/
+
+/* 1. Hero Section - Banner chính */
+.hero-section {
+    position: relative;
+    padding: 8rem 0;
+    text-align: center;
+    color: white;
+    background: url('https://images.unsplash.com/photo-1533616688484-4b4a69441571?q=80&w=2070&auto=format&fit=crop') no-repeat center center;
+    background-size: cover;
+}
+
+    /* Lớp phủ màu tối để làm nổi bật chữ */
+    .hero-section::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background-color: rgba(0, 0, 0, 0.4);
+    }
+
+    /* Đảm bảo nội dung nằm trên lớp phủ */
+    .hero-section .container {
+        position: relative;
+        z-index: 2;
+    }
+
+    .hero-section .display-4 {
+        font-family: var(--font-family-serif);
+        font-weight: 700;
+        text-shadow: 2px 2px 8px rgba(0,0,0,0.6);
+    }
+
+    .hero-section .lead {
+        font-size: 1.5rem;
+        margin-bottom: 2rem;
+        text-shadow: 1px 1px 4px rgba(0,0,0,0.5);
+    }
+
+
+/* 2. Các khối nội dung bổ sung */
+.feature-section {
+    padding: 4rem 0;
+}
+
+.feature-icon {
+    font-size: 3rem;
+    color: var(--primary-pink-dark);
+    margin-bottom: 1.5rem;
+}
+
+.testimonial-section {
+    background-color: #fff;
+    padding: 4rem 0;
+}
+
+.testimonial-item {
+    text-align: center;
+}
+
+    .testimonial-item img {
+        width: 80px;
+        height: 80px;
+        border-radius: 50%;
+        margin-bottom: 1rem;
+    }
+
+    .testimonial-item .lead {
+        font-style: italic;
+        color: var(--text-light);
+    }
+
+    .testimonial-item .customer-name {
+        font-weight: 700;
+        color: var(--text-dark);
+    }
+
+.page-section-title {
+    text-align: center;
+    margin-bottom: 3rem;
+    font-size: 2.5rem;
+}

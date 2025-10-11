@@ -1,0 +1,70 @@
+﻿/*
+ * CSS dành riêng cho Trang Cá nhân (Profile)
+*/
+
+.profile-layout {
+    display: flex;
+    gap: 30px;
+}
+
+.profile-nav {
+    flex: 0 0 250px; /* Cố định chiều rộng của menu điều hướng */
+}
+
+.profile-content {
+    flex-grow: 1; /* Phần nội dung chiếm phần còn lại */
+}
+
+.profile-nav .list-group-item {
+    border: none;
+    padding: 15px 20px;
+    font-weight: 700;
+    color: var(--text-light);
+    border-left: 3px solid transparent;
+}
+
+    .profile-nav .list-group-item i {
+        width: 20px;
+        margin-right: 10px;
+    }
+
+    .profile-nav .list-group-item.active {
+        background-color: #fdf2f4;
+        color: var(--primary-pink-dark);
+        border-left-color: var(--primary-pink-dark);
+    }
+
+.profile-card {
+    background-color: #fff;
+    border-radius: 12px;
+    border: 1px solid var(--border-color);
+}
+
+    .profile-card .card-header {
+        background-color: transparent;
+        border-bottom: 1px solid var(--border-color);
+        padding: 1rem 1.5rem;
+    }
+
+        .profile-card .card-header h5 {
+            margin: 0;
+            font-family: var(--font-family-serif);
+        }
+
+    .profile-card .card-body {
+        padding: 2rem;
+    }
+
+.address-item {
+    padding: 1rem;
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    margin-bottom: 1rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.address-item-info {
+    font-size: 0.95rem;
+}

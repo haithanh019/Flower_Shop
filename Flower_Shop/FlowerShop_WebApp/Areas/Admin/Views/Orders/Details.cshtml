@@ -1,82 +1,56 @@
 ﻿@model FlowerShop_WebApp.Models.Orders.OrderViewModel
 @{
-    ViewData["Title"] = $"Order Details #{Model.OrderId.ToString().Substring(0, 8)}";
+    ViewData["Title"] = $"Chi tiết Đơn hàng #{Model.OrderId.ToString().Substring(0, 8)}";
     var orderStatuses = ViewBag.OrderStatuses as List<string> ?? new List<string>();
 }
 
-@if (TempData["SuccessMessage"] != null)
-{
-    <div class="alert alert-success">@TempData["SuccessMessage"]</div>
-}
-@if (TempData["ErrorMessage"] != null)
-{
-    <div class="alert alert-danger">@TempData["ErrorMessage"]</div>
-}
-
-<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+<div class="page-header">
     <h1 class="h2">@ViewData["Title"]</h1>
+    <a asp-action="Index" class="btn btn-secondary"><i class="fas fa-arrow-left me-2"></i>Quay lại danh sách</a>
 </div>
 
-
-<div class="row">
-    <div class="col-md-8">
-        <div class="card shadow-sm">
-            <div class="card-header">
-                <h5 class="my-1"><i class="fas fa-box-open me-2"></i>Items in Order</h5>
-            </div>
-            <div class="card-body">
-                @foreach (var item in Model.Items)
-                {
-                    <div class="row mb-3 border-bottom pb-3">
-                        <div class="col-8">
-                            <h6 class="mb-0">@item.ProductName</h6>
-                            <small class="text-muted">Quantity: @item.Quantity &times; @item.UnitPrice.ToString("N0") VND</small>
-                        </div>
-                        <div class="col-4 text-end">
-                            <strong>@item.LineTotal.ToString("N0") VND</strong>
-                        </div>
-                    </div>
-                }
+<div class="row order-detail-admin">
+    <div class="col-lg-8">
+        <div class="card management-card">
+            <div class="card-header"><h5 class="card-title"><i class="fas fa-box-open me-2"></i>Các sản phẩm trong đơn</h5></div>
+            <div class="card-body p-0">
+                <table class="table mb-0">
+                    <tbody>
+                        @foreach (var item in Model.Items)
+                        {
+                            <tr>
+                                <td>
+                                    <div class="d-flex align-items-center">
+                                        <img src="https://via.placeholder.com/150" class="product-image-thumb me-3" />
+                                        <div>
+                                            <strong>@item.ProductName</strong><br />
+                                            <small class="text-muted">@item.UnitPrice.ToString("N0") VND x @item.Quantity</small>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td class="text-end fw-bold">@item.LineTotal.ToString("N0") VND</td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
             </div>
         </div>
     </div>
-
-    <div class="col-md-4">
-        <div class="card shadow-sm mb-4">
-            <div class="card-header">
-                <h5 class="my-1"><i class="fas fa-info-circle me-2"></i>Order Summary</h5>
-            </div>
-            <div class="card-body">
-                <ul class="list-group list-group-flush">
-                    <li class="list-group-item d-flex justify-content-between">
-                        <span>Customer:</span>
-                        <span class="fw-bold">@Model.CustomerEmail</span>
-                    </li>
-                    <li class="list-group-item d-flex justify-content-between">
-                        <span>Order Date:</span>
-                        <span>@Model.CreatedAt.ToString("f")</span>
-                    </li>
-                    <li class="list-group-item">
-                        <span>Shipping Address:</span>
-                        <div class="fw-bold text-end">@Model.ShippingAddress</div>
-                    </li>
-                    <li class="list-group-item d-flex justify-content-between">
-                        <span>Payment Method:</span>
-                        <span>@Model.PaymentMethod</span>
-                    </li>
-                    <li class="list-group-item d-flex justify-content-between bg-light">
-                        <strong class="text-uppercase">Total Amount:</strong>
-                        <strong class="text-danger">@Model.Total.ToString("N0") VND</strong>
-                    </li>
-                </ul>
-            </div>
-        </div>
-
-        <div class="card shadow-sm">
-            <div class="card-header">
-                <h5 class="my-1"><i class="fas fa-sync-alt me-2"></i>Update Status</h5>
-            </div>
-            <div class="card-body">
+    <div class="col-lg-4">
+        <div class="card management-card">
+            <div class="card-header"><h5 class="card-title"><i class="fas fa-info-circle me-2"></i>Thông tin đơn hàng</h5></div>
+            <ul class="list-group list-group-flush">
+                <li class="list-group-item"><span>Email khách hàng:</span> <strong class="float-end">@Model.CustomerEmail</strong></li>
+                <li class="list-group-item"><span>Địa chỉ giao:</span> <strong class="float-end text-end">@Model.ShippingAddress</strong></li>
+                <li class="list-group-item"><span>Ngày đặt:</span> <strong class="float-end">@Model.CreatedAt.ToString("f")</strong></li>
+                <li class="list-group-item"><span>Thanh toán:</span> <strong class="float-end">@Model.PaymentMethod</strong></li>
+                <li class="list-group-item bg-light">
+                    <strong class="text-uppercase">Tổng tiền:</strong>
+                    <strong class="text-danger fs-5 float-end">@Model.Total.ToString("N0") VND</strong>
+                </li>
+            </ul>
+            <div class="card-body update-status-card">
+                <h6 class="card-title fw-bold">Cập nhật trạng thái</h6>
                 <form asp-action="UpdateStatus" method="post">
                     <input type="hidden" name="orderId" value="@Model.OrderId" />
                     <div class="input-group">
@@ -91,9 +65,9 @@
                 </form>
             </div>
         </div>
-
-        <div class="d-grid mt-3">
-            <a asp-action="Index" class="btn btn-secondary"><i class="fas fa-arrow-left me-2"></i>Back to Orders List</a>
-        </div>
     </div>
 </div>
+
+@section Styles {
+    <link rel="stylesheet" href="~/css/admin-management.css" asp-append-version="true" />
+}

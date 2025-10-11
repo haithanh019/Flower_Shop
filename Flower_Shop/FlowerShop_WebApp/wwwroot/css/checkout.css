@@ -1,0 +1,152 @@
+﻿/*
+ * CSS dành riêng cho Trang Giỏ hàng & Thanh toán
+*/
+
+/* --- CÁC PHẦN CHUNG --- */
+.form-control, .form-select {
+    border-radius: 8px;
+    padding: 10px 15px;
+}
+
+    .form-control:focus, .form-select:focus {
+        border-color: var(--primary-pink-dark);
+        box-shadow: 0 0 0 0.25rem rgba(231, 84, 128, 0.25);
+    }
+
+/* --- TRANG THANH TOÁN --- */
+
+.checkout-section .card {
+    border: 1px solid var(--border-color);
+    border-radius: 12px;
+    background-color: #fff;
+    margin-bottom: 1.5rem;
+}
+
+.checkout-section .card-header {
+    background-color: transparent;
+    border-bottom: 1px solid var(--border-color);
+    padding: 1rem 1.5rem;
+}
+
+    .checkout-section .card-header h5 {
+        margin: 0;
+        font-family: var(--font-family-serif);
+        font-weight: 700;
+    }
+
+.checkout-section .card-body {
+    padding: 1.5rem;
+}
+
+/* --- Lựa chọn địa chỉ đã lưu --- */
+.saved-address-item {
+    padding: 1rem;
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    margin-bottom: 1rem;
+    cursor: pointer;
+    transition: all 0.2s ease-in-out;
+}
+
+    .saved-address-item:hover {
+        border-color: var(--primary-pink);
+        background-color: #fdf2f4;
+    }
+
+    .saved-address-item.selected {
+        border-color: var(--primary-pink-dark);
+        background-color: #fdf2f4;
+        box-shadow: 0 0 10px rgba(231, 84, 128, 0.3);
+    }
+
+    .saved-address-item input[type="radio"] {
+        display: none; /* Ẩn radio button mặc định */
+    }
+
+/* --- Lựa chọn phương thức thanh toán --- */
+.payment-method-item {
+    display: flex;
+    align-items: center;
+    padding: 1rem;
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.2s ease-in-out;
+}
+
+    .payment-method-item:not(:last-child) {
+        margin-bottom: 1rem;
+    }
+
+    .payment-method-item:hover {
+        border-color: var(--primary-pink);
+        background-color: #fdf2f4;
+    }
+
+    .payment-method-item.selected {
+        border-color: var(--primary-pink-dark);
+        background-color: #fdf2f4;
+    }
+
+    .payment-method-item input[type="radio"] {
+        margin-right: 1rem;
+    }
+
+    .payment-method-item .payment-icon {
+        font-size: 1.5rem;
+        margin-right: 1rem;
+        color: var(--primary-pink-dark);
+    }
+
+
+/* --- Tóm tắt đơn hàng (Checkout) --- */
+.order-summary-card {
+    background-color: #fff;
+    border-radius: 12px;
+    padding: 1.5rem;
+    border: 1px solid var(--border-color);
+    position: sticky;
+    top: 20px;
+}
+
+    .order-summary-card h5 {
+        font-family: var(--font-family-serif);
+        font-weight: 700;
+        margin-bottom: 1.5rem;
+    }
+
+.summary-item {
+    display: flex;
+    align-items: center;
+    padding: 1rem 0;
+    border-bottom: 1px solid var(--border-color);
+}
+
+    .summary-item:last-child {
+        border-bottom: none;
+    }
+
+.summary-item-image {
+    width: 60px;
+    height: 60px;
+    object-fit: cover;
+    border-radius: 8px;
+    margin-right: 1rem;
+}
+
+.summary-item-details {
+    flex-grow: 1;
+}
+
+.summary-item-name {
+    font-weight: 500;
+}
+
+.summary-item-price {
+    font-weight: 700;
+}
+
+.summary-item-quantity {
+    color: var(--text-light);
+    font-size: 0.9rem;
+}

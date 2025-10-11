@@ -1,43 +1,47 @@
 ﻿@model FlowerShop_WebApp.Models.Auth.LoginViewModel
 @{
-    ViewData["Title"] = "Log in";
+    ViewData["Title"] = "Đăng nhập";
 }
 
-<div class="row justify-content-center">
-    <div class="col-md-5">
-        <div class="card shadow-sm">
-            <div class="card-body">
-                <h2 class="card-title text-center mb-4">@ViewData["Title"]</h2>
-                <form asp-route-returnurl="@ViewData["ReturnUrl"]" method="post">
+<div class="account-page">
+    <div class="card account-card">
+        <div class="card-body">
+            <h2 class="card-title text-center">@ViewData["Title"]</h2>
+            <form asp-route-returnurl="@ViewData["ReturnUrl"]" method="post">
 
-                    <div asp-validation-summary="ModelOnly" class="text-danger mb-3" role="alert"></div>
+                <div asp-validation-summary="ModelOnly" class="text-danger mb-3" role="alert"></div>
 
-                    <div class="form-floating mb-3">
-                        <input asp-for="Email" class="form-control" autocomplete="username" aria-required="true" placeholder="name@example.com" />
-                        <label asp-for="Email" class="form-label"></label>
-                        <span asp-validation-for="Email" class="text-danger"></span>
-                    </div>
+                <div class="form-floating mb-3">
+                    <input asp-for="Email" class="form-control" autocomplete="username" aria-required="true" placeholder="name@example.com" />
+                    <label asp-for="Email" class="form-label"></label>
+                    <span asp-validation-for="Email" class="text-danger"></span>
+                </div>
 
-                    <div class="form-floating mb-3">
-                        <input asp-for="Password" class="form-control" autocomplete="current-password" aria-required="true" placeholder="password" />
-                        <label asp-for="Password" class="form-label"></label>
-                        <span asp-validation-for="Password" class="text-danger"></span>
-                    </div>
+                <div class="form-floating mb-3">
+                    <input asp-for="Password" class="form-control" autocomplete="current-password" aria-required="true" placeholder="password" />
+                    <label asp-for="Password" class="form-label"></label>
+                    <span asp-validation-for="Password" class="text-danger"></span>
+                </div>
 
-                    <div class="d-grid">
-                        <button type="submit" class="btn btn-primary btn-lg">Log in</button>
-                    </div>
+                <div class="d-grid mt-4">
+                    <button type="submit" class="btn btn-primary btn-lg">
+                        <i class="fas fa-sign-in-alt me-2"></i>Đăng nhập
+                    </button>
+                </div>
 
-                    <div class="text-center mt-3">
-                        <p>
-                            <a asp-action="Register" asp-route-returnurl="@ViewData["ReturnUrl"]">Register as a new user</a>
-                        </p>
-                    </div>
-                </form>
-            </div>
+                <div class="text-center mt-4">
+                    <p class="text-muted">
+                        Chưa có tài khoản? <a asp-action="Register" asp-route-returnurl="@ViewData["ReturnUrl"]">Đăng ký ngay</a>
+                    </p>
+                </div>
+            </form>
         </div>
     </div>
 </div>
+
+@section Styles {
+    <link rel="stylesheet" href="~/css/account.css" asp-append-version="true" />
+}
 
 @section Scripts {
     <partial name="_ValidationScriptsPartial" />

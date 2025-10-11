@@ -1,0 +1,109 @@
+﻿/*
+ * CSS dành riêng cho Trang Lịch sử & Chi tiết Đơn hàng
+*/
+
+/* 1. Trang Lịch sử đơn hàng (History) */
+.order-history-card {
+    background-color: #fff;
+    border: 1px solid var(--border-color);
+    border-radius: 12px;
+    margin-bottom: 1.5rem;
+    padding: 1.5rem;
+    transition: box-shadow 0.2s ease-in-out;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+}
+
+    .order-history-card:hover {
+        box-shadow: 0 4px 15px rgba(0,0,0,0.08);
+    }
+
+.order-info {
+    flex-grow: 1;
+}
+
+    .order-info .order-id {
+        font-family: var(--font-family-serif);
+        font-weight: 700;
+        font-size: 1.2rem;
+        color: var(--text-dark);
+    }
+
+    .order-info .order-date {
+        color: var(--text-light);
+        font-size: 0.9rem;
+    }
+
+.order-total {
+    font-size: 1.25rem;
+    font-weight: 700;
+    color: var(--primary-pink-dark);
+    margin: 0 2rem;
+}
+
+.order-status .badge {
+    font-size: 0.9rem;
+    padding: 8px 15px;
+}
+
+.order-actions {
+    margin-left: auto;
+}
+
+/* 2. Trang Chi tiết đơn hàng (Details) */
+.order-detail-card {
+    background-color: #fff;
+    border: 1px solid var(--border-color);
+    border-radius: 12px;
+    margin-bottom: 1.5rem;
+}
+
+    .order-detail-card .card-header {
+        background-color: transparent;
+        border-bottom: 1px solid var(--border-color);
+        font-family: var(--font-family-serif);
+        font-weight: 700;
+    }
+
+    .order-detail-card .list-group-item {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+
+    .order-detail-card .summary-item {
+        display: flex;
+        align-items: center;
+        padding: 1rem 1.25rem;
+        border-bottom: 1px solid var(--border-color);
+    }
+
+        .order-detail-card .summary-item:last-child {
+            border-bottom: none;
+        }
+
+.summary-item-image {
+    width: 60px;
+    height: 60px;
+    object-fit: cover;
+    border-radius: 8px;
+    margin-right: 1rem;
+}
+
+.summary-item-details {
+    flex-grow: 1;
+}
+
+.summary-item-name {
+    font-weight: 500;
+}
+
+.summary-item-price {
+    font-weight: 700;
+}
+
+.summary-item-quantity {
+    color: var(--text-light);
+    font-size: 0.9rem;
+}

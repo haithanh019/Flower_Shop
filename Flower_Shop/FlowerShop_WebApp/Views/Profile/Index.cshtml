@@ -1,61 +1,108 @@
 ﻿@model FlowerShop_WebApp.Models.Profile.CustomerProfileViewModel
 @{
-    ViewData["Title"] = "My Profile";
+    ViewData["Title"] = "Tài khoản của tôi";
 }
 
-<div class="container mt-4">
+<div class="container mt-5">
+    <h1 class="page-section-title">@ViewData["Title"]</h1>
+
     <div class="row">
-        <div class="col-md-8 offset-md-2">
-            @* Phần thông tin cá nhân *@
-            <div class="card">
-                <div class="card-header">
-                    <h3><i class="fas fa-user"></i> My Profile</h3>
-                </div>
+        <div class="col-md-3">
+            <div class="list-group profile-nav">
+                <a asp-action="Index" asp-controller="Profile" class="list-group-item list-group-item-action active">
+                    <i class="fas fa-user-circle"></i>Thông tin cá nhân
+                </a>
+                <a asp-action="History" asp-controller="Orders" class="list-group-item list-group-item-action">
+                    <i class="fas fa-receipt"></i>Lịch sử đơn hàng
+                </a>
+                <a asp-action="ChangePassword" asp-controller="Profile" class="list-group-item list-group-item-action">
+                    <i class="fas fa-key"></i>Đổi mật khẩu
+                </a>
+            </div>
+        </div>
+
+        <div class="col-md-9">
+            @if (TempData["SuccessMessage"] != null)
+            {
+                <div class="alert alert-success">@TempData["SuccessMessage"]</div>
+            }
+            @if (TempData["ErrorMessage"] != null)
+            {
+                <div class="alert alert-danger">@TempData["ErrorMessage"]</div>
+            }
+
+            <div class="profile-card mb-4">
+                <div class="card-header"><h5>Thông tin cá nhân</h5></div>
                 <div class="card-body">
-                    @if (TempData["SuccessMessage"] != null)
-                    {
-                        <div class="alert alert-success">@TempData["SuccessMessage"]</div>
-                    }
-                    @if (TempData["ErrorMessage"] != null)
-                    {
-                        <div class="alert alert-danger">@TempData["ErrorMessage"]</div>
-                    }
                     <form asp-action="UpdateProfile" method="post">
                         <div class="row">
-                            <div class="col-md-6">
-                                <div class="mb-3">
-                                    <label asp-for="Email" class="form-label">Email</label>
-                                    <input asp-for="Email" class="form-control" readonly />
-                                </div>
+                            <div class="col-md-6 mb-3">
+                                <label asp-for="Email" class="form-label">Email</label>
+                                <input asp-for="Email" class="form-control" readonly />
                             </div>
-                            <div class="col-md-6">
-                                <div class="mb-3">
-                                    <label class="form-label">Member Since</label>
-                                    <input value="@Model.CreatedAt.ToString("dd/MM/yyyy")" class="form-control" readonly />
-                                </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Ngày tham gia</label>
+                                <input value="@Model.CreatedAt.ToString("dd/MM/yyyy")" class="form-control" readonly />
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label asp-for="FullName" class="form-label">Họ và tên</label>
+                                <input asp-for="FullName" class="form-control" />
+                                <span asp-validation-for="FullName" class="text-danger"></span>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label asp-for="PhoneNumber" class="form-label">Số điện thoại</label>
+                                <input asp-for="PhoneNumber" class="form-control" />
+                                <span asp-validation-for="PhoneNumber" class="text-danger"></span>
                             </div>
                         </div>
-                        <div class="mb-3">
-                            <label asp-for="FullName" class="form-label">Full Name</label>
-                            <input asp-for="FullName" class="form-control" />
-                            <span asp-validation-for="FullName" class="text-danger"></span>
-                        </div>
-                        <div class="mb-3">
-                            <label asp-for="PhoneNumber" class="form-label">Phone Number</label>
-                            <input asp-for="PhoneNumber" class="form-control" />
-                            <span asp-validation-for="PhoneNumber" class="text-danger"></span>
-                        </div>
-                        <div class="d-flex justify-content-between">
-                            <button type="submit" class="btn btn-primary">
-                                <i class="fas fa-save"></i> Update Profile
-                            </button>
-                            <a asp-action="ChangePassword" class="btn btn-outline-secondary">
-                                <i class="fas fa-key"></i> Change Password
-                            </a>
-                        </div>
+                        <button type="submit" class="btn btn-primary mt-3">
+                            <i class="fas fa-save me-2"></i>Cập nhật thông tin
+                        </button>
                     </form>
                 </div>
             </div>
+
+            <div class="profile-card">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h5>Địa chỉ của tôi</h5>
+                    <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addAddressModal">
+                        <i class="fas fa-plus me-2"></i>Thêm địa chỉ
+                    </button>
+                </div>
+                <div class="card-body">
+                    @if (Model.Addresses.Any())
+                    {
+                        @foreach (var address in Model.Addresses)
+                        {
+                            <div class="address-item">
+                                <div class="address-item-info">
+                                    <strong>@address.Detail</strong><br>
+                                    <small class="text-muted">@address.Ward, @address.District, @address.City</small>
+                                </div>
+                                <div>
+                                    <button type="button" class="btn btn-sm btn-outline-secondary me-2"
+                                            data-bs-toggle="modal" data-bs-target="#editAddressModal-@address.AddressId"
+                                            data-address-id="@address.AddressId" data-city="@address.City"
+                                            data-district="@address.District" data-ward="@address.Ward">
+                                        <i class="fas fa-edit"></i> Sửa
+                                    </button>
+                                    <form asp-action="DeleteAddress" method="post" class="d-inline">
+                                        <input type="hidden" name="addressId" value="@address.AddressId" />
+                                        <button type="submit" class="btn btn-sm btn-outline-danger" onclick="return confirm('Bạn có chắc muốn xóa địa chỉ này?');">
+                                            <i class="fas fa-trash"></i> Xóa
+                                        </button>
+                                    </form>
+                                </div>
+                            </div>
+                        }
+                    }
+                    else
+                    {
+                        <p class="text-center text-muted">Bạn chưa có địa chỉ nào được lưu.</p>
+                    }
+                </div>
+            </div>
+
 
             @* Phần quản lý địa chỉ *@
             <div class="card mt-4">
