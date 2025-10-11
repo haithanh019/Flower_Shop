@@ -92,7 +92,6 @@ namespace Flower_Shop_API
             });
 
             builder.Services.AddDistributedMemoryCache();
-            builder.WebHost.UseUrls("http://*:5035", "https://*:7260");
             builder.Services.AddCors(options =>
             {
                 options.AddPolicy(
@@ -100,11 +99,7 @@ namespace Flower_Shop_API
                     policy =>
                     {
                         policy
-                            .WithOrigins(
-                                "https://unarriving-unswaying-winifred.ngrok-free.dev",
-                                "https://localhost:7260",
-                                "http://localhost:5035"
-                            )
+                            .WithOrigins("https://unarriving-unswaying-winifred.ngrok-free.dev")
                             .AllowAnyMethod()
                             .AllowAnyHeader()
                             .AllowCredentials();
