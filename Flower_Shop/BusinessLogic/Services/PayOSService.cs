@@ -53,10 +53,10 @@ namespace BusinessLogic.Services
                 PaymentData paymentData = new PaymentData(
                     orderCode,
                     (int)order.TotalAmount,
-                    $"Thanh toán đơn hàng #{order.OrderNumber}",
+                    $"Đơn hàng #{order.OrderNumber}",
                     items,
-                    _configuration["WebApp:BaseUrl"] + "/payment/cancel",
-                    _configuration["WebApp:BaseUrl"] + "/payment/success"
+                    _configuration["WebApp:BaseUrl"] + "/Orders/PaymentCancelled",
+                    _configuration["WebApp:BaseUrl"] + "/Orders/PaymentSuccess"
                 );
 
                 CreatePaymentResult createPaymentResult = await _payOS.createPaymentLink(

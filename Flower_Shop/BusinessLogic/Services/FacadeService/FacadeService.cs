@@ -24,7 +24,6 @@ namespace BusinessLogic.Services.FacadeService
             InfraDependencies infraDependencies,
             IOptions<JwtOptions> jwtOptions,
             IPayOSService payOSService,
-            IVietQRService vietQRService,
             IHttpClientFactory httpClientFactory,
             ILogger<OrderService> logger
         )

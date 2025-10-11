@@ -92,9 +92,7 @@ namespace Flower_Shop_API.Controllers
             try
             {
                 var webhookData = _facadeService.PayOSService.VerifyPaymentWebhook(webhookPayload);
-
                 await _facadeService.OrderService.HandlePayOSWebhook(webhookData);
-
                 return Ok("Webhook processed successfully.");
             }
             catch (Exception ex)

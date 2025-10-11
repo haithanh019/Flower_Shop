@@ -9,6 +9,7 @@ namespace BusinessLogic.Services
         #region Base Template
         private static string BuildBaseEmail(string title, string contentHtml)
         {
+            // ... (Phần template cơ sở giữ nguyên, không thay đổi)
             return $@"
             <!DOCTYPE html>
             <html lang=""vi"">
@@ -49,19 +50,24 @@ namespace BusinessLogic.Services
 
         #region Email Templates
 
-        public static string PaymentSuccessEmail(Order order, User user)
+        /// <summary>
+        /// Gửi khi khách đặt hàng COD thành công (trạng thái Pending).
+        /// </summary>
+        public static string OrderReceivedEmail(Order order, User user)
         {
-            var title = $"Thanh toán thành công đơn hàng #{order.OrderNumber}";
+            var title = $"Đã tiếp nhận đơn hàng #{order.OrderNumber}";
             var content =
                 $@"
                 <p>Xin chào <strong>{user.FullName}</strong>,</p>
-                <p>Cảm ơn bạn! FlowerShop đã xác nhận thanh toán thành công cho đơn hàng của bạn. Chúng tôi đang tiến hành chuẩn bị đơn hàng và sẽ giao đến bạn trong thời gian sớm nhất.</p>
+                <p>FlowerShop đã nhận được yêu cầu đặt hàng của bạn. Chúng tôi sẽ sớm xác nhận đơn hàng và liên hệ với bạn.</p>
                 {BuildOrderDetailsHtml(order)}
                 <p>Trân trọng,<br>Đội ngũ FlowerShop</p>";
-
             return BuildBaseEmail(title, content);
         }
 
+        /// <summary>
+        /// Gửi khi admin xác nhận đơn hàng COD (trạng thái Confirmed).
+        /// </summary>
         public static string OrderConfirmedEmail(Order order, User user)
         {
             var title = $"Đơn hàng #{order.OrderNumber} đã được xác nhận";
@@ -74,8 +80,54 @@ namespace BusinessLogic.Services
             return BuildBaseEmail(title, content);
         }
 
+        /// <summary>
+        /// Gửi khi thanh toán qua PayOS thành công (trạng thái Confirmed).
+        /// </summary>
+        public static string PaymentSuccessEmail(Order order, User user)
+        {
+            var title = $"Thanh toán thành công đơn hàng #{order.OrderNumber}";
+            var content =
+                $@"
+                <p>Xin chào <strong>{user.FullName}</strong>,</p>
+                <p>Cảm ơn bạn! FlowerShop đã xác nhận thanh toán thành công cho đơn hàng của bạn. Chúng tôi đang tiến hành chuẩn bị đơn hàng và sẽ giao đến bạn trong thời gian sớm nhất.</p>
+                {BuildOrderDetailsHtml(order)}
+                <p>Trân trọng,<br>Đội ngũ FlowerShop</p>";
+            return BuildBaseEmail(title, content);
+        }
+
+        /// <summary>
+        /// Gửi khi đơn hàng được chuyển sang trạng thái Shipping.
+        /// </summary>
+        public static string OrderShippedEmail(Order order, User user)
+        {
+            var title = $"Đơn hàng #{order.OrderNumber} đang được giao đến bạn";
+            var content =
+                $@"
+                <p>Xin chào <strong>{user.FullName}</strong>,</p>
+                <p>Đơn hàng của bạn đã được bàn giao cho đơn vị vận chuyển và đang trên đường đến với bạn. Vui lòng giữ điện thoại để nhận hàng nhé!</p>
+                {BuildOrderDetailsHtml(order)}
+                <p>Trân trọng,<br>Đội ngũ FlowerShop</p>";
+            return BuildBaseEmail(title, content);
+        }
+
+        /// <summary>
+        /// Gửi khi đơn hàng bị hủy.
+        /// </summary>
+        public static string OrderCancelledEmail(Order order, User user)
+        {
+            var title = $"Đã hủy đơn hàng #{order.OrderNumber}";
+            var content =
+                $@"
+                <p>Xin chào <strong>{user.FullName}</strong>,</p>
+                <p>Chúng tôi rất tiếc phải thông báo rằng đơn hàng của bạn đã được hủy. Nếu bạn có bất kỳ thắc mắc nào, vui lòng liên hệ với chúng tôi để được hỗ trợ.</p>
+                {BuildOrderDetailsHtml(order)}
+                <p>Trân trọng,<br>Đội ngũ FlowerShop</p>";
+            return BuildBaseEmail(title, content);
+        }
+
         private static string BuildOrderDetailsHtml(Order order)
         {
+            // ... (Phần helper này giữ nguyên, không thay đổi)
             var itemsHtml = new StringBuilder();
             foreach (var item in order.Items)
             {
