@@ -11,6 +11,7 @@ namespace FlowerShop_WebApp.Controllers
     public class ProfileController : Controller
     {
         private readonly IHttpClientFactory _httpClientFactory;
+        private readonly ILogger<ProfileController> _logger;
 
         private readonly JsonSerializerOptions _apiJsonOptions = new()
         {
@@ -18,42 +19,25 @@ namespace FlowerShop_WebApp.Controllers
             PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
         };
 
-        public ProfileController(IHttpClientFactory httpClientFactory)
+        public ProfileController(
+            IHttpClientFactory httpClientFactory,
+            ILogger<ProfileController> logger
+        )
         {
             _httpClientFactory = httpClientFactory;
+            _logger = logger;
         }
 
+        // [HttpGet] - Action này xử lý khi bạn truy cập trang
         public async Task<IActionResult> Index()
         {
-            var client = CreateApiClient();
-            var profileResponse = await client.GetAsync("api/profile");
-
-            if (!profileResponse.IsSuccessStatusCode)
-            {
-                TempData["ErrorMessage"] = "Không thể tải thông tin tài khoản.";
-                return View(new CustomerProfileViewModel());
-            }
-
-            var profile = await profileResponse.Content.ReadFromJsonAsync<CustomerProfileViewModel>(
-                _apiJsonOptions
-            );
-
-            var addressResponse = await client.GetAsync("api/address");
-            if (addressResponse.IsSuccessStatusCode)
-            {
-                var addresses = await addressResponse.Content.ReadFromJsonAsync<
-                    List<AddressViewModel>
-                >(_apiJsonOptions);
-                if (profile != null)
-                {
-                    profile.Addresses = addresses ?? new List<AddressViewModel>();
-                }
-            }
-
+            var profile = await GetCurrentProfileForView();
             return View(profile);
         }
 
+        // [HttpPost] - Action này xử lý khi bạn nhấn nút "Cập nhật thông tin"
         [HttpPost]
+        [ValidateAntiForgeryToken]
         public async Task<IActionResult> UpdateProfile(CustomerProfileUpdateViewModel model)
         {
             if (!ModelState.IsValid)
@@ -70,7 +54,6 @@ namespace FlowerShop_WebApp.Controllers
                 Encoding.UTF8,
                 "application/json"
             );
-
             var response = await client.PutAsync("api/profile", jsonContent);
 
             if (response.IsSuccessStatusCode)
@@ -84,71 +67,111 @@ namespace FlowerShop_WebApp.Controllers
             return RedirectToAction("Index");
         }
 
+        // [HttpPost] - Action này xử lý khi bạn nhấn nút "Thêm địa chỉ"
         [HttpPost]
+        [ValidateAntiForgeryToken]
         public async Task<IActionResult> AddAddress(AddressViewModel model)
         {
-            if (ModelState.IsValid)
+            if (!ModelState.IsValid)
             {
-                var client = CreateApiClient();
-                var addRequest = new
-                {
-                    model.City,
-                    model.District,
-                    model.Ward,
-                    model.Detail,
-                };
+                TempData["ErrorMessage"] = "Thông tin địa chỉ không hợp lệ.";
+                return RedirectToAction("Index");
+            }
 
-                // SỬA LỖI: Sử dụng _apiJsonOptions khi serialize
-                var jsonContent = new StringContent(
-                    JsonSerializer.Serialize(addRequest, _apiJsonOptions),
-                    Encoding.UTF8,
-                    "application/json"
-                );
+            var client = CreateApiClient();
+            var jsonContent = new StringContent(
+                JsonSerializer.Serialize(model, _apiJsonOptions),
+                Encoding.UTF8,
+                "application/json"
+            );
+            var response = await client.PostAsync("api/address", jsonContent);
 
-                var response = await client.PostAsync("api/address", jsonContent);
-
-                if (response.IsSuccessStatusCode)
-                {
-                    TempData["SuccessMessage"] = "Thêm địa chỉ thành công!";
-                }
-                else
-                {
-                    TempData["ErrorMessage"] = "Thêm địa chỉ thất bại.";
-                }
+            if (response.IsSuccessStatusCode)
+            {
+                TempData["SuccessMessage"] = "Thêm địa chỉ thành công!";
             }
             else
             {
-                TempData["ErrorMessage"] = "Thông tin địa chỉ không hợp lệ.";
+                TempData["ErrorMessage"] = "Thêm địa chỉ thất bại.";
             }
             return RedirectToAction("Index");
         }
 
+        // [HttpPost] - Action này xử lý khi bạn nhấn nút "Lưu thay đổi" trong modal sửa địa chỉ
         [HttpPost]
+        [ValidateAntiForgeryToken]
         public async Task<IActionResult> EditAddress(AddressViewModel model)
         {
-            if (ModelState.IsValid)
+            if (!ModelState.IsValid)
             {
-                var client = CreateApiClient();
-                var jsonContent = new StringContent(
-                    JsonSerializer.Serialize(model, _apiJsonOptions),
-                    Encoding.UTF8,
-                    "application/json"
-                );
+                TempData["ErrorMessage"] = "Thông tin địa chỉ không hợp lệ.";
+                return RedirectToAction("Index");
+            }
 
-                var response = await client.PutAsync($"api/address/{model.AddressId}", jsonContent);
+            var client = CreateApiClient();
+            var jsonContent = new StringContent(
+                JsonSerializer.Serialize(model, _apiJsonOptions),
+                Encoding.UTF8,
+                "application/json"
+            );
+            var response = await client.PutAsync($"api/address/{model.AddressId}", jsonContent);
 
-                if (response.IsSuccessStatusCode)
-                {
-                    TempData["SuccessMessage"] = "Cập nhật địa chỉ thành công!";
-                }
-                else
-                {
-                    TempData["ErrorMessage"] = "Cập nhật địa chỉ thất bại.";
-                }
+            if (response.IsSuccessStatusCode)
+            {
+                TempData["SuccessMessage"] = "Cập nhật địa chỉ thành công!";
             }
             else
             {
-                TempData["ErrorMessage"] = "Thông tin địa chỉ không hợp lệ.";
+                TempData["ErrorMessage"] = "Cập nhật địa chỉ thất bại.";
+            }
+            return RedirectToAction("Index");
+        }
+
+        // [HttpPost] - Action này xử lý khi bạn nhấn nút "Xóa" địa chỉ
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> DeleteAddress(Guid addressId)
+        {
+            var client = CreateApiClient();
+            var response = await client.DeleteAsync($"api/address/{addressId}");
+            if (response.IsSuccessStatusCode)
+            {
+                TempData["SuccessMessage"] = "Xóa địa chỉ thành công!";
+            }
+            else
+            {
+                TempData["ErrorMessage"] = "Xóa địa chỉ thất bại.";
+            }
+            return RedirectToAction("Index");
+        }
+
+        // [HttpPost] - Action này xử lý khi bạn nhấn nút "Lưu thay đổi" trong modal đổi mật khẩu
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> ChangePassword(ChangePasswordViewModel model)
+        {
+            if (!ModelState.IsValid)
+            {
+                TempData["ErrorMessage"] = "Thông tin đổi mật khẩu không hợp lệ. Vui lòng thử lại.";
+                return RedirectToAction("Index");
+            }
+
+            var client = CreateApiClient();
+            var jsonContent = new StringContent(
+                JsonSerializer.Serialize(model, _apiJsonOptions),
+                Encoding.UTF8,
+                "application/json"
+            );
+            var response = await client.PutAsync("api/profile/change-password", jsonContent);
+
+            if (response.IsSuccessStatusCode)
+            {
+                TempData["SuccessMessage"] = "Đổi mật khẩu thành công!";
+            }
+            else
+            {
+                TempData["ErrorMessage"] =
+                    "Đổi mật khẩu thất bại. Vui lòng kiểm tra lại mật khẩu hiện tại.";
             }
             return RedirectToAction("Index");
         }
@@ -163,6 +186,10 @@ namespace FlowerShop_WebApp.Controllers
                     "Bearer",
                     token
                 );
+            }
+            else
+            {
+                _logger.LogWarning("--- [WebApp] JWT Token is missing from session.");
             }
             return client;
         }

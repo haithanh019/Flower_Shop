@@ -27,12 +27,17 @@
     };
 
     const loadAddressForEdit = async (modalId, cityName, districtName, wardName, detailValue) => {
+        const modal = document.getElementById(`editAddressModal-${modalId}`);
+        if (!modal) {
+            console.error(`Modal with ID #editAddressModal-${modalId} not found.`);
+            return;
+        }
+
         const citySelect = document.getElementById(`city-edit-${modalId}`);
         const districtSelect = document.getElementById(`district-edit-${modalId}`);
         const wardSelect = document.getElementById(`ward-edit-${modalId}`);
         const detailInput = modal.querySelector('.detail-input');
 
-        // Điền giá trị cho ô địa chỉ chi tiết
         if (detailInput) {
             detailInput.value = detailValue;
         }

@@ -1,4 +1,5 @@
 ﻿using System.Security.Claims;
+using System.Text.Json;
 using BusinessLogic.DTOs.Address;
 using BusinessLogic.Services.FacadeService;
 using Microsoft.AspNetCore.Authorization;
@@ -12,10 +13,12 @@ namespace Flower_Shop_API.Controllers
     public class AddressController : ControllerBase
     {
         private readonly IFacadeService _facadeService;
+        private readonly ILogger<AddressController> _logger; // Thêm ILogger
 
-        public AddressController(IFacadeService facadeService)
+        public AddressController(IFacadeService facadeService, ILogger<AddressController> logger) // Cập nhật constructor
         {
             _facadeService = facadeService;
+            _logger = logger;
         }
 
         [HttpGet]
@@ -30,7 +33,16 @@ namespace Flower_Shop_API.Controllers
         public async Task<IActionResult> AddAddress([FromBody] AddressCreateRequest request)
         {
             var userId = GetUserIdFromClaims();
+            _logger.LogInformation(
+                "--- [API] User {UserId} is adding a new address. Data: {RequestData}",
+                userId,
+                JsonSerializer.Serialize(request)
+            );
             var newAddress = await _facadeService.AddressService.AddAddressAsync(userId, request);
+            _logger.LogInformation(
+                "--- [API] Successfully added new address for User {UserId}",
+                userId
+            );
             return Ok(newAddress);
         }
 

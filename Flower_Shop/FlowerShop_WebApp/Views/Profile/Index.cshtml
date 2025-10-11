@@ -15,9 +15,9 @@
                 <a asp-action="History" asp-controller="Orders" class="list-group-item list-group-item-action">
                     <i class="fas fa-receipt"></i>Lịch sử đơn hàng
                 </a>
-                <a asp-action="ChangePassword" asp-controller="Profile" class="list-group-item list-group-item-action">
+                <button type="button" class="list-group-item list-group-item-action" data-bs-toggle="modal" data-bs-target="#changePasswordModal">
                     <i class="fas fa-key"></i>Đổi mật khẩu
-                </a>
+                </button>
             </div>
         </div>
 
@@ -109,6 +109,9 @@
     </div>
 </div>
 
+@* --- MODALS --- *@
+
+@* Add Address Modal *@
 <div class="modal fade" id="addAddressModal" tabindex="-1" aria-labelledby="addAddressModalLabel" aria-hidden="true">
     <div class="modal-dialog">
         <div class="modal-content">
@@ -144,6 +147,7 @@
     </div>
 </div>
 
+@* Edit Address Modals *@
 @foreach (var address in Model.Addresses)
 {
     <div class="modal fade edit-address-modal" id="editAddressModal-@address.AddressId" tabindex="-1" aria-hidden="true">
@@ -182,6 +186,46 @@
         </div>
     </div>
 }
+
+@* Change Password Modal *@
+<div class="modal fade" id="changePasswordModal" tabindex="-1" aria-labelledby="changePasswordModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <form asp-controller="Profile" asp-action="ChangePassword" method="post">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="changePasswordModalLabel">Đổi mật khẩu</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    @{
+                        var changePasswordModel = new FlowerShop_WebApp.Models.Profile.ChangePasswordViewModel();
+                    }
+                    <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
+
+                    <div class="mb-3">
+                        <label asp-for="@changePasswordModel.CurrentPassword" class="form-label"></label>
+                        <input asp-for="@changePasswordModel.CurrentPassword" class="form-control" type="password" />
+                        <span asp-validation-for="@changePasswordModel.CurrentPassword" class="text-danger"></span>
+                    </div>
+                    <div class="mb-3">
+                        <label asp-for="@changePasswordModel.NewPassword" class="form-label"></label>
+                        <input asp-for="@changePasswordModel.NewPassword" class="form-control" type="password" />
+                        <span asp-validation-for="@changePasswordModel.NewPassword" class="text-danger"></span>
+                    </div>
+                    <div class="mb-3">
+                        <label asp-for="@changePasswordModel.ConfirmNewPassword" class="form-label"></label>
+                        <input asp-for="@changePasswordModel.ConfirmNewPassword" class="form-control" type="password" />
+                        <span asp-validation-for="@changePasswordModel.ConfirmNewPassword" class="text-danger"></span>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Đóng</button>
+                    <button type="submit" class="btn btn-primary">Lưu thay đổi</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
 
 @section Scripts {
     <script src="~/js/profile.js" asp-append-version="true"></script>
