@@ -8,6 +8,7 @@ namespace Flower_Shop_API.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
+    [Authorize] // Bắt buộc đăng nhập cho tất cả các action
     public class CartController : ControllerBase
     {
         private readonly IFacadeService _facadeService;
@@ -18,10 +19,10 @@ namespace Flower_Shop_API.Controllers
         }
 
         [HttpGet]
-        public async Task<IActionResult> GetCart([FromQuery] string? sessionId)
+        public async Task<IActionResult> GetCart()
         {
             var userId = GetUserIdFromClaims();
-            var cart = await _facadeService.CartService.GetCartAsync(userId, sessionId);
+            var cart = await _facadeService.CartService.GetCartAsync(userId);
             return Ok(cart);
         }
 
@@ -29,46 +30,42 @@ namespace Flower_Shop_API.Controllers
         public async Task<IActionResult> AddItemToCart([FromBody] CartAddItemRequest request)
         {
             var userId = GetUserIdFromClaims();
-            var cart = await _facadeService.CartService.AddItemToCartAsync(userId, request);
-            return Ok(cart);
+            var updatedCart = await _facadeService.CartService.AddItemToCartAsync(userId, request);
+            return Ok(updatedCart);
         }
 
         [HttpPut("items")]
         public async Task<IActionResult> UpdateItemQuantity([FromBody] CartUpdateQtyRequest request)
         {
             var userId = GetUserIdFromClaims();
-            var cart = await _facadeService.CartService.UpdateItemQuantityAsync(userId, request);
-            return Ok(cart);
+            var updatedCart = await _facadeService.CartService.UpdateItemQuantityAsync(
+                userId,
+                request
+            );
+            return Ok(updatedCart);
         }
 
-        [HttpPost("items/remove")] // Sử dụng POST để body có thể chứa request object
+        [HttpPost("items/remove")]
         public async Task<IActionResult> RemoveItemFromCart(
             [FromBody] CartRemoveItemRequest request
         )
         {
             var userId = GetUserIdFromClaims();
-            var cart = await _facadeService.CartService.RemoveItemFromCartAsync(userId, request);
-            return Ok(cart);
+            var updatedCart = await _facadeService.CartService.RemoveItemFromCartAsync(
+                userId,
+                request
+            );
+            return Ok(updatedCart);
         }
 
-        [HttpPost("merge")]
-        [Authorize] // Yêu cầu người dùng phải đăng nhập để hợp nhất giỏ hàng
-        public async Task<IActionResult> MergeCarts([FromBody] CartMergeRequest request)
-        {
-            var userId = GetUserIdFromClaims();
-            if (!userId.HasValue)
-            {
-                return Unauthorized("User ID claim is missing.");
-            }
-
-            var cart = await _facadeService.CartService.MergeCartsAsync(userId.Value, request);
-            return Ok(cart);
-        }
-
-        private Guid? GetUserIdFromClaims()
+        private Guid GetUserIdFromClaims()
         {
             var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-            return Guid.TryParse(userIdClaim, out var userId) ? userId : (Guid?)null;
+            if (Guid.TryParse(userIdClaim, out var userId))
+            {
+                return userId;
+            }
+            throw new UnauthorizedAccessException("User ID claim is invalid or missing.");
         }
     }
 }

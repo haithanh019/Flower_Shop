@@ -1,4 +1,5 @@
 ﻿using System.ComponentModel.DataAnnotations;
+using Microsoft.AspNetCore.Http;
 
 namespace BusinessLogic.DTOs.Products;
 
@@ -20,6 +21,5 @@ public class ProductUpdateRequest
 
     public bool? IsActive { get; set; }
 
-    public List<string>? ImageUrls { get; set; }
-    public List<string>? ImagePublicIds { get; set; }
+    public List<IFormFile>? ImageFiles { get; set; }
 }

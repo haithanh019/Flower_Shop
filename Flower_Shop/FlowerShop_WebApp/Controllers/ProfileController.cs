@@ -1,0 +1,202 @@
+﻿using System.Net.Http.Headers;
+using System.Text;
+using System.Text.Json;
+using FlowerShop_WebApp.Models.Profile;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
+
+namespace FlowerShop_WebApp.Controllers
+{
+    [Authorize] // Chỉ cho phép user đã đăng nhập
+    public class ProfileController : Controller
+    {
+        private readonly IHttpClientFactory _httpClientFactory;
+        private readonly JsonSerializerOptions _jsonOptions = new()
+        {
+            PropertyNameCaseInsensitive = true,
+        };
+
+        public ProfileController(IHttpClientFactory httpClientFactory)
+        {
+            _httpClientFactory = httpClientFactory;
+        }
+
+        public async Task<IActionResult> Index()
+        {
+            var client = CreateApiClient();
+            var profileResponse = await client.GetAsync("api/profile");
+
+            if (!profileResponse.IsSuccessStatusCode)
+            {
+                return View(new CustomerProfileViewModel());
+            }
+
+            var profileJsonString = await profileResponse.Content.ReadAsStringAsync();
+            var profile = JsonSerializer.Deserialize<CustomerProfileViewModel>(
+                profileJsonString,
+                _jsonOptions
+            );
+
+            var addressResponse = await client.GetAsync("api/address");
+            if (addressResponse.IsSuccessStatusCode)
+            {
+                var addressJsonString = await addressResponse.Content.ReadAsStringAsync();
+                var addresses = JsonSerializer.Deserialize<List<AddressViewModel>>(
+                    addressJsonString,
+                    _jsonOptions
+                );
+                if (profile != null)
+                {
+                    profile.Addresses = addresses ?? new List<AddressViewModel>();
+                }
+            }
+
+            return View(profile);
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> UpdateProfile(CustomerProfileUpdateViewModel model)
+        {
+            if (!ModelState.IsValid)
+            {
+                return RedirectToAction("Index");
+            }
+
+            var client = CreateApiClient();
+            var jsonContent = new StringContent(
+                JsonSerializer.Serialize(model),
+                Encoding.UTF8,
+                "application/json"
+            );
+
+            var response = await client.PutAsync("api/profile", jsonContent);
+
+            if (response.IsSuccessStatusCode)
+            {
+                TempData["SuccessMessage"] = "Profile updated successfully!";
+            }
+            else
+            {
+                TempData["ErrorMessage"] = "Failed to update profile.";
+            }
+            return RedirectToAction("Index");
+        }
+
+        public IActionResult ChangePassword()
+        {
+            return View(new ChangePasswordViewModel());
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> ChangePassword(ChangePasswordViewModel model)
+        {
+            if (!ModelState.IsValid)
+            {
+                return View(model);
+            }
+
+            var client = CreateApiClient();
+            var jsonContent = new StringContent(
+                JsonSerializer.Serialize(model),
+                Encoding.UTF8,
+                "application/json"
+            );
+
+            var response = await client.PutAsync("api/profile/change-password", jsonContent);
+
+            if (response.IsSuccessStatusCode)
+            {
+                TempData["SuccessMessage"] = "Password changed successfully!";
+                return RedirectToAction("Index");
+            }
+
+            TempData["ErrorMessage"] =
+                "Failed to change password. Please check your current password.";
+            return View(model);
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> AddAddress(AddressViewModel model)
+        {
+            if (ModelState.IsValid)
+            {
+                var client = CreateApiClient();
+                var jsonContent = new StringContent(
+                    JsonSerializer.Serialize(model),
+                    Encoding.UTF8,
+                    "application/json"
+                );
+
+                var response = await client.PostAsync("api/address", jsonContent);
+
+                if (response.IsSuccessStatusCode)
+                {
+                    TempData["SuccessMessage"] = "Address added successfully!";
+                }
+                else
+                {
+                    TempData["ErrorMessage"] = "Failed to add address.";
+                }
+            }
+            return RedirectToAction("Index");
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> EditAddress(AddressViewModel model)
+        {
+            if (ModelState.IsValid)
+            {
+                var client = CreateApiClient();
+                var jsonContent = new StringContent(
+                    JsonSerializer.Serialize(model),
+                    Encoding.UTF8,
+                    "application/json"
+                );
+
+                var response = await client.PutAsync($"api/address/{model.AddressId}", jsonContent);
+
+                if (response.IsSuccessStatusCode)
+                {
+                    TempData["SuccessMessage"] = "Address updated successfully!";
+                }
+                else
+                {
+                    TempData["ErrorMessage"] = "Failed to update address.";
+                }
+            }
+            return RedirectToAction("Index");
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> DeleteAddress(Guid addressId)
+        {
+            var client = CreateApiClient();
+            var response = await client.DeleteAsync($"api/address/{addressId}");
+
+            if (response.IsSuccessStatusCode)
+            {
+                TempData["SuccessMessage"] = "Address deleted successfully!";
+            }
+            else
+            {
+                TempData["ErrorMessage"] = "Failed to delete address.";
+            }
+
+            return RedirectToAction("Index");
+        }
+
+        private HttpClient CreateApiClient()
+        {
+            var client = _httpClientFactory.CreateClient("ApiClient");
+            var token = HttpContext.Session.GetString("JWToken");
+            if (!string.IsNullOrEmpty(token))
+            {
+                client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue(
+                    "Bearer",
+                    token
+                );
+            }
+            return client;
+        }
+    }
+}

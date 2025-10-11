@@ -13,6 +13,7 @@ namespace DataAccess.UnitOfWork
         IProductRepository Product { get; }
         IProductImageRepository ProductImage { get; }
         IUserRepository User { get; }
+        IAddressRepository Address { get; }
         Task SaveAsync();
     }
 }

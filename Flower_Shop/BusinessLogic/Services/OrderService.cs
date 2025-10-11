@@ -5,6 +5,10 @@ using BusinessLogic.Services.Interfaces;
 using DataAccess.Entities;
 using DataAccess.UnitOfWork;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Logging;
+using Net.payOS.Types;
+using Ultitity.Email.Interface;
 using Ultitity.Exceptions;
 
 namespace BusinessLogic.Services
@@ -13,11 +17,29 @@ namespace BusinessLogic.Services
     {
         private readonly IUnitOfWork _unitOfWork;
         private readonly IMapper _mapper;
+        private readonly IEmailQueue _emailQueue;
+        private readonly IPayOSService _payOSService;
+        private readonly IHttpClientFactory _httpClientFactory;
+        private readonly IConfiguration _configuration;
+        private readonly ILogger<OrderService> _logger;
 
-        public OrderService(IUnitOfWork unitOfWork, IMapper mapper)
+        public OrderService(
+            IUnitOfWork unitOfWork,
+            IMapper mapper,
+            IEmailQueue emailQueue,
+            IPayOSService payOSService,
+            IHttpClientFactory httpClientFactory,
+            IConfiguration configuration,
+            ILogger<OrderService> logger
+        )
         {
             _unitOfWork = unitOfWork;
             _mapper = mapper;
+            _emailQueue = emailQueue;
+            _payOSService = payOSService;
+            _httpClientFactory = httpClientFactory;
+            _configuration = configuration;
+            _logger = logger;
         }
 
         public async Task<OrderDto> CreateOrderFromCartAsync(
@@ -25,7 +47,7 @@ namespace BusinessLogic.Services
             OrderCreateRequest request
         )
         {
-            // 1. Lấy giỏ hàng của người dùng
+            // ... (Phần logic kiểm tra giỏ hàng, người dùng, địa chỉ giữ nguyên)
             var cart = await _unitOfWork.Cart.GetAsync(c => c.UserId == userId, "Items.Product");
             if (cart == null || !cart.Items.Any())
             {
@@ -40,12 +62,27 @@ namespace BusinessLogic.Services
                 throw new KeyNotFoundException("User not found.");
             }
 
-            // 2. Tạo đối tượng Order và OrderItems
+            var address = await _unitOfWork.Address.GetAsync(a =>
+                a.AddressId == request.AddressId && a.UserId == userId
+            );
+            if (address == null)
+            {
+                throw new CustomValidationException(
+                    new Dictionary<string, string[]>
+                    {
+                        { "AddressId", new[] { "Invalid or unauthorized address." } },
+                    }
+                );
+            }
+            var fullShippingAddress =
+                $"{address.Detail}, {address.Ward}, {address.District}, {address.City}";
+
+            // ... (Phần logic tạo đơn hàng và trừ kho giữ nguyên)
             var newOrder = new Order
             {
                 UserId = userId,
-                PhoneNumber = user.PhoneNumber,
-                ShippingAddress = user.Address,
+                PhoneNumber = request.ShippingPhoneNumber,
+                ShippingAddress = fullShippingAddress,
                 Status = OrderStatus.Pending,
                 OrderNumber = Guid.NewGuid().ToString("N").Substring(0, 8).ToUpper(),
             };
@@ -54,12 +91,7 @@ namespace BusinessLogic.Services
             foreach (var cartItem in cart.Items)
             {
                 if (cartItem.Product == null)
-                {
-                    throw new InvalidOperationException(
-                        $"Product details missing for cart item {cartItem.CartItemId}."
-                    );
-                }
-                // Kiểm tra số lượng tồn kho
+                    continue;
                 if (cartItem.Product.StockQuantity < cartItem.Quantity)
                 {
                     throw new CustomValidationException(
@@ -75,10 +107,7 @@ namespace BusinessLogic.Services
                         }
                     );
                 }
-
-                // Trừ số lượng tồn kho
                 cartItem.Product.StockQuantity -= cartItem.Quantity;
-
                 var orderItem = new OrderItem
                 {
                     ProductId = cartItem.ProductId,
@@ -91,11 +120,9 @@ namespace BusinessLogic.Services
             }
 
             newOrder.Subtotal = subtotal;
-            newOrder.TotalAmount = subtotal; // Tạm thời chưa có phí ship/giảm giá
-
+            newOrder.TotalAmount = subtotal;
             await _unitOfWork.Order.AddAsync(newOrder);
 
-            // 3. Tạo thanh toán (Payment) tương ứng
             var payment = new Payment
             {
                 OrderId = newOrder.OrderId,
@@ -105,13 +132,246 @@ namespace BusinessLogic.Services
             };
             await _unitOfWork.Payment.AddAsync(payment);
 
-            // 4. Xóa các sản phẩm trong giỏ hàng
             _unitOfWork.CartItem.RemoveRange(cart.Items);
-
-            // 5. Lưu tất cả thay đổi vào database trong một transaction
             await _unitOfWork.SaveAsync();
 
-            return _mapper.Map<OrderDto>(newOrder);
+            var createdOrder = await _unitOfWork.Order.GetAsync(
+                o => o.OrderId == newOrder.OrderId,
+                includeProperties: "Payment,Items.Product,User"
+            );
+
+            if (
+                createdOrder?.Payment?.Method == PaymentMethod.CashOnDelivery
+                && createdOrder.User != null
+            )
+            {
+                var subject = $"[FlowerShop] Đã tiếp nhận đơn hàng #{createdOrder.OrderNumber}";
+                var htmlMessage = EmailTemplateService.OrderReceivedEmail(
+                    createdOrder,
+                    createdOrder.User
+                );
+                _emailQueue.QueueEmail(createdOrder.User.Email, subject, htmlMessage);
+            }
+            else if (createdOrder?.Payment?.Method == PaymentMethod.PayOS)
+            {
+                var paymentResult = await _payOSService.CreatePaymentLink(createdOrder);
+                if (paymentResult != null && createdOrder.Payment != null)
+                {
+                    createdOrder.Payment.TransactionId = paymentResult.checkoutUrl;
+                    await _unitOfWork.SaveAsync();
+                }
+            }
+
+            return _mapper.Map<OrderDto>(createdOrder ?? newOrder);
+        }
+
+        public async Task<OrderDto> UpdateOrderStatusAsync(OrderUpdateStatusRequest request)
+        {
+            var orderToUpdate = await _unitOfWork.Order.GetAsync(
+                o => o.OrderId == request.OrderId,
+                "Items.Product,User,Payment"
+            );
+            if (orderToUpdate == null)
+            {
+                throw new KeyNotFoundException($"Order with ID {request.OrderId} not found.");
+            }
+
+            if (!Enum.TryParse<OrderStatus>(request.Status, true, out var newStatus))
+            {
+                throw new CustomValidationException(
+                    new Dictionary<string, string[]>
+                    {
+                        { "Status", new[] { $"Invalid order status: {request.Status}." } },
+                    }
+                );
+            }
+
+            var oldStatus = orderToUpdate.Status;
+            orderToUpdate.Status = newStatus;
+
+            if (newStatus != oldStatus && orderToUpdate.User != null)
+            {
+                string subject = string.Empty;
+                string htmlMessage = string.Empty;
+
+                switch (newStatus)
+                {
+                    case OrderStatus.Confirmed:
+                        if (orderToUpdate.Payment?.Method == PaymentMethod.CashOnDelivery)
+                        {
+                            subject =
+                                $"[FlowerShop] Đơn hàng #{orderToUpdate.OrderNumber} đã được xác nhận";
+                            htmlMessage = EmailTemplateService.OrderConfirmedEmail(
+                                orderToUpdate,
+                                orderToUpdate.User
+                            );
+                        }
+                        break;
+
+                    case OrderStatus.Shipping:
+                        subject =
+                            $"[FlowerShop] Đơn hàng #{orderToUpdate.OrderNumber} đang được giao đến bạn";
+                        htmlMessage = EmailTemplateService.OrderShippedEmail(
+                            orderToUpdate,
+                            orderToUpdate.User
+                        );
+                        break;
+
+                    case OrderStatus.Completed:
+                        subject =
+                            $"[FlowerShop] Đơn hàng #{orderToUpdate.OrderNumber} đã được giao đến bạn";
+                        htmlMessage = EmailTemplateService.OrderCompletedEmail(
+                            orderToUpdate,
+                            orderToUpdate.User
+                        );
+                        break;
+
+                    case OrderStatus.Cancelled:
+                        subject = $"[FlowerShop] Đã hủy đơn hàng #{orderToUpdate.OrderNumber}";
+                        htmlMessage = EmailTemplateService.OrderCancelledEmail(
+                            orderToUpdate,
+                            orderToUpdate.User
+                        );
+                        break;
+                }
+
+                if (!string.IsNullOrEmpty(subject) && !string.IsNullOrEmpty(htmlMessage))
+                {
+                    _emailQueue.QueueEmail(orderToUpdate.User.Email, subject, htmlMessage);
+                }
+            }
+
+            await _unitOfWork.SaveAsync();
+            return _mapper.Map<OrderDto>(orderToUpdate);
+        }
+
+        public async Task HandlePayOSWebhook(WebhookData data)
+        {
+            _logger.LogInformation(
+                "Webhook received for PayOS orderCode {PayOSCode}, searching for a matching order.",
+                data.orderCode
+            );
+
+            var pendingOrders = await _unitOfWork.Order.GetRangeAsync(
+                o =>
+                    o.Status == OrderStatus.Pending
+                    && o.Payment != null
+                    && o.Payment.Method == PaymentMethod.PayOS,
+                "Payment,User"
+            );
+
+            Order? foundOrder = null;
+            foreach (var order in pendingOrders)
+            {
+                try
+                {
+                    long orderCodeFromDb = long.Parse(
+                        order.OrderNumber,
+                        System.Globalization.NumberStyles.HexNumber
+                    );
+
+                    if (orderCodeFromDb == data.orderCode)
+                    {
+                        foundOrder = await _unitOfWork.Order.GetAsync(
+                            o => o.OrderId == order.OrderId,
+                            "Items.Product,User,Payment"
+                        );
+                        break;
+                    }
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogWarning(
+                        ex,
+                        "Could not parse OrderNumber {OrderNumber} as a hex number.",
+                        order.OrderNumber
+                    );
+                    continue;
+                }
+            }
+
+            if (foundOrder != null && foundOrder.Payment?.Status != PaymentStatus.Accepted)
+            {
+                _logger.LogInformation(
+                    "Order ID {OrderId} found. Updating status to Confirmed/Accepted.",
+                    foundOrder.OrderId
+                );
+
+                foundOrder.Status = OrderStatus.Confirmed;
+                if (foundOrder.Payment != null)
+                {
+                    foundOrder.Payment.Status = PaymentStatus.Accepted;
+                    foundOrder.Payment.PaidAt = DateTime.UtcNow;
+                }
+
+                if (foundOrder.User != null)
+                {
+                    var subject =
+                        $"[FlowerShop] Thanh toán thành công cho đơn hàng #{foundOrder.OrderNumber}";
+                    var htmlMessage = EmailTemplateService.PaymentSuccessEmail(
+                        foundOrder,
+                        foundOrder.User
+                    );
+                    _emailQueue.QueueEmail(foundOrder.User.Email, subject, htmlMessage);
+
+                    var confirmedSubject =
+                        $"[FlowerShop] Đơn hàng #{foundOrder.OrderNumber} đã được xác nhận";
+                    var confirmedHtmlMessage = EmailTemplateService.OrderConfirmedEmail(
+                        foundOrder,
+                        foundOrder.User
+                    );
+                    _emailQueue.QueueEmail(
+                        foundOrder.User.Email,
+                        confirmedSubject,
+                        confirmedHtmlMessage
+                    );
+                }
+
+                await _unitOfWork.SaveAsync();
+                _logger.LogInformation(
+                    "Successfully updated status for Order ID {OrderId}.",
+                    foundOrder.OrderId
+                );
+            }
+            else if (foundOrder != null)
+            {
+                _logger.LogWarning(
+                    "Webhook received for already processed Order ID {OrderId}.",
+                    foundOrder.OrderId
+                );
+            }
+            else
+            {
+                _logger.LogWarning(
+                    "Webhook received but no matching order found for PayOS orderCode {PayOSCode}",
+                    data.orderCode
+                );
+            }
+        }
+
+        public async Task<PagedResultDto<OrderDto>> GetAllOrdersAsync(QueryParameters queryParams)
+        {
+            var query = _unitOfWork.Order.GetQueryable("Items,Payment,User");
+            if (!string.IsNullOrEmpty(queryParams.Search))
+            {
+                if (Enum.TryParse<OrderStatus>(queryParams.Search, true, out var status))
+                {
+                    query = query.Where(o => o.Status == status);
+                }
+            }
+            query = query.OrderByDescending(o => o.CreatedAt);
+            var totalCount = await query.CountAsync();
+            var orders = await query
+                .Skip((queryParams.PageNumber - 1) * queryParams.PageSize)
+                .Take(queryParams.PageSize)
+                .ToListAsync();
+            return new PagedResultDto<OrderDto>
+            {
+                Items = _mapper.Map<IEnumerable<OrderDto>>(orders),
+                TotalCount = totalCount,
+                PageNumber = queryParams.PageNumber,
+                PageSize = queryParams.PageSize,
+            };
         }
 
         public async Task<OrderDto?> GetOrderDetailsAsync(Guid orderId)
@@ -146,32 +406,6 @@ namespace BusinessLogic.Services
                 PageNumber = queryParams.PageNumber,
                 PageSize = queryParams.PageSize,
             };
-        }
-
-        public async Task<OrderDto> UpdateOrderStatusAsync(OrderUpdateStatusRequest request)
-        {
-            var orderToUpdate = await _unitOfWork.Order.GetAsync(o => o.OrderId == request.OrderId);
-            if (orderToUpdate == null)
-            {
-                throw new KeyNotFoundException($"Order with ID {request.OrderId} not found.");
-            }
-
-            if (Enum.TryParse<OrderStatus>(request.Status, true, out var newStatus))
-            {
-                orderToUpdate.Status = newStatus;
-            }
-            else
-            {
-                throw new CustomValidationException(
-                    new Dictionary<string, string[]>
-                    {
-                        { "Status", new[] { $"Invalid order status: {request.Status}." } },
-                    }
-                );
-            }
-
-            await _unitOfWork.SaveAsync();
-            return _mapper.Map<OrderDto>(orderToUpdate);
         }
     }
 }

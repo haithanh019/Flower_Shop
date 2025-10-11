@@ -10,7 +10,14 @@ public class OrderCreateRequest
     [Required]
     public required string PaymentMethod { get; set; }
 
-    // For direct order creation (without Cart)
+    [Required]
+    public required string ShippingFullName { get; set; }
+
+    [Required]
+    public required string ShippingPhoneNumber { get; set; }
+
+    [Required]
+    public Guid AddressId { get; set; }
     public List<OrderItemCreateLine>? Items { get; set; }
 }
 

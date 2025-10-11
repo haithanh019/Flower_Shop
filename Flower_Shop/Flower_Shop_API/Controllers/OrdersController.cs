@@ -1,25 +1,43 @@
-﻿using System.Security.Claims;
+﻿// File: Flower_Shop_API/Controllers/OrdersController.cs
+
+using System.IO; // Thêm using này
+using System.Security.Claims;
+using System.Text.Json; // Thêm using này
 using BusinessLogic.DTOs;
 using BusinessLogic.DTOs.Orders;
 using BusinessLogic.Services.FacadeService;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Net.payOS;
+using Net.payOS.Types;
 
 namespace Flower_Shop_API.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
-    [Authorize] // Tất cả các hành động trong đây đều yêu cầu đăng nhập
+    [Authorize]
     public class OrdersController : ControllerBase
     {
         private readonly IFacadeService _facadeService;
+        private readonly ILogger<OrdersController> _logger;
 
-        public OrdersController(IFacadeService facadeService)
+        // SỬA LẠI HÀM KHỞI TẠO (CONSTRUCTOR)
+        public OrdersController(IFacadeService facadeService, ILogger<OrdersController> logger)
         {
             _facadeService = facadeService;
+            _logger = logger;
+        }
+
+        [HttpGet("all")]
+        [Authorize(Roles = "Admin")]
+        public async Task<IActionResult> GetAllOrders([FromQuery] QueryParameters queryParams)
+        {
+            var orders = await _facadeService.OrderService.GetAllOrdersAsync(queryParams);
+            return Ok(orders);
         }
 
         [HttpPost]
+        [Authorize] // Giữ Authorize cho các action cần thiết
         public async Task<IActionResult> CreateOrder([FromBody] OrderCreateRequest request)
         {
             var userId = GetUserIdFromClaims();
@@ -28,6 +46,7 @@ namespace Flower_Shop_API.Controllers
         }
 
         [HttpGet]
+        [Authorize]
         public async Task<IActionResult> GetUserOrders([FromQuery] QueryParameters queryParams)
         {
             var userId = GetUserIdFromClaims();
@@ -36,6 +55,7 @@ namespace Flower_Shop_API.Controllers
         }
 
         [HttpGet("{id}")]
+        [Authorize]
         public async Task<IActionResult> GetOrderDetails(Guid id)
         {
             var userId = GetUserIdFromClaims();
@@ -46,23 +66,43 @@ namespace Flower_Shop_API.Controllers
                 return NotFound();
             }
 
-            // Đảm bảo người dùng chỉ có thể xem đơn hàng của chính họ, trừ khi là Admin
             if (order.CustomerId != userId && !User.IsInRole("Admin"))
             {
-                return Forbid(); // HTTP 403 Forbidden
+                return Forbid();
             }
 
             return Ok(order);
         }
 
         [HttpPut("status")]
-        [Authorize(Roles = "Admin")] // Chỉ Admin mới được cập nhật trạng thái
+        [Authorize(Roles = "Admin")]
         public async Task<IActionResult> UpdateOrderStatus(
             [FromBody] OrderUpdateStatusRequest request
         )
         {
             var updatedOrder = await _facadeService.OrderService.UpdateOrderStatusAsync(request);
             return Ok(updatedOrder);
+        }
+
+        [HttpPost("payos-webhook")]
+        [AllowAnonymous]
+        public async Task<IActionResult> PayOSWebhook([FromBody] WebhookType webhookPayload)
+        {
+            _logger.LogInformation("--- PayOS Webhook endpoint was hit ---");
+            try
+            {
+                var webhookData = _facadeService.PayOSService.VerifyPaymentWebhook(webhookPayload);
+                await _facadeService.OrderService.HandlePayOSWebhook(webhookData);
+                return Ok("Webhook processed successfully.");
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(
+                    ex,
+                    "--- ERROR: An unexpected error occurred while processing webhook ---"
+                );
+                return Ok("An error occurred but has been logged.");
+            }
         }
 
         private Guid GetUserIdFromClaims()

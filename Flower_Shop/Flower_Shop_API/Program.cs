@@ -1,6 +1,8 @@
-using System.Text;
+﻿using System.Text;
 using BusinessLogic.Mapping;
+using BusinessLogic.Services;
 using BusinessLogic.Services.FacadeService;
+using BusinessLogic.Services.Interfaces;
 using DataAccess.Data;
 using DataAccess.UnitOfWork;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
@@ -41,10 +43,21 @@ namespace Flower_Shop_API
                         ValidateIssuerSigningKey = true,
                         ValidIssuer = builder.Configuration["Jwt:Issuer"],
                         ValidAudience = builder.Configuration["Jwt:Audience"],
-                        IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(key)),
+                        IssuerSigningKey = new SymmetricSecurityKey(Encoding.ASCII.GetBytes(key)),
                     };
                 });
-            builder.Services.AddControllers();
+            builder
+                .Services.AddControllers()
+                .AddJsonOptions(options =>
+                {
+                    // Cấu hình này sẽ bảo API luôn xử lý tên thuộc tính JSON
+                    // dưới dạng camelCase, ví dụ: "productId" thay vì "ProductId".
+                    options.JsonSerializerOptions.PropertyNamingPolicy = System
+                        .Text
+                        .Json
+                        .JsonNamingPolicy
+                        .CamelCase;
+                });
             // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
             builder.Services.AddEndpointsApiExplorer();
             builder.Services.AddSwaggerGen();
@@ -56,13 +69,17 @@ namespace Flower_Shop_API
                 builder.Configuration.GetSection("Cloudinary")
             );
             builder.Services.Configure<GoogleOptions>(builder.Configuration.GetSection("Google"));
-
+            builder.Services.AddLogging();
             /// Register services
             builder.Services.AddScoped<CoreDependencies>();
             builder.Services.AddScoped<InfraDependencies>();
             builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
             builder.Services.AddScoped<IFacadeService, FacadeService>();
+            builder.Services.AddSingleton<EmailSender>();
+            builder.Services.AddHostedService<BackgroundEmailSender>();
             builder.Services.AddSingleton<IEmailQueue, EmailQueue>();
+            builder.Services.AddScoped<IPayOSService, PayOSService>();
+            builder.Services.AddScoped<IVietQRService, VietQRService>();
 
             // LLM client
             builder.Services.AddHttpClient<IGroqClient, GroqClient>(client =>
@@ -75,6 +92,21 @@ namespace Flower_Shop_API
             });
 
             builder.Services.AddDistributedMemoryCache();
+            builder.Services.AddCors(options =>
+            {
+                options.AddPolicy(
+                    "AllowSpecificOrigins",
+                    policy =>
+                    {
+                        policy
+                            .WithOrigins("https://unarriving-unswaying-winifred.ngrok-free.dev")
+                            .AllowAnyMethod()
+                            .AllowAnyHeader()
+                            .AllowCredentials();
+                    }
+                );
+            });
+
             var app = builder.Build();
 
             // Configure the HTTP request pipeline.
@@ -83,11 +115,14 @@ namespace Flower_Shop_API
                 app.UseSwagger();
                 app.UseSwaggerUI();
             }
+
             app.UseMiddleware<ValidationExceptionMiddleware>();
 
             app.UseHttpsRedirection();
 
             app.UseRouting();
+
+            app.UseCors("AllowSpecificOrigins");
 
             app.UseAuthentication();
 

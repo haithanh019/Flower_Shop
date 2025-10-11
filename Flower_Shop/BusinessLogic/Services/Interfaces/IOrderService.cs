@@ -1,5 +1,6 @@
 ﻿using BusinessLogic.DTOs;
 using BusinessLogic.DTOs.Orders;
+using Net.payOS.Types;
 
 namespace BusinessLogic.Services.Interfaces
 {
@@ -12,5 +13,7 @@ namespace BusinessLogic.Services.Interfaces
         Task<OrderDto?> GetOrderDetailsAsync(Guid orderId);
 
         Task<OrderDto> UpdateOrderStatusAsync(OrderUpdateStatusRequest request);
+        Task<PagedResultDto<OrderDto>> GetAllOrdersAsync(QueryParameters queryParams);
+        Task HandlePayOSWebhook(WebhookData data);
     }
 }

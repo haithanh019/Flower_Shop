@@ -1,15 +1,21 @@
 ﻿using System.Text.Json;
 using Microsoft.AspNetCore.Http;
+using Microsoft.Extensions.Logging; // Thêm using này
 
 namespace Ultitity.Exceptions
 {
     public class ValidationExceptionMiddleware
     {
         private readonly RequestDelegate _next;
+        private readonly ILogger<ValidationExceptionMiddleware> _logger; // Thêm ILogger
 
-        public ValidationExceptionMiddleware(RequestDelegate next)
+        public ValidationExceptionMiddleware(
+            RequestDelegate next,
+            ILogger<ValidationExceptionMiddleware> logger
+        ) // Cập nhật constructor
         {
             _next = next;
+            _logger = logger;
         }
 
         public async Task InvokeAsync(HttpContext httpContext)
@@ -22,8 +28,10 @@ namespace Ultitity.Exceptions
             {
                 await HandleValidationExceptionAsync(httpContext, ex);
             }
-            catch
+            catch (Exception ex) // Bắt tất cả các loại exception khác
             {
+                // Ghi lại toàn bộ chi tiết của lỗi
+                _logger.LogError(ex, "An unhandled exception has occurred.");
                 await HandleExceptionAsync(httpContext);
             }
         }
@@ -47,7 +55,11 @@ namespace Ultitity.Exceptions
             context.Response.ContentType = "application/json";
             context.Response.StatusCode = StatusCodes.Status500InternalServerError;
 
-            var response = new { message = "An unexpected error occurred." };
+            // Giữ thông báo lỗi chung chung cho client, nhưng lỗi chi tiết đã được log ở server
+            var response = new
+            {
+                message = "An unexpected error occurred. Please check the API logs for details.",
+            };
 
             var json = JsonSerializer.Serialize(response);
             await context.Response.WriteAsync(json);

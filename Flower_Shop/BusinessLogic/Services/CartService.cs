@@ -3,6 +3,7 @@ using BusinessLogic.DTOs.Cart;
 using BusinessLogic.Services.Interfaces;
 using DataAccess.Entities;
 using DataAccess.UnitOfWork;
+using Microsoft.EntityFrameworkCore;
 using Ultitity.Exceptions;
 
 namespace BusinessLogic.Services
@@ -18,203 +19,110 @@ namespace BusinessLogic.Services
             _mapper = mapper;
         }
 
-        public async Task<CartDto> GetCartAsync(Guid? userId, string? sessionId)
+        public async Task<CartDto> GetCartAsync(Guid userId)
         {
-            Cart? cart;
-            if (userId.HasValue)
-            {
-                cart = await GetOrCreateCartByUserId(userId.Value);
-            }
-            else if (!string.IsNullOrEmpty(sessionId))
-            {
-                cart = await GetOrCreateCartBySessionId(sessionId);
-            }
-            else
-            {
-                return new CartDto(); // Trả về giỏ hàng trống nếu không có thông tin định danh
-            }
-
-            return _mapper.Map<CartDto>(cart);
+            var cart = await _unitOfWork.Cart.GetAsync(
+                c => c.UserId == userId,
+                "Items.Product.Images"
+            );
+            return _mapper.Map<CartDto>(cart ?? new Cart { UserId = userId });
         }
 
-        public async Task<CartDto> AddItemToCartAsync(Guid? userId, CartAddItemRequest request)
+        public async Task<CartDto> AddItemToCartAsync(Guid userId, CartAddItemRequest request)
         {
-            var cart = await GetCartForModification(userId, request.SessionId);
-
+            var cart = await GetOrCreateCartAsync(userId);
             var product = await _unitOfWork.Product.GetAsync(p =>
                 p.ProductId == request.ProductId && p.IsActive
             );
             if (product == null)
-            {
                 throw new KeyNotFoundException("Product not found or is inactive.");
-            }
-            if (product.StockQuantity < request.Quantity)
-            {
-                throw new CustomValidationException(
-                    new Dictionary<string, string[]>
-                    {
-                        { "Quantity", new[] { "Not enough stock available." } },
-                    }
-                );
-            }
 
             var existingItem = cart.Items.FirstOrDefault(i => i.ProductId == request.ProductId);
             if (existingItem != null)
             {
-                existingItem.Quantity += request.Quantity;
+                var newQuantity = existingItem.Quantity + request.Quantity;
+                if (product.StockQuantity < newQuantity)
+                    throw new CustomValidationException(
+                        new Dictionary<string, string[]>
+                        {
+                            { "Quantity", new[] { "Not enough stock." } },
+                        }
+                    );
+                existingItem.Quantity = newQuantity;
             }
             else
             {
-                cart.Items.Add(
-                    new CartItem
-                    {
-                        ProductId = request.ProductId,
-                        Quantity = request.Quantity,
-                        UnitPrice = product.Price,
-                    }
-                );
+                if (product.StockQuantity < request.Quantity)
+                    throw new CustomValidationException(
+                        new Dictionary<string, string[]>
+                        {
+                            { "Quantity", new[] { "Not enough stock." } },
+                        }
+                    );
+
+                var newCartItem = new CartItem
+                {
+                    CartId = cart.CartId,
+                    ProductId = request.ProductId,
+                    Quantity = request.Quantity,
+                    UnitPrice = product.Price,
+                };
+
+                await _unitOfWork.CartItem.AddAsync(newCartItem);
             }
 
             await _unitOfWork.SaveAsync();
-            return _mapper.Map<CartDto>(cart);
+            return await GetCartAsync(userId);
         }
 
         public async Task<CartDto> UpdateItemQuantityAsync(
-            Guid? userId,
+            Guid userId,
             CartUpdateQtyRequest request
         )
         {
-            var cart = await GetCartForModification(userId, request.SessionId);
-            var itemToUpdate = cart.Items.FirstOrDefault(i => i.CartItemId == request.CartItemId);
-
-            if (itemToUpdate == null)
-            {
-                throw new KeyNotFoundException("Cart item not found.");
-            }
+            var cart = await GetOrCreateCartAsync(userId);
+            var item = cart.Items.FirstOrDefault(i => i.CartItemId == request.CartItemId);
+            if (item == null)
+                throw new KeyNotFoundException("Item not found in cart.");
 
             if (request.Quantity <= 0)
             {
-                _unitOfWork.CartItem.Remove(itemToUpdate);
+                _unitOfWork.CartItem.Remove(item);
             }
             else
             {
-                itemToUpdate.Quantity = request.Quantity;
+                item.Quantity = request.Quantity;
             }
 
             await _unitOfWork.SaveAsync();
-            return _mapper.Map<CartDto>(cart);
+            return await GetCartAsync(userId);
         }
 
         public async Task<CartDto> RemoveItemFromCartAsync(
-            Guid? userId,
+            Guid userId,
             CartRemoveItemRequest request
         )
         {
-            var cart = await GetCartForModification(userId, request.SessionId);
-            var itemToRemove = cart.Items.FirstOrDefault(i => i.CartItemId == request.CartItemId);
-
-            if (itemToRemove != null)
+            var cart = await GetOrCreateCartAsync(userId);
+            var item = cart.Items.FirstOrDefault(i => i.CartItemId == request.CartItemId);
+            if (item != null)
             {
-                _unitOfWork.CartItem.Remove(itemToRemove);
+                _unitOfWork.CartItem.Remove(item);
                 await _unitOfWork.SaveAsync();
             }
-
-            return _mapper.Map<CartDto>(cart);
+            return await GetCartAsync(userId);
         }
 
-        public async Task<CartDto> MergeCartsAsync(Guid userId, CartMergeRequest request)
+        private async Task<Cart> GetOrCreateCartAsync(Guid userId)
         {
-            var userCart = await GetOrCreateCartByUserId(userId, "Items.Product");
-            var guestCart = await _unitOfWork.Cart.GetAsync(
-                c => c.SessionId == request.SessionId,
-                "Items.Product"
-            );
+            // Sử dụng GetAsync để đảm bảo các đối tượng được DbContext theo dõi
+            var cart = await _unitOfWork.Cart.GetAsync(c => c.UserId == userId, "Items");
 
-            if (guestCart == null || !guestCart.Items.Any())
-            {
-                return _mapper.Map<CartDto>(userCart);
-            }
-
-            foreach (var guestItem in guestCart.Items.ToList()) // Dùng ToList() để tránh lỗi khi thay đổi collection
-            {
-                var userItem = userCart.Items.FirstOrDefault(i =>
-                    i.ProductId == guestItem.ProductId
-                );
-                if (userItem != null)
-                {
-                    userItem.Quantity += guestItem.Quantity;
-                }
-                else
-                {
-                    // Chuyển item từ giỏ hàng khách sang giỏ hàng user
-                    guestItem.CartId = userCart.CartId;
-                    userCart.Items.Add(guestItem);
-                }
-            }
-
-            _unitOfWork.Cart.Remove(guestCart);
-            await _unitOfWork.SaveAsync();
-
-            return _mapper.Map<CartDto>(userCart);
-        }
-
-        // --- Helper Methods ---
-        private async Task<Cart> GetOrCreateCartByUserId(
-            Guid userId,
-            string includeProperties = "Items.Product.Images"
-        )
-        {
-            var cart = await _unitOfWork.Cart.GetAsync(c => c.UserId == userId, includeProperties);
             if (cart == null)
             {
                 cart = new Cart { UserId = userId };
                 await _unitOfWork.Cart.AddAsync(cart);
-                // Không cần SaveAsync ở đây, sẽ save ở các hàm gọi nó
-            }
-            return cart;
-        }
-
-        private async Task<Cart> GetOrCreateCartBySessionId(
-            string sessionId,
-            string includeProperties = "Items.Product.Images"
-        )
-        {
-            var cart = await _unitOfWork.Cart.GetAsync(
-                c => c.SessionId == sessionId,
-                includeProperties
-            );
-            if (cart == null)
-            {
-                cart = new Cart { SessionId = sessionId };
-                await _unitOfWork.Cart.AddAsync(cart);
-            }
-            return cart;
-        }
-
-        private async Task<Cart> GetCartForModification(Guid? userId, string? sessionId)
-        {
-            Cart? cart;
-            const string includeProps = "Items";
-
-            if (userId.HasValue)
-            {
-                cart = await GetOrCreateCartByUserId(userId.Value, includeProps);
-            }
-            else if (!string.IsNullOrEmpty(sessionId))
-            {
-                cart = await GetOrCreateCartBySessionId(sessionId, includeProps);
-            }
-            else
-            {
-                throw new CustomValidationException(
-                    new Dictionary<string, string[]>
-                    {
-                        {
-                            "Identifier",
-                            new[] { "Either User ID or Session ID is required to manage the cart." }
-                        },
-                    }
-                );
+                await _unitOfWork.SaveAsync();
             }
             return cart;
         }
