@@ -137,10 +137,9 @@ namespace BusinessLogic.Services
 
             var createdOrder = await _unitOfWork.Order.GetAsync(
                 o => o.OrderId == newOrder.OrderId,
-                includeProperties: "Payment,Items.Product,User" // Nạp thêm User và Items.Product
+                includeProperties: "Payment,Items.Product,User"
             );
 
-            // Nếu là đơn COD, gửi email "Đã tiếp nhận đơn hàng"
             if (
                 createdOrder?.Payment?.Method == PaymentMethod.CashOnDelivery
                 && createdOrder.User != null
@@ -188,9 +187,8 @@ namespace BusinessLogic.Services
             }
 
             var oldStatus = orderToUpdate.Status;
-            orderToUpdate.Status = newStatus; // Cập nhật trạng thái mới
+            orderToUpdate.Status = newStatus;
 
-            // Chỉ gửi email nếu trạng thái thực sự thay đổi và có thông tin user
             if (newStatus != oldStatus && orderToUpdate.User != null)
             {
                 string subject = string.Empty;
@@ -198,7 +196,6 @@ namespace BusinessLogic.Services
 
                 switch (newStatus)
                 {
-                    // Gửi mail xác nhận cho đơn COD
                     case OrderStatus.Confirmed:
                         if (orderToUpdate.Payment?.Method == PaymentMethod.CashOnDelivery)
                         {
@@ -211,7 +208,6 @@ namespace BusinessLogic.Services
                         }
                         break;
 
-                    // Gửi mail báo đang vận chuyển
                     case OrderStatus.Shipping:
                         subject =
                             $"[FlowerShop] Đơn hàng #{orderToUpdate.OrderNumber} đang được giao đến bạn";
@@ -221,7 +217,15 @@ namespace BusinessLogic.Services
                         );
                         break;
 
-                    // Gửi mail báo đã hủy
+                    case OrderStatus.Completed:
+                        subject =
+                            $"[FlowerShop] Đơn hàng #{orderToUpdate.OrderNumber} đã được giao đến bạn";
+                        htmlMessage = EmailTemplateService.OrderCompletedEmail(
+                            orderToUpdate,
+                            orderToUpdate.User
+                        );
+                        break;
+
                     case OrderStatus.Cancelled:
                         subject = $"[FlowerShop] Đã hủy đơn hàng #{orderToUpdate.OrderNumber}";
                         htmlMessage = EmailTemplateService.OrderCancelledEmail(
@@ -243,14 +247,16 @@ namespace BusinessLogic.Services
 
         public async Task HandlePayOSWebhook(WebhookData data)
         {
-            // ... (Phần logic xử lý webhook giữ nguyên như đã sửa)
             _logger.LogInformation(
                 "Webhook received for PayOS orderCode {PayOSCode}, searching for a matching order.",
                 data.orderCode
             );
 
             var pendingOrders = await _unitOfWork.Order.GetRangeAsync(
-                o => o.Status == OrderStatus.Pending && o.Payment.Method == PaymentMethod.PayOS,
+                o =>
+                    o.Status == OrderStatus.Pending
+                    && o.Payment != null
+                    && o.Payment.Method == PaymentMethod.PayOS,
                 "Payment,User"
             );
 
@@ -307,6 +313,18 @@ namespace BusinessLogic.Services
                         foundOrder.User
                     );
                     _emailQueue.QueueEmail(foundOrder.User.Email, subject, htmlMessage);
+
+                    var confirmedSubject =
+                        $"[FlowerShop] Đơn hàng #{foundOrder.OrderNumber} đã được xác nhận";
+                    var confirmedHtmlMessage = EmailTemplateService.OrderConfirmedEmail(
+                        foundOrder,
+                        foundOrder.User
+                    );
+                    _emailQueue.QueueEmail(
+                        foundOrder.User.Email,
+                        confirmedSubject,
+                        confirmedHtmlMessage
+                    );
                 }
 
                 await _unitOfWork.SaveAsync();
@@ -331,7 +349,6 @@ namespace BusinessLogic.Services
             }
         }
 
-        // ... (Các phương thức khác như GetAllOrdersAsync, GetUserOrdersAsync, GetOrderDetailsAsync giữ nguyên)
         public async Task<PagedResultDto<OrderDto>> GetAllOrdersAsync(QueryParameters queryParams)
         {
             var query = _unitOfWork.Order.GetQueryable("Items,Payment,User");

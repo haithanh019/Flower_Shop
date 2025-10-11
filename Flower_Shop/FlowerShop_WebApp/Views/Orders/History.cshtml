@@ -2,7 +2,17 @@
 @{
     ViewData["Title"] = "My Orders";
 }
-
+@{
+    Func<string, string> getStatusBadgeClass = status => status switch
+    {
+        "Pending" => "bg-warning text-dark",
+        "Confirmed" => "bg-info text-dark",
+        "Shipping" => "bg-primary",
+        "Completed" => "bg-success",
+        "Cancelled" => "bg-danger",
+        _ => "bg-secondary"
+    };
+}
 <h1 class="mb-4">@ViewData["Title"]</h1>
 
 <div class="card shadow-sm">
@@ -27,7 +37,7 @@
                             <td>@order.CreatedAt.ToString("g")</td>
                             <td>@order.Total.ToString("N0") VND</td>
                             <td>
-                                <span class="badge bg-primary rounded-pill">@order.Status</span>
+                                <span class="badge @getStatusBadgeClass(order.Status) rounded-pill">@order.Status</span>
                             </td>
                             <td>
                                 <a asp-action="Details" asp-route-id="@order.OrderId" class="btn btn-sm btn-outline-primary">View Details</a>

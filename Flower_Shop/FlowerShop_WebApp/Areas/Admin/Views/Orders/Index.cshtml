@@ -1,8 +1,9 @@
 ﻿@model PagedResultViewModel<OrderViewModel>
+
 @{
     ViewData["Title"] = "Manage Orders";
-    var currentPage = (int)ViewBag.CurrentPage;
-    var totalPages = (int)ViewBag.TotalPages;
+    var currentPage = Model?.PageNumber ?? 1;
+    var totalPages = Model != null ? (int)Math.Ceiling((double)Model.TotalCount / Model.PageSize) : 1;
     var currentStatusFilter = ViewBag.CurrentStatusFilter as string;
     var orderStatuses = ViewBag.OrderStatuses as List<string> ?? new List<string>();
 
@@ -49,7 +50,7 @@
                 </tr>
             </thead>
             <tbody>
-                @if (Model.Items.Any())
+                @if (Model != null && Model.Items.Any())
                 {
                     @foreach (var order in Model.Items)
                     {

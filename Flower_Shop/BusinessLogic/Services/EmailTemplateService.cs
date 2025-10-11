@@ -9,7 +9,6 @@ namespace BusinessLogic.Services
         #region Base Template
         private static string BuildBaseEmail(string title, string contentHtml)
         {
-            // ... (Phần template cơ sở giữ nguyên, không thay đổi)
             return $@"
             <!DOCTYPE html>
             <html lang=""vi"">
@@ -105,6 +104,22 @@ namespace BusinessLogic.Services
                 $@"
                 <p>Xin chào <strong>{user.FullName}</strong>,</p>
                 <p>Đơn hàng của bạn đã được bàn giao cho đơn vị vận chuyển và đang trên đường đến với bạn. Vui lòng giữ điện thoại để nhận hàng nhé!</p>
+                {BuildOrderDetailsHtml(order)}
+                <p>Trân trọng,<br>Đội ngũ FlowerShop</p>";
+            return BuildBaseEmail(title, content);
+        }
+
+        /// <summary>
+        /// Gửi khi đơn hàng được chuyển sang trạng thái Completed.
+        /// </summary>
+        public static string OrderCompletedEmail(Order order, User user)
+        {
+            var title = $"Đơn hàng #{order.OrderNumber} đã giao thành công";
+            var content =
+                $@"
+                <p>Xin chào <strong>{user.FullName}</strong>,</p>
+                <p>FlowerShop xác nhận đơn hàng của bạn đã được giao thành công. Cảm ơn bạn đã tin tưởng và mua sắm tại cửa hàng của chúng tôi.</p>
+                <p>Chúng tôi rất mong được phục vụ bạn trong những lần tiếp theo!</p>
                 {BuildOrderDetailsHtml(order)}
                 <p>Trân trọng,<br>Đội ngũ FlowerShop</p>";
             return BuildBaseEmail(title, content);
