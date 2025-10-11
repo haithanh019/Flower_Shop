@@ -1,7 +1,7 @@
 ﻿using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using FlowerShop_WebApp.Models.Cart;
-using FlowerShop_WebApp.Models.Profile; // Thêm using này
+using FlowerShop_WebApp.Models.Profile;
 
 namespace FlowerShop_WebApp.Models.Orders
 {
@@ -9,26 +9,25 @@ namespace FlowerShop_WebApp.Models.Orders
     {
         public CartViewModel Cart { get; set; } = new();
 
-        [Required]
-        [Display(Name = "Full Name")]
+        [Required(ErrorMessage = "Vui lòng nhập họ và tên người nhận.")]
+        [Display(Name = "Họ và tên người nhận")]
         public string ShippingFullName { get; set; } = string.Empty;
 
-        [Required]
-        [Phone]
-        [Display(Name = "Phone Number")]
+        [Required(ErrorMessage = "Vui lòng nhập số điện thoại người nhận.")]
+        [Phone(ErrorMessage = "Số điện thoại không hợp lệ.")]
+        [Display(Name = "Số điện thoại người nhận")]
         public string ShippingPhoneNumber { get; set; } = string.Empty;
 
-        [Required(ErrorMessage = "Please select a shipping address.")]
-        [Display(Name = "Shipping Address")]
+        [Required(ErrorMessage = "Vui lòng chọn một địa chỉ giao hàng.")]
+        [Display(Name = "Địa chỉ giao hàng")]
         public Guid SelectedAddressId { get; set; }
 
-        [Display(Name = "Order Note")]
+        [Display(Name = "Ghi chú cho đơn hàng")]
         public string? CustomerNote { get; set; }
 
-        [Required(ErrorMessage = "Please select a payment method.")]
+        [Required(ErrorMessage = "Vui lòng chọn một phương thức thanh toán.")]
         public string PaymentMethod { get; set; } = "CashOnDelivery";
 
-        // Dùng để hiển thị danh sách địa chỉ cho người dùng chọn
         public List<AddressViewModel> SavedAddresses { get; set; } = new List<AddressViewModel>();
     }
 }

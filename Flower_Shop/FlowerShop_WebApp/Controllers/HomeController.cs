@@ -24,25 +24,20 @@ namespace FlowerShop_WebApp.Controllers
 
         public async Task<IActionResult> Index()
         {
-            // Tạo một client để gọi API
             var client = _httpClientFactory.CreateClient("ApiClient");
 
-            // Gọi đến endpoint lấy sản phẩm của API
             var response = await client.GetAsync("api/products?PageSize=8");
 
             if (response.IsSuccessStatusCode)
             {
                 var jsonString = await response.Content.ReadAsStringAsync();
-                // Deserialize JSON trả về thành PagedResultViewModel chứa các ProductViewModel
                 var pagedResult = JsonSerializer.Deserialize<
                     PagedResultViewModel<ProductViewModel>
                 >(jsonString, _jsonOptions);
 
-                // Gửi danh sách sản phẩm (Items) cho View "Index.cshtml"
                 return View(pagedResult?.Items);
             }
 
-            // Nếu gọi API thất bại, hiển thị trang chủ với danh sách rỗng
             return View(new List<ProductViewModel>());
         }
 
@@ -59,11 +54,9 @@ namespace FlowerShop_WebApp.Controllers
                     _jsonOptions
                 );
 
-                // Gửi đối tượng sản phẩm cho View "ProductDetail.cshtml"
                 return View(product);
             }
 
-            // Nếu không tìm thấy sản phẩm, trả về lỗi 404
             return NotFound();
         }
 

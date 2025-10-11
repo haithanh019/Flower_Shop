@@ -45,12 +45,12 @@
                                 <input value="@Model.CreatedAt.ToString("dd/MM/yyyy")" class="form-control" readonly />
                             </div>
                             <div class="col-md-6 mb-3">
-                                <label asp-for="FullName" class="form-label">Họ và tên</label>
+                                <label asp-for="FullName" class="form-label"></label>
                                 <input asp-for="FullName" class="form-control" />
                                 <span asp-validation-for="FullName" class="text-danger"></span>
                             </div>
                             <div class="col-md-6 mb-3">
-                                <label asp-for="PhoneNumber" class="form-label">Số điện thoại</label>
+                                <label asp-for="PhoneNumber" class="form-label"></label>
                                 <input asp-for="PhoneNumber" class="form-control" />
                                 <span asp-validation-for="PhoneNumber" class="text-danger"></span>
                             </div>
@@ -82,8 +82,11 @@
                                 <div>
                                     <button type="button" class="btn btn-sm btn-outline-secondary me-2"
                                             data-bs-toggle="modal" data-bs-target="#editAddressModal-@address.AddressId"
-                                            data-address-id="@address.AddressId" data-city="@address.City"
-                                            data-district="@address.District" data-ward="@address.Ward">
+                                            data-address-id="@address.AddressId"
+                                            data-city="@address.City"
+                                            data-district="@address.District"
+                                            data-ward="@address.Ward"
+                                            data-detail="@address.Detail">
                                         <i class="fas fa-edit"></i> Sửa
                                     </button>
                                     <form asp-action="DeleteAddress" method="post" class="d-inline">
@@ -102,53 +105,6 @@
                     }
                 </div>
             </div>
-
-
-            @* Phần quản lý địa chỉ *@
-            <div class="card mt-4">
-                <div class="card-header d-flex justify-content-between align-items-center">
-                    <h3><i class="fas fa-map-marker-alt"></i> My Addresses</h3>
-                    <button type="button" class="btn btn-success" data-bs-toggle="modal" data-bs-target="#addAddressModal">
-                        <i class="fas fa-plus"></i> Add New Address
-                    </button>
-                </div>
-                <div class="card-body">
-                    @if (Model.Addresses.Any())
-                    {
-                        <ul class="list-group">
-                            @foreach (var address in Model.Addresses)
-                            {
-                                <li class="list-group-item d-flex justify-content-between align-items-center">
-                                    <div>
-                                        <strong>@address.Detail</strong><br>
-                                        <small class="text-muted">@address.Ward, @address.District, @address.City</small>
-                                    </div>
-                                    <div>
-                                        <button type="button" class="btn btn-sm btn-outline-primary"
-                                                data-bs-toggle="modal" data-bs-target="#editAddressModal-@address.AddressId"
-                                                data-address-id="@address.AddressId"
-                                                data-city="@address.City"
-                                                data-district="@address.District"
-                                                data-ward="@address.Ward">
-                                            <i class="fas fa-edit"></i> Edit
-                                        </button>
-                                        <form asp-action="DeleteAddress" method="post" class="d-inline">
-                                            <input type="hidden" name="addressId" value="@address.AddressId" />
-                                            <button type="submit" class="btn btn-sm btn-outline-danger" onclick="return confirm('Are you sure you want to delete this address?');">
-                                                <i class="fas fa-trash"></i> Delete
-                                            </button>
-                                        </form>
-                                    </div>
-                                </li>
-                            }
-                        </ul>
-                    }
-                    else
-                    {
-                        <p>You don't have any saved addresses.</p>
-                    }
-                </div>
-            </div>
         </div>
     </div>
 </div>
@@ -158,7 +114,7 @@
         <div class="modal-content">
             <form asp-action="AddAddress" method="post">
                 <div class="modal-header">
-                    <h5 class="modal-title" id="addAddressModalLabel">Add New Address</h5>
+                    <h5 class="modal-title" id="addAddressModalLabel">Thêm địa chỉ mới</h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
                 <div class="modal-body">
@@ -180,8 +136,8 @@
                     </div>
                 </div>
                 <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-                    <button type="submit" class="btn btn-primary">Add Address</button>
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Đóng</button>
+                    <button type="submit" class="btn btn-primary">Thêm địa chỉ</button>
                 </div>
             </form>
         </div>
@@ -195,7 +151,7 @@
             <div class="modal-content">
                 <form asp-action="EditAddress" method="post">
                     <div class="modal-header">
-                        <h5 class="modal-title">Edit Address</h5>
+                        <h5 class="modal-title">Chỉnh sửa địa chỉ</h5>
                         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                     </div>
                     <div class="modal-body">
@@ -214,12 +170,12 @@
                         </div>
                         <div class="mb-3">
                             <label class="form-label">Địa chỉ chi tiết</label>
-                            <input name="Detail" class="form-control" value="@address.Detail" required />
+                            <input name="Detail" class="form-control detail-input" value="@address.Detail" required />
                         </div>
                     </div>
                     <div class="modal-footer">
-                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-                        <button type="submit" class="btn btn-primary">Save changes</button>
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Đóng</button>
+                        <button type="submit" class="btn btn-primary">Lưu thay đổi</button>
                     </div>
                 </form>
             </div>

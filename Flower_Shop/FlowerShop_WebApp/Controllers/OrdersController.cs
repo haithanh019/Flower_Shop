@@ -10,7 +10,7 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace FlowerShop_WebApp.Controllers
 {
-    [Authorize] // Bắt buộc người dùng phải đăng nhập để truy cập controller này
+    [Authorize]
     public class OrdersController : Controller
     {
         private readonly IHttpClientFactory _httpClientFactory;
@@ -24,7 +24,6 @@ namespace FlowerShop_WebApp.Controllers
             _httpClientFactory = httpClientFactory;
         }
 
-        // Action hiển thị trang Checkout
         [HttpGet]
         public async Task<IActionResult> Checkout()
         {
@@ -40,11 +39,11 @@ namespace FlowerShop_WebApp.Controllers
 
             if (cart == null || !cart.Items.Any())
             {
-                TempData["ErrorMessage"] = "Your cart is empty. Cannot proceed to checkout.";
+                TempData["ErrorMessage"] =
+                    "Giỏ hàng của bạn trống. Không thể tiến hành thanh toán.";
                 return RedirectToAction("Index", "Cart");
             }
 
-            // Lấy thông tin profile để điền tên và SĐT
             var profileResponse = await client.GetAsync("api/profile");
             var userProfile = new CustomerProfileViewModel();
             if (profileResponse.IsSuccessStatusCode)
@@ -55,7 +54,6 @@ namespace FlowerShop_WebApp.Controllers
                     );
             }
 
-            // Lấy danh sách địa chỉ đã lưu
             var addressResponse = await client.GetAsync("api/address");
             var savedAddresses = new List<AddressViewModel>();
             if (addressResponse.IsSuccessStatusCode)
@@ -76,7 +74,6 @@ namespace FlowerShop_WebApp.Controllers
             return View(checkoutViewModel);
         }
 
-        // Action xử lý việc đặt hàng
         [HttpPost]
         public async Task<IActionResult> PlaceOrder(CheckoutViewModel model)
         {
@@ -84,12 +81,11 @@ namespace FlowerShop_WebApp.Controllers
 
             if (model.SelectedAddressId == Guid.Empty)
             {
-                ModelState.AddModelError("SelectedAddressId", "Please select a shipping address.");
+                ModelState.AddModelError("SelectedAddressId", "Vui lòng chọn địa chỉ giao hàng.");
             }
 
             if (!ModelState.IsValid)
             {
-                // Nạp lại dữ liệu cần thiết nếu form không hợp lệ
                 var cartResponse = await client.GetAsync("api/cart");
                 model.Cart =
                     await cartResponse.Content.ReadFromJsonAsync<CartViewModel>(_jsonOptions)
@@ -113,19 +109,15 @@ namespace FlowerShop_WebApp.Controllers
                 AddressId = model.SelectedAddressId,
             };
 
-            // --- BẮT ĐẦU THAY ĐỔI ---
-            // Cấu hình serializer để sử dụng camelCase
             var serializerOptions = new JsonSerializerOptions
             {
                 PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
             };
             var jsonContent = new StringContent(
-                JsonSerializer.Serialize(orderRequest, serializerOptions), // Áp dụng cấu hình tại đây
+                JsonSerializer.Serialize(orderRequest, serializerOptions),
                 Encoding.UTF8,
                 "application/json"
             );
-            // --- KẾT THÚC THAY ĐỔI ---
-
             var response = await client.PostAsync("api/orders", jsonContent);
 
             if (response.IsSuccessStatusCode)
@@ -148,7 +140,6 @@ namespace FlowerShop_WebApp.Controllers
             }
             else
             {
-                // Nạp lại dữ liệu cho view nếu có lỗi từ API
                 var cartResponse = await client.GetAsync("api/cart");
                 model.Cart =
                     await cartResponse.Content.ReadFromJsonAsync<CartViewModel>(_jsonOptions)
@@ -161,13 +152,12 @@ namespace FlowerShop_WebApp.Controllers
 
                 ModelState.AddModelError(
                     string.Empty,
-                    "An error occurred while placing your order. Please try again."
+                    "Đã xảy ra lỗi khi đặt hàng. Vui lòng thử lại"
                 );
                 return View("Checkout", model);
             }
         }
 
-        // TODO: Action History() để xem lịch sử đơn hàng
         [HttpGet]
         public async Task<IActionResult> History()
         {
@@ -187,7 +177,6 @@ namespace FlowerShop_WebApp.Controllers
             return View(new List<OrderViewModel>());
         }
 
-        // Action hiển thị trang Chi tiết Đơn hàng
         [HttpGet]
         public async Task<IActionResult> Details(Guid id)
         {
@@ -218,7 +207,6 @@ namespace FlowerShop_WebApp.Controllers
             return RedirectToAction("Index", "Cart");
         }
 
-        // Helper method để tạo HttpClient đã đính kèm JWT Token
         private Task<HttpClient> CreateApiClientAsync()
         {
             var client = _httpClientFactory.CreateClient("ApiClient");

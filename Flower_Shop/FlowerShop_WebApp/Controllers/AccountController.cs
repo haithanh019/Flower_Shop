@@ -74,11 +74,10 @@ namespace FlowerShop_WebApp.Controllers
                 }
             }
 
-            ModelState.AddModelError(string.Empty, "Invalid email or password.");
+            ModelState.AddModelError(string.Empty, "Email hoặc mật khẩu không hợp lệ.");
             return View(model);
         }
 
-        // Các action Register, Logout, và helper methods khác
         [HttpGet]
         public IActionResult Register() => View();
 
@@ -122,7 +121,7 @@ namespace FlowerShop_WebApp.Controllers
                     return RedirectToAction("Index", "Home");
                 }
             }
-            ModelState.AddModelError(string.Empty, "Registration failed.");
+            ModelState.AddModelError(string.Empty, "Đăng ký thất bại.");
             return View(model);
         }
 
@@ -134,7 +133,6 @@ namespace FlowerShop_WebApp.Controllers
             return RedirectToAction("Index", "Home");
         }
 
-        // PHỤC HỒI PHƯƠNG THỨC ĐỌC CLAIM ĐÚNG
         private ClaimsPrincipal CreateClaimsPrincipalFromToken(string token)
         {
             var tokenHandler = new JwtSecurityTokenHandler();

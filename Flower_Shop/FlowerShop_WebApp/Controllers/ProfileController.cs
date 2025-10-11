@@ -7,13 +7,15 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace FlowerShop_WebApp.Controllers
 {
-    [Authorize] // Chỉ cho phép user đã đăng nhập
+    [Authorize]
     public class ProfileController : Controller
     {
         private readonly IHttpClientFactory _httpClientFactory;
-        private readonly JsonSerializerOptions _jsonOptions = new()
+
+        private readonly JsonSerializerOptions _apiJsonOptions = new()
         {
             PropertyNameCaseInsensitive = true,
+            PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
         };
 
         public ProfileController(IHttpClientFactory httpClientFactory)
@@ -28,23 +30,20 @@ namespace FlowerShop_WebApp.Controllers
 
             if (!profileResponse.IsSuccessStatusCode)
             {
+                TempData["ErrorMessage"] = "Không thể tải thông tin tài khoản.";
                 return View(new CustomerProfileViewModel());
             }
 
-            var profileJsonString = await profileResponse.Content.ReadAsStringAsync();
-            var profile = JsonSerializer.Deserialize<CustomerProfileViewModel>(
-                profileJsonString,
-                _jsonOptions
+            var profile = await profileResponse.Content.ReadFromJsonAsync<CustomerProfileViewModel>(
+                _apiJsonOptions
             );
 
             var addressResponse = await client.GetAsync("api/address");
             if (addressResponse.IsSuccessStatusCode)
             {
-                var addressJsonString = await addressResponse.Content.ReadAsStringAsync();
-                var addresses = JsonSerializer.Deserialize<List<AddressViewModel>>(
-                    addressJsonString,
-                    _jsonOptions
-                );
+                var addresses = await addressResponse.Content.ReadFromJsonAsync<
+                    List<AddressViewModel>
+                >(_apiJsonOptions);
                 if (profile != null)
                 {
                     profile.Addresses = addresses ?? new List<AddressViewModel>();
@@ -59,12 +58,15 @@ namespace FlowerShop_WebApp.Controllers
         {
             if (!ModelState.IsValid)
             {
-                return RedirectToAction("Index");
+                var profile = await GetCurrentProfileForView();
+                profile.FullName = model.FullName;
+                profile.PhoneNumber = model.PhoneNumber;
+                return View("Index", profile);
             }
 
             var client = CreateApiClient();
             var jsonContent = new StringContent(
-                JsonSerializer.Serialize(model),
+                JsonSerializer.Serialize(model, _apiJsonOptions),
                 Encoding.UTF8,
                 "application/json"
             );
@@ -73,46 +75,13 @@ namespace FlowerShop_WebApp.Controllers
 
             if (response.IsSuccessStatusCode)
             {
-                TempData["SuccessMessage"] = "Profile updated successfully!";
+                TempData["SuccessMessage"] = "Cập nhật thông tin thành công!";
             }
             else
             {
-                TempData["ErrorMessage"] = "Failed to update profile.";
+                TempData["ErrorMessage"] = "Cập nhật thông tin thất bại.";
             }
             return RedirectToAction("Index");
-        }
-
-        public IActionResult ChangePassword()
-        {
-            return View(new ChangePasswordViewModel());
-        }
-
-        [HttpPost]
-        public async Task<IActionResult> ChangePassword(ChangePasswordViewModel model)
-        {
-            if (!ModelState.IsValid)
-            {
-                return View(model);
-            }
-
-            var client = CreateApiClient();
-            var jsonContent = new StringContent(
-                JsonSerializer.Serialize(model),
-                Encoding.UTF8,
-                "application/json"
-            );
-
-            var response = await client.PutAsync("api/profile/change-password", jsonContent);
-
-            if (response.IsSuccessStatusCode)
-            {
-                TempData["SuccessMessage"] = "Password changed successfully!";
-                return RedirectToAction("Index");
-            }
-
-            TempData["ErrorMessage"] =
-                "Failed to change password. Please check your current password.";
-            return View(model);
         }
 
         [HttpPost]
@@ -121,8 +90,17 @@ namespace FlowerShop_WebApp.Controllers
             if (ModelState.IsValid)
             {
                 var client = CreateApiClient();
+                var addRequest = new
+                {
+                    model.City,
+                    model.District,
+                    model.Ward,
+                    model.Detail,
+                };
+
+                // SỬA LỖI: Sử dụng _apiJsonOptions khi serialize
                 var jsonContent = new StringContent(
-                    JsonSerializer.Serialize(model),
+                    JsonSerializer.Serialize(addRequest, _apiJsonOptions),
                     Encoding.UTF8,
                     "application/json"
                 );
@@ -131,12 +109,16 @@ namespace FlowerShop_WebApp.Controllers
 
                 if (response.IsSuccessStatusCode)
                 {
-                    TempData["SuccessMessage"] = "Address added successfully!";
+                    TempData["SuccessMessage"] = "Thêm địa chỉ thành công!";
                 }
                 else
                 {
-                    TempData["ErrorMessage"] = "Failed to add address.";
+                    TempData["ErrorMessage"] = "Thêm địa chỉ thất bại.";
                 }
+            }
+            else
+            {
+                TempData["ErrorMessage"] = "Thông tin địa chỉ không hợp lệ.";
             }
             return RedirectToAction("Index");
         }
@@ -148,7 +130,7 @@ namespace FlowerShop_WebApp.Controllers
             {
                 var client = CreateApiClient();
                 var jsonContent = new StringContent(
-                    JsonSerializer.Serialize(model),
+                    JsonSerializer.Serialize(model, _apiJsonOptions),
                     Encoding.UTF8,
                     "application/json"
                 );
@@ -157,31 +139,17 @@ namespace FlowerShop_WebApp.Controllers
 
                 if (response.IsSuccessStatusCode)
                 {
-                    TempData["SuccessMessage"] = "Address updated successfully!";
+                    TempData["SuccessMessage"] = "Cập nhật địa chỉ thành công!";
                 }
                 else
                 {
-                    TempData["ErrorMessage"] = "Failed to update address.";
+                    TempData["ErrorMessage"] = "Cập nhật địa chỉ thất bại.";
                 }
-            }
-            return RedirectToAction("Index");
-        }
-
-        [HttpPost]
-        public async Task<IActionResult> DeleteAddress(Guid addressId)
-        {
-            var client = CreateApiClient();
-            var response = await client.DeleteAsync($"api/address/{addressId}");
-
-            if (response.IsSuccessStatusCode)
-            {
-                TempData["SuccessMessage"] = "Address deleted successfully!";
             }
             else
             {
-                TempData["ErrorMessage"] = "Failed to delete address.";
+                TempData["ErrorMessage"] = "Thông tin địa chỉ không hợp lệ.";
             }
-
             return RedirectToAction("Index");
         }
 
@@ -197,6 +165,31 @@ namespace FlowerShop_WebApp.Controllers
                 );
             }
             return client;
+        }
+
+        private async Task<CustomerProfileViewModel> GetCurrentProfileForView()
+        {
+            var client = CreateApiClient();
+            var profile = new CustomerProfileViewModel();
+
+            var profileResponse = await client.GetAsync("api/profile");
+            if (profileResponse.IsSuccessStatusCode)
+            {
+                profile = await profileResponse.Content.ReadFromJsonAsync<CustomerProfileViewModel>(
+                    _apiJsonOptions
+                );
+            }
+
+            var addressResponse = await client.GetAsync("api/address");
+            if (addressResponse.IsSuccessStatusCode && profile != null)
+            {
+                profile.Addresses =
+                    await addressResponse.Content.ReadFromJsonAsync<List<AddressViewModel>>(
+                        _apiJsonOptions
+                    ) ?? new List<AddressViewModel>();
+            }
+
+            return profile ?? new CustomerProfileViewModel();
         }
     }
 }

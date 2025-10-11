@@ -24,22 +24,22 @@
                 <div class="navbar-collapse collapse d-sm-inline-flex justify-content-between">
                     <ul class="navbar-nav flex-grow-1">
                         <li class="nav-item">
-                            <a class="nav-link" asp-area="" asp-controller="Home" asp-action="Index">Home</a>
+                            <a class="nav-link" asp-area="" asp-controller="Home" asp-action="Index">Trang chủ</a>
                         </li>
                         <li class="nav-item">
-                            <a class="nav-link" asp-area="" asp-controller="Products" asp-action="Index">Shop</a>
+                            <a class="nav-link" asp-area="" asp-controller="Products" asp-action="Index">Cửa hàng</a>
                         </li>
                     </ul>
                     <ul class="navbar-nav">
                         @if (User.IsInRole("Admin"))
                         {
                             <li class="nav-item">
-                                <a class="nav-link text-danger fw-bold" asp-area="Admin" asp-controller="Dashboard" asp-action="Index">Admin Panel</a>
+                                <a class="nav-link text-danger fw-bold" asp-area="Admin" asp-controller="Dashboard" asp-action="Index">Trang quản trị</a>
                             </li>
                         }
                         <li class="nav-item">
                             <a class="nav-link" asp-controller="Cart" asp-action="Index">
-                                &#x1F6D2; Cart
+                                &#x1F6D2; Giỏ hàng
                             </a>
                         </li>
                         @if (User.Identity != null && User.Identity.IsAuthenticated)
@@ -51,13 +51,14 @@
                                 <ul class="dropdown-menu dropdown-menu-end">
                                     <li>
                                         <a class="dropdown-item" asp-controller="Profile" asp-action="Index">
-                                            <i class="fas fa-user-edit"></i> My Profile
+                                            <i class="fas fa-user-edit"></i> Tài khoản của tôi
                                         </a>
                                     </li>
-                                    <li><a class="dropdown-item" asp-controller="Orders" asp-action="History">My Orders</a></li><li><hr class="dropdown-divider"></li>
+                                    <li><a class="dropdown-item" asp-controller="Orders" asp-action="History">Đơn hàng</a></li>
+                                    <li><hr class="dropdown-divider"></li>
                                     <li>
                                         <form class="form-inline" asp-controller="Account" asp-action="Logout" method="post">
-                                            <button type="submit" class="dropdown-item btn btn-link text-dark">Logout</button>
+                                            <button type="submit" class="dropdown-item btn btn-link text-dark">Đăng xuất</button>
                                         </form>
                                     </li>
                                 </ul>
@@ -66,10 +67,10 @@
                         else
                         {
                             <li class="nav-item">
-                                <a class="nav-link" asp-controller="Account" asp-action="Login">Login</a>
+                                <a class="nav-link" asp-controller="Account" asp-action="Login">Đăng nhập</a>
                             </li>
                             <li class="nav-item">
-                                <a class="nav-link" asp-controller="Account" asp-action="Register">Register</a>
+                                <a class="nav-link" asp-controller="Account" asp-action="Register">Đăng ký</a>
                             </li>
                         }
                     </ul>
@@ -85,7 +86,7 @@
 
     <footer class="border-top footer text-muted">
         <div class="container">
-            &copy; 2025 - FlowerShop_WebApp - <a asp-area="" asp-controller="Home" asp-action="Privacy">Privacy</a>
+            &copy; 2025 - FlowerShop_WebApp - <a asp-area="" asp-controller="Home" asp-action="Privacy">Chính sách Bảo mật</a>
         </div>
     </footer>
     <script src="~/lib/jquery/dist/jquery.min.js"></script>
