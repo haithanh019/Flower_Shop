@@ -33,8 +33,10 @@ namespace BusinessLogic.Services
         {
             try
             {
-                // Order code phải là số nguyên, ta có thể dùng một phần timestamp hoặc hashcode
-                long orderCode = DateTimeOffset.Now.ToUnixTimeMilliseconds();
+                long orderCode = long.Parse(
+                    order.OrderNumber,
+                    System.Globalization.NumberStyles.HexNumber
+                );
 
                 var items = new List<ItemData>();
                 foreach (var item in order.Items)
@@ -53,8 +55,8 @@ namespace BusinessLogic.Services
                     (int)order.TotalAmount,
                     $"Thanh toán đơn hàng #{order.OrderNumber}",
                     items,
-                    _configuration["WebApp:BaseUrl"] + "/Orders/PaymentCancelled",
-                    _configuration["WebApp:BaseUrl"] + "/Orders/PaymentSuccess"
+                    _configuration["WebApp:BaseUrl"] + "/payment/cancel",
+                    _configuration["WebApp:BaseUrl"] + "/payment/success"
                 );
 
                 CreatePaymentResult createPaymentResult = await _payOS.createPaymentLink(

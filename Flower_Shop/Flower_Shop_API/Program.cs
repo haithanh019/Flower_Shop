@@ -93,6 +93,25 @@ namespace Flower_Shop_API
 
             builder.Services.AddDistributedMemoryCache();
             builder.WebHost.UseUrls("http://*:5035", "https://*:7260");
+            builder.Services.AddCors(options =>
+            {
+                options.AddPolicy(
+                    "AllowSpecificOrigins",
+                    policy =>
+                    {
+                        policy
+                            .WithOrigins(
+                                "https://unarriving-unswaying-winifred.ngrok-free.dev",
+                                "https://localhost:7260",
+                                "http://localhost:5035"
+                            )
+                            .AllowAnyMethod()
+                            .AllowAnyHeader()
+                            .AllowCredentials();
+                    }
+                );
+            });
+
             var app = builder.Build();
 
             // Configure the HTTP request pipeline.
@@ -101,11 +120,14 @@ namespace Flower_Shop_API
                 app.UseSwagger();
                 app.UseSwaggerUI();
             }
+
             app.UseMiddleware<ValidationExceptionMiddleware>();
 
             app.UseHttpsRedirection();
 
             app.UseRouting();
+
+            app.UseCors("AllowSpecificOrigins");
 
             app.UseAuthentication();
 

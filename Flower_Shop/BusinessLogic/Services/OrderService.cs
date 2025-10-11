@@ -263,7 +263,7 @@ namespace BusinessLogic.Services
         public async Task HandlePayOSWebhook(WebhookData data)
         {
             var order = await _unitOfWork.Order.GetAsync(
-                o => o.OrderId.GetHashCode() == data.orderCode,
+                o => o.OrderNumber == data.orderCode.ToString(),
                 "Payment,User"
             );
 
