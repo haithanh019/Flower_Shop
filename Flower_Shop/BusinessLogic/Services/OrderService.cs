@@ -262,15 +262,24 @@ namespace BusinessLogic.Services
 
         public async Task HandlePayOSWebhook(WebhookData data)
         {
+            // SỬA LỖI: Chuyển đổi orderCode (long) từ webhook về lại chuỗi Hex để so sánh
+            string orderNumberToFind = data.orderCode.ToString("X").ToUpper();
+
+            _logger.LogInformation(
+                "Webhook received for PayOS orderCode {PayOSCode}, searching for OrderNumber {OrderNumber}",
+                data.orderCode,
+                orderNumberToFind
+            );
+
             var order = await _unitOfWork.Order.GetAsync(
-                o => o.OrderNumber == data.orderCode.ToString(),
+                o => o.OrderNumber == orderNumberToFind,
                 "Payment,User"
             );
 
             if (order != null && order.Payment?.Status != PaymentStatus.Accepted)
             {
                 _logger.LogInformation(
-                    "Webhook received for Order ID {OrderId}. Updating status to Confirmed/Accepted.",
+                    "Order ID {OrderId} found. Updating status to Confirmed/Accepted.",
                     order.OrderId
                 );
 
@@ -290,12 +299,23 @@ namespace BusinessLogic.Services
                 }
 
                 await _unitOfWork.SaveAsync();
+                _logger.LogInformation(
+                    "Successfully updated status for Order ID {OrderId}.",
+                    order.OrderId
+                );
+            }
+            else if (order != null)
+            {
+                _logger.LogWarning(
+                    "Webhook received for already processed Order ID {OrderId}.",
+                    order.OrderId
+                );
             }
             else
             {
                 _logger.LogWarning(
-                    "Webhook received but no matching order found or order already processed for orderCode {orderCode}",
-                    data.orderCode
+                    "Webhook received but no matching order found for OrderNumber {OrderNumber}",
+                    orderNumberToFind
                 );
             }
         }

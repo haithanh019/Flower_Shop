@@ -8,26 +8,25 @@ using BusinessLogic.DTOs.Orders;
 using BusinessLogic.Services.FacadeService;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Net.payOS;
 using Net.payOS.Types;
 
 namespace Flower_Shop_API.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
-    // [Authorize] // Tạm thời comment dòng này để test webhook dễ hơn
+    [Authorize]
     public class OrdersController : ControllerBase
     {
         private readonly IFacadeService _facadeService;
-        private readonly ILogger<OrdersController> _logger; // <-- THÊM DÒNG NÀY
+        private readonly ILogger<OrdersController> _logger;
 
         // SỬA LẠI HÀM KHỞI TẠO (CONSTRUCTOR)
         public OrdersController(IFacadeService facadeService, ILogger<OrdersController> logger)
         {
             _facadeService = facadeService;
-            _logger = logger; // <-- THÊM DÒNG NÀY
+            _logger = logger;
         }
-
-        // ... (các phương thức GetAllOrders, CreateOrder, v.v. giữ nguyên) ...
 
         [HttpGet("all")]
         [Authorize(Roles = "Admin")]
@@ -85,34 +84,27 @@ namespace Flower_Shop_API.Controllers
             return Ok(updatedOrder);
         }
 
-        // PHƯƠNG THỨC WEBHOOK ĐỂ CHẨN ĐOÁN LỖI
         [HttpPost("payos-webhook")]
         [AllowAnonymous]
-        public async Task<IActionResult> PayOSWebhook()
+        public async Task<IActionResult> PayOSWebhook([FromBody] WebhookType webhookPayload)
         {
-            _logger.LogInformation("--- WEBHOOK ENDPOINT HIT ---");
+            _logger.LogInformation("--- PayOS Webhook endpoint was hit ---");
             try
             {
-                string rawRequestBody = await new StreamReader(Request.Body).ReadToEndAsync();
-                _logger.LogInformation("Raw Webhook Body: {RequestBody}", rawRequestBody);
+                var webhookData = _facadeService.PayOSService.VerifyPaymentWebhook(webhookPayload);
 
-                var webhookPayload = JsonSerializer.Deserialize<WebhookType>(rawRequestBody);
+                await _facadeService.OrderService.HandlePayOSWebhook(webhookData);
 
-                if (webhookPayload != null)
-                {
-                    var data = _facadeService.PayOSService.VerifyPaymentWebhook(webhookPayload);
-                    if (data != null)
-                    {
-                        await _facadeService.OrderService.HandlePayOSWebhook(data);
-                    }
-                }
+                return Ok("Webhook processed successfully.");
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "--- ERROR PARSING OR PROCESSING WEBHOOK ---");
-                return Ok("Error logged.");
+                _logger.LogError(
+                    ex,
+                    "--- ERROR: An unexpected error occurred while processing webhook ---"
+                );
+                return Ok("An error occurred but has been logged.");
             }
-            return Ok("Webhook received.");
         }
 
         private Guid GetUserIdFromClaims()
