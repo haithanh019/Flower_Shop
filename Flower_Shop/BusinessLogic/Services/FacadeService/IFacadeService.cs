@@ -1,9 +1,19 @@
-﻿namespace BusinessLogic.Services.FacadeService
+﻿using BusinessLogic.Services.Interfaces;
+
+namespace BusinessLogic.Services.FacadeService
 {
     public interface IFacadeService
     {
-        //IServiceRequestService ServiceRequestService { get; }
-        //IMaterialService MaterialService { get; }
-        //IServicesService ServiceService { get; }
+        ICategoryService CategoryService { get; }
+        IProductService ProductService { get; }
+        IAuthService AuthService { get; }
+        ICartService CartService { get; }
+        IOrderService OrderService { get; }
+        IUserService UserService { get; }
+        IPaymentService PaymentService { get; }
+        IUtilityService UtilityService { get; }
+        IDashboardService DashboardService { get; }
+        IAddressService AddressService { get; }
+        IPayOSService PayOSService { get; }
     }
 }

@@ -1,0 +1,79 @@
+﻿@model FlowerShop_WebApp.Models.Cart.CartViewModel
+@{
+    ViewData["Title"] = "Your Shopping Cart";
+}
+
+<h1 class="mb-4">@ViewData["Title"]</h1>
+
+<div class="row">
+    <div class="col-md-8">
+        @if (Model != null && Model.Items.Any())
+        {
+            @foreach (var item in Model.Items)
+            {
+                <div class="card mb-3">
+                    <div class="row g-0">
+                        <div class="col-md-2">
+                            <img src="@(item.ProductThumbnailUrl ?? "https://via.placeholder.com/150")" class="img-fluid rounded-start" alt="@item.ProductName">
+                        </div>
+                        <div class="col-md-10">
+                            <div class="card-body">
+                                <div class="d-flex justify-content-between">
+                                    <h5 class="card-title">@item.ProductName</h5>
+                                    <h5>@item.LineTotal.ToString("N0") VND</h5>
+                                </div>
+                                <p class="card-text"><small class="text-muted">Unit Price: @item.UnitPrice.ToString("N0") VND</small></p>
+
+                                <div class="d-flex align-items-center">
+                                    <form asp-action="UpdateQuantity" method="post" class="d-flex align-items-center me-3">
+                                        <input type="hidden" name="cartItemId" value="@item.CartItemId" />
+                                        <input type="number" name="quantity" value="@item.Quantity" class="form-control" style="width: 70px;" min="1" />
+                                        <button type="submit" class="btn btn-sm btn-outline-secondary ms-2">Update</button>
+                                    </form>
+                                    <form asp-action="RemoveFromCart" method="post">
+                                        <input type="hidden" name="cartItemId" value="@item.CartItemId" />
+                                        <button type="submit" class="btn btn-sm btn-outline-danger">Remove</button>
+                                    </form>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            }
+        }
+        else
+        {
+            <div class="alert alert-info" role="alert">
+                Your cart is empty. <a asp-controller="Home" asp-action="Index" class="alert-link">Continue shopping</a>.
+            </div>
+        }
+    </div>
+
+    <div class="col-md-4">
+        <div class="card shadow-sm">
+            <div class="card-body">
+                <h5 class="card-title">Order Summary</h5>
+                <ul class="list-group list-group-flush">
+                    <li class="list-group-item d-flex justify-content-between">
+                        <span>Subtotal</span>
+                        <strong>@(Model?.SubTotal.ToString("N0") ?? "0") VND</strong>
+                    </li>
+                    <li class="list-group-item d-flex justify-content-between">
+                        <span>Shipping</span>
+                        <span>Free</span>
+                    </li>
+                    <li class="list-group-item d-flex justify-content-between">
+                        <strong>Total</strong>
+                        <strong>@(Model?.SubTotal.ToString("N0") ?? "0") VND</strong>
+                    </li>
+                </ul>
+                @if (Model != null && Model.Items.Any())
+                {
+                    <div class="d-grid mt-3">
+                        <a asp-controller="Orders" asp-action="Checkout" class="btn btn-primary">Proceed to Checkout</a>
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+</div>

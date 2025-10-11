@@ -17,6 +17,7 @@ namespace DataAccess.Data
         public DbSet<Order> Orders { get; set; }
         public DbSet<OrderItem> OrderItems { get; set; }
         public DbSet<Payment> Payments { get; set; }
+        public DbSet<Address> Addresses { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -27,9 +28,9 @@ namespace DataAccess.Data
 
             // User (1) - (1) Cart
             modelBuilder
-                .Entity<Cart>()
-                .HasOne(c => c.User)
-                .WithOne(u => u.Cart)
+                .Entity<User>()
+                .HasOne(u => u.Cart)
+                .WithOne(c => c.User)
                 .HasForeignKey<Cart>(c => c.UserId)
                 .OnDelete(DeleteBehavior.Cascade);
 
@@ -95,6 +96,14 @@ namespace DataAccess.Data
                 .HasOne(o => o.Payment)
                 .WithOne(p => p.Order)
                 .HasForeignKey<Payment>(p => p.OrderId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            // Thêm cấu hình cho mối quan hệ User (1) - (n) Address
+            modelBuilder
+                .Entity<Address>()
+                .HasOne(a => a.User)
+                .WithMany(u => u.Addresses)
+                .HasForeignKey(a => a.UserId)
                 .OnDelete(DeleteBehavior.Cascade);
             modelBuilder.Entity<Order>(entity =>
             {

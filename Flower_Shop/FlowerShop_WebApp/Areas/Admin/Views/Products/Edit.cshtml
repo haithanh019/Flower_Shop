@@ -1,0 +1,101 @@
+﻿@model FlowerShop_WebApp.Areas.Admin.Models.Products.ProductUpdateRequest
+@{
+    ViewData["Title"] = "Edit Product";
+}
+
+<h1>@ViewData["Title"]</h1>
+<hr />
+
+<form asp-action="Edit" enctype="multipart/form-data">
+    <input type="hidden" asp-for="ProductId" />
+    <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+
+    <div class="row">
+        <div class="col-md-8">
+            <div class="card shadow-sm form-card">
+                <div class="card-body">
+                    <div class="mb-3">
+                        <label asp-for="Name" class="form-label"></label>
+                        <input asp-for="Name" class="form-control" />
+                        <span asp-validation-for="Name" class="text-danger"></span>
+                    </div>
+                    <div class="mb-3">
+                        <label asp-for="Description" class="form-label"></label>
+                        <textarea asp-for="Description" class="form-control" rows="5"></textarea>
+                        <span asp-validation-for="Description" class="text-danger"></span>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label asp-for="Price" class="form-label"></label>
+                            <input asp-for="Price" class="form-control" />
+                            <span asp-validation-for="Price" class="text-danger"></span>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label asp-for="StockQuantity" class="form-label"></label>
+                            <input asp-for="StockQuantity" class="form-control" />
+                            <span asp-validation-for="StockQuantity" class="text-danger"></span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-4">
+            <div class="card shadow-sm form-card mb-4">
+                <div class="card-header">
+                    <h5 class="my-1">Organize</h5>
+                </div>
+                <div class="card-body">
+                    <div class="mb-3">
+                        <label asp-for="CategoryId" class="form-label"></label>
+                        <select asp-for="CategoryId" class="form-select" asp-items="@Model.CategoryList">
+                            <option value="">-- Select Category --</option>
+                        </select>
+                        <span asp-validation-for="CategoryId" class="text-danger"></span>
+                    </div>
+                    <div class="mb-3 form-check">
+                        <input class="form-check-input" asp-for="IsActive" />
+                        <label class="form-check-label" asp-for="IsActive"></label>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card shadow-sm form-card">
+                <div class="card-header">
+                    <h5 class="my-1">Product Images</h5>
+                </div>
+                <div class="card-body">
+                    <div class="mb-3">
+                        <label class="form-label">Current Images</label>
+                        @if (Model.ExistingImageUrls != null && Model.ExistingImageUrls.Any())
+                        {
+                            <div class="d-flex flex-wrap">
+                                @foreach (var imageUrl in Model.ExistingImageUrls)
+                                {
+                                    <div class="me-2 mb-2">
+                                        <img src="@imageUrl" class="img-thumbnail" style="width: 80px; height: 80px; object-fit: cover;" alt="Product Image" />
+                                    </div>
+                                }
+                            </div>
+                        }
+                        else
+                        {
+                            <p class="text-muted">This product has no images.</p>
+                        }
+                    </div>
+                    <div class="mb-3">
+                        <label asp-for="ImageFiles" class="form-label"></label>
+                        <input asp-for="ImageFiles" class="form-control" type="file" multiple />
+                        <small class="form-text text-muted">Uploading new images will replace all current ones.</small>
+                        <span asp-validation-for="ImageFiles" class="text-danger"></span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="form-group mt-4">
+        <button type="submit" class="btn btn-primary"><i class="fas fa-save me-2"></i>Save Changes</button>
+        <a asp-action="Index" class="btn btn-secondary"><i class="fas fa-arrow-left me-2"></i>Back to List</a>
+    </div>
+</form>
