@@ -60,8 +60,9 @@ namespace Flower_Shop_API.Controllers
             {
                 return BadRequest("Product ID mismatch.");
             }
-            await _facadeService.ProductService.UpdateProductAsync(request);
-            return NoContent();
+            // Sửa lại để trả về đối tượng đã cập nhật
+            var updatedProduct = await _facadeService.ProductService.UpdateProductAsync(request);
+            return Ok(updatedProduct);
         }
 
         [HttpDelete("{id}")]

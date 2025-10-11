@@ -94,19 +94,8 @@ namespace BusinessLogic.Services
             return _mapper.Map<ProductDto>(newProduct);
         }
 
-        public async Task UpdateProductAsync(ProductUpdateRequest updateRequest)
+        public async Task<ProductDto> UpdateProductAsync(ProductUpdateRequest updateRequest)
         {
-            // Kiểm tra nghiệp vụ: Giới hạn tối đa 5 ảnh khi cập nhật
-            if (updateRequest.ImageFiles != null && updateRequest.ImageFiles.Count > 5)
-            {
-                throw new CustomValidationException(
-                    new Dictionary<string, string[]>
-                    {
-                        { "ImageUrls", new[] { "A product can have a maximum of 5 images." } },
-                    }
-                );
-            }
-
             var productToUpdate = await _unitOfWork.Product.GetAsync(
                 filter: p => p.ProductId == updateRequest.ProductId,
                 includeProperties: "Images"
@@ -121,19 +110,17 @@ namespace BusinessLogic.Services
 
             _mapper.Map(updateRequest, productToUpdate);
 
-            // Xử lý ảnh: Xóa ảnh cũ và thêm ảnh mới nếu có
             if (updateRequest.ImageFiles != null && updateRequest.ImageFiles.Count > 0)
             {
-                // Xóa tất cả ảnh cũ trên Cloudinary và DB
-                foreach (var oldImage in productToUpdate.Images)
+                foreach (var oldImage in productToUpdate.Images.ToList())
                 {
                     if (!string.IsNullOrEmpty(oldImage.PublicId))
                     {
                         await _unitOfWork.ProductImage.DeleteImageAsync(oldImage.PublicId);
                     }
                 }
+                productToUpdate.Images.Clear();
 
-                // Upload ảnh mới
                 foreach (var file in updateRequest.ImageFiles)
                 {
                     var newImage = new ProductImage();
@@ -143,6 +130,8 @@ namespace BusinessLogic.Services
             }
 
             await _unitOfWork.SaveAsync();
+
+            return _mapper.Map<ProductDto>(productToUpdate);
         }
 
         public async Task DeleteProductAsync(Guid productId)

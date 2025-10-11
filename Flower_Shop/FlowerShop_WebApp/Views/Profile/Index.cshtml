@@ -8,6 +8,7 @@
 
     <div class="row">
         <div class="col-md-3">
+            @* MENU ĐIỀU HƯỚNG SẼ ĐƯỢC CẬP NHẬT Ở CÁC BƯỚC SAU *@
             <div class="list-group profile-nav">
                 <a asp-action="Index" asp-controller="Profile" class="list-group-item list-group-item-action active">
                     <i class="fas fa-user-circle"></i>Thông tin cá nhân
@@ -15,9 +16,13 @@
                 <a asp-action="History" asp-controller="Orders" class="list-group-item list-group-item-action">
                     <i class="fas fa-receipt"></i>Lịch sử đơn hàng
                 </a>
-                <button type="button" class="list-group-item list-group-item-action" data-bs-toggle="modal" data-bs-target="#changePasswordModal">
+                @* Tạm thời vô hiệu hóa các liên kết này *@
+                <a asp-action="Index" asp-controller="Address" class="list-group-item list-group-item-action">
+                    <i class="fas fa-map-marker-alt"></i>Sổ địa chỉ
+                </a>
+                <a asp-action="ChangePassword" asp-controller="Profile" class="list-group-item list-group-item-action">
                     <i class="fas fa-key"></i>Đổi mật khẩu
-                </button>
+                </a>
             </div>
         </div>
 
@@ -31,13 +36,16 @@
                 <div class="alert alert-danger">@TempData["ErrorMessage"]</div>
             }
 
-            <div class="profile-card mb-4">
+            <div class="profile-card">
                 <div class="card-header"><h5>Thông tin cá nhân</h5></div>
                 <div class="card-body">
-                    <form asp-action="UpdateProfile" method="post">
+                    <form asp-action="Index" method="post">
+                        @* Thêm Anti-Forgery Token để bảo mật *@
+                        @Html.AntiForgeryToken()
+
                         <div class="row">
                             <div class="col-md-6 mb-3">
-                                <label asp-for="Email" class="form-label">Email</label>
+                                <label class="form-label">Email</label>
                                 <input asp-for="Email" class="form-control" readonly />
                             </div>
                             <div class="col-md-6 mb-3">
@@ -56,177 +64,11 @@
                             </div>
                         </div>
                         <button type="submit" class="btn btn-primary mt-3">
-                            <i class="fas fa-save me-2"></i>Cập nhật thông tin
+                            <i class="fas fa-save me-2"></i>Lưu thay đổi
                         </button>
                     </form>
                 </div>
             </div>
-
-            <div class="profile-card">
-                <div class="card-header d-flex justify-content-between align-items-center">
-                    <h5>Địa chỉ của tôi</h5>
-                    <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addAddressModal">
-                        <i class="fas fa-plus me-2"></i>Thêm địa chỉ
-                    </button>
-                </div>
-                <div class="card-body">
-                    @if (Model.Addresses.Any())
-                    {
-                        @foreach (var address in Model.Addresses)
-                        {
-                            <div class="address-item">
-                                <div class="address-item-info">
-                                    <strong>@address.Detail</strong><br>
-                                    <small class="text-muted">@address.Ward, @address.District, @address.City</small>
-                                </div>
-                                <div>
-                                    <button type="button" class="btn btn-sm btn-outline-secondary me-2"
-                                            data-bs-toggle="modal" data-bs-target="#editAddressModal-@address.AddressId"
-                                            data-address-id="@address.AddressId"
-                                            data-city="@address.City"
-                                            data-district="@address.District"
-                                            data-ward="@address.Ward"
-                                            data-detail="@address.Detail">
-                                        <i class="fas fa-edit"></i> Sửa
-                                    </button>
-                                    <form asp-action="DeleteAddress" method="post" class="d-inline">
-                                        <input type="hidden" name="addressId" value="@address.AddressId" />
-                                        <button type="submit" class="btn btn-sm btn-outline-danger" onclick="return confirm('Bạn có chắc muốn xóa địa chỉ này?');">
-                                            <i class="fas fa-trash"></i> Xóa
-                                        </button>
-                                    </form>
-                                </div>
-                            </div>
-                        }
-                    }
-                    else
-                    {
-                        <p class="text-center text-muted">Bạn chưa có địa chỉ nào được lưu.</p>
-                    }
-                </div>
-            </div>
         </div>
     </div>
 </div>
-
-@* --- MODALS --- *@
-
-@* Add Address Modal *@
-<div class="modal fade" id="addAddressModal" tabindex="-1" aria-labelledby="addAddressModalLabel" aria-hidden="true">
-    <div class="modal-dialog">
-        <div class="modal-content">
-            <form asp-action="AddAddress" method="post">
-                <div class="modal-header">
-                    <h5 class="modal-title" id="addAddressModalLabel">Thêm địa chỉ mới</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                </div>
-                <div class="modal-body">
-                    <div class="mb-3">
-                        <label class="form-label">Tỉnh/Thành phố</label>
-                        <select name="City" id="city-add" class="form-select" required></select>
-                    </div>
-                    <div class="mb-3">
-                        <label class="form-label">Quận/Huyện</label>
-                        <select name="District" id="district-add" class="form-select" required></select>
-                    </div>
-                    <div class="mb-3">
-                        <label class="form-label">Phường/Xã</label>
-                        <select name="Ward" id="ward-add" class="form-select" required></select>
-                    </div>
-                    <div class="mb-3">
-                        <label class="form-label">Địa chỉ chi tiết</label>
-                        <input name="Detail" class="form-control" placeholder="Số nhà, tên đường..." required />
-                    </div>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Đóng</button>
-                    <button type="submit" class="btn btn-primary">Thêm địa chỉ</button>
-                </div>
-            </form>
-        </div>
-    </div>
-</div>
-
-@* Edit Address Modals *@
-@foreach (var address in Model.Addresses)
-{
-    <div class="modal fade edit-address-modal" id="editAddressModal-@address.AddressId" tabindex="-1" aria-hidden="true">
-        <div class="modal-dialog">
-            <div class="modal-content">
-                <form asp-action="EditAddress" method="post">
-                    <div class="modal-header">
-                        <h5 class="modal-title">Chỉnh sửa địa chỉ</h5>
-                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                    </div>
-                    <div class="modal-body">
-                        <input type="hidden" name="AddressId" value="@address.AddressId" />
-                        <div class="mb-3">
-                            <label class="form-label">Tỉnh/Thành phố</label>
-                            <select name="City" id="city-edit-@address.AddressId" class="form-select city-select" required></select>
-                        </div>
-                        <div class="mb-3">
-                            <label class="form-label">Quận/Huyện</label>
-                            <select name="District" id="district-edit-@address.AddressId" class="form-select district-select" required></select>
-                        </div>
-                        <div class="mb-3">
-                            <label class="form-label">Phường/Xã</label>
-                            <select name="Ward" id="ward-edit-@address.AddressId" class="form-select ward-select" required></select>
-                        </div>
-                        <div class="mb-3">
-                            <label class="form-label">Địa chỉ chi tiết</label>
-                            <input name="Detail" class="form-control detail-input" value="@address.Detail" required />
-                        </div>
-                    </div>
-                    <div class="modal-footer">
-                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Đóng</button>
-                        <button type="submit" class="btn btn-primary">Lưu thay đổi</button>
-                    </div>
-                </form>
-            </div>
-        </div>
-    </div>
-}
-
-@* Change Password Modal *@
-<div class="modal fade" id="changePasswordModal" tabindex="-1" aria-labelledby="changePasswordModalLabel" aria-hidden="true">
-    <div class="modal-dialog">
-        <div class="modal-content">
-            <form asp-controller="Profile" asp-action="ChangePassword" method="post">
-                <div class="modal-header">
-                    <h5 class="modal-title" id="changePasswordModalLabel">Đổi mật khẩu</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                </div>
-                <div class="modal-body">
-                    @{
-                        var changePasswordModel = new FlowerShop_WebApp.Models.Profile.ChangePasswordViewModel();
-                    }
-                    <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
-
-                    <div class="mb-3">
-                        <label asp-for="@changePasswordModel.CurrentPassword" class="form-label"></label>
-                        <input asp-for="@changePasswordModel.CurrentPassword" class="form-control" type="password" />
-                        <span asp-validation-for="@changePasswordModel.CurrentPassword" class="text-danger"></span>
-                    </div>
-                    <div class="mb-3">
-                        <label asp-for="@changePasswordModel.NewPassword" class="form-label"></label>
-                        <input asp-for="@changePasswordModel.NewPassword" class="form-control" type="password" />
-                        <span asp-validation-for="@changePasswordModel.NewPassword" class="text-danger"></span>
-                    </div>
-                    <div class="mb-3">
-                        <label asp-for="@changePasswordModel.ConfirmNewPassword" class="form-label"></label>
-                        <input asp-for="@changePasswordModel.ConfirmNewPassword" class="form-control" type="password" />
-                        <span asp-validation-for="@changePasswordModel.ConfirmNewPassword" class="text-danger"></span>
-                    </div>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Đóng</button>
-                    <button type="submit" class="btn btn-primary">Lưu thay đổi</button>
-                </div>
-            </form>
-        </div>
-    </div>
-</div>
-
-@section Scripts {
-    <script src="~/js/profile.js" asp-append-version="true"></script>
-}

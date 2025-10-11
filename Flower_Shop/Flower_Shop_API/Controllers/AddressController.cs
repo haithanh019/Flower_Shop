@@ -61,6 +61,7 @@ namespace Flower_Shop_API.Controllers
                 userId,
                 request
             );
+            // THAY ĐỔI: Trả về đối tượng đã được cập nhật
             return Ok(updatedAddress);
         }
 

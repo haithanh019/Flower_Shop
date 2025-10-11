@@ -10,7 +10,7 @@ namespace BusinessLogic.Services.Interfaces
 
         Task<CategoryDto> CreateCategoryAsync(CategoryCreateRequest createRequest);
 
-        Task UpdateCategoryAsync(CategoryUpdateRequest updateRequest);
+        Task<CategoryDto> UpdateCategoryAsync(CategoryUpdateRequest updateRequest);
 
         Task DeleteCategoryAsync(Guid categoryId);
     }

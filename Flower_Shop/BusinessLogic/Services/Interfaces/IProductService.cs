@@ -11,7 +11,7 @@ namespace BusinessLogic.Services.Interfaces
 
         Task<ProductDto> CreateProductAsync(ProductCreateRequest createRequest);
 
-        Task UpdateProductAsync(ProductUpdateRequest updateRequest);
+        Task<ProductDto> UpdateProductAsync(ProductUpdateRequest updateRequest);
 
         Task DeleteProductAsync(Guid productId);
     }
