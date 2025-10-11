@@ -37,7 +37,7 @@ namespace FlowerShop_WebApp.Controllers
         // POST: /Profile/Index
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Index(CustomerProfileUpdateViewModel model)
+        public async Task<IActionResult> UpdateProfile(CustomerProfileUpdateViewModel model)
         {
             if (!ModelState.IsValid)
             {
@@ -66,25 +66,20 @@ namespace FlowerShop_WebApp.Controllers
             return RedirectToAction("Index");
         }
 
-        // --- BỔ SUNG ACTIONS CHO TRANG ĐỔI MẬT KHẨU ---
+        // LOẠI BỎ: [HttpGet] ChangePassword() đã bị xóa.
 
-        // GET: /Profile/ChangePassword
-        // Hiển thị trang đổi mật khẩu
-        [HttpGet]
-        public IActionResult ChangePassword()
-        {
-            return View();
-        }
-
-        // POST: /Profile/ChangePassword
-        // Xử lý việc đổi mật khẩu
+        // POST: /Profile/ChangePassword (Xử lý yêu cầu từ modal)
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> ChangePassword(ChangePasswordViewModel model)
         {
             if (!ModelState.IsValid)
             {
-                return View(model);
+                // Nếu dữ liệu không hợp lệ, tạo một thông báo lỗi chung và quay lại trang Index.
+                // Các lỗi chi tiết sẽ được hiển thị bởi validation summary trên modal.
+                TempData["ErrorMessage"] =
+                    "Thông tin đổi mật khẩu không hợp lệ. Vui lòng kiểm tra lại.";
+                return RedirectToAction("Index");
             }
 
             var client = CreateApiClient();
@@ -98,14 +93,13 @@ namespace FlowerShop_WebApp.Controllers
             if (response.IsSuccessStatusCode)
             {
                 TempData["SuccessMessage"] = "Đổi mật khẩu thành công!";
-                return RedirectToAction("Index");
             }
-
-            ModelState.AddModelError(
-                string.Empty,
-                "Đổi mật khẩu thất bại. Vui lòng kiểm tra lại mật khẩu hiện tại."
-            );
-            return View(model);
+            else
+            {
+                TempData["ErrorMessage"] =
+                    "Đổi mật khẩu thất bại. Vui lòng kiểm tra lại mật khẩu hiện tại.";
+            }
+            return RedirectToAction("Index");
         }
 
         // --- CÁC PHƯƠNG THỨC HỖ TRỢ ---

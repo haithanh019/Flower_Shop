@@ -43,7 +43,7 @@ namespace FlowerShop_WebApp
                     options =>
                     {
                         options.Cookie.Name = "FlowerShop.Auth";
-                        options.LoginPath = "/Account/Login"; // Đường dẫn đến trang đăng nhập
+                        options.LoginPath = "/Account/Login";
                         options.AccessDeniedPath = "/Home/AccessDenied";
                     }
                 );
@@ -57,7 +57,6 @@ namespace FlowerShop_WebApp
             if (!app.Environment.IsDevelopment())
             {
                 app.UseExceptionHandler("/Home/Error");
-                // The default HSTS value is 30 days. You may want to change this for production scenarios, see https://aka.ms/aspnetcore-hsts.
                 app.UseHsts();
             }
 

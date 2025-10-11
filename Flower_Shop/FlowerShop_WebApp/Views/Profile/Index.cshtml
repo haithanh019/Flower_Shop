@@ -8,7 +8,6 @@
 
     <div class="row">
         <div class="col-md-3">
-            @* MENU ĐIỀU HƯỚNG SẼ ĐƯỢC CẬP NHẬT Ở CÁC BƯỚC SAU *@
             <div class="list-group profile-nav">
                 <a asp-action="Index" asp-controller="Profile" class="list-group-item list-group-item-action active">
                     <i class="fas fa-user-circle"></i>Thông tin cá nhân
@@ -16,13 +15,13 @@
                 <a asp-action="History" asp-controller="Orders" class="list-group-item list-group-item-action">
                     <i class="fas fa-receipt"></i>Lịch sử đơn hàng
                 </a>
-                @* Tạm thời vô hiệu hóa các liên kết này *@
                 <a asp-action="Index" asp-controller="Address" class="list-group-item list-group-item-action">
                     <i class="fas fa-map-marker-alt"></i>Sổ địa chỉ
                 </a>
-                <a asp-action="ChangePassword" asp-controller="Profile" class="list-group-item list-group-item-action">
+                @* THAY THẾ LIÊN KẾT BẰNG NÚT BẤM MỞ MODAL *@
+                <button type="button" class="list-group-item list-group-item-action" data-bs-toggle="modal" data-bs-target="#changePasswordModal">
                     <i class="fas fa-key"></i>Đổi mật khẩu
-                </a>
+                </button>
             </div>
         </div>
 
@@ -39,10 +38,8 @@
             <div class="profile-card">
                 <div class="card-header"><h5>Thông tin cá nhân</h5></div>
                 <div class="card-body">
-                    <form asp-action="Index" method="post">
-                        @* Thêm Anti-Forgery Token để bảo mật *@
+                    <form asp-action="UpdateProfile" method="post">
                         @Html.AntiForgeryToken()
-
                         <div class="row">
                             <div class="col-md-6 mb-3">
                                 <label class="form-label">Email</label>
@@ -72,3 +69,43 @@
         </div>
     </div>
 </div>
+
+@* --- BỔ SUNG MODAL ĐỔI MẬT KHẨU --- *@
+<div class="modal fade" id="changePasswordModal" tabindex="-1" aria-labelledby="changePasswordModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <form asp-controller="Profile" asp-action="ChangePassword" method="post">
+                @Html.AntiForgeryToken()
+                <div class="modal-header">
+                    <h5 class="modal-title" id="changePasswordModalLabel">Đổi mật khẩu</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    @* SỬA LỖI: Sử dụng name="" thay vì asp-for với biến cục bộ *@
+                    <div asp-validation-summary="All" class="text-danger mb-3"></div>
+
+                    <div class="mb-3">
+                        <label for="CurrentPassword" class="form-label">Mật khẩu hiện tại</label>
+                        <input name="CurrentPassword" id="CurrentPassword" class="form-control" type="password" required />
+                    </div>
+                    <div class="mb-3">
+                        <label for="NewPassword" class="form-label">Mật khẩu mới</label>
+                        <input name="NewPassword" id="NewPassword" class="form-control" type="password" required minlength="6" />
+                    </div>
+                    <div class="mb-3">
+                        <label for="ConfirmNewPassword" class="form-label">Xác nhận mật khẩu mới</label>
+                        <input name="ConfirmNewPassword" id="ConfirmNewPassword" class="form-control" type="password" required />
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Đóng</button>
+                    <button type="submit" class="btn btn-primary">Lưu thay đổi</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}
