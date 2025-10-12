@@ -24,12 +24,10 @@ namespace FlowerShop_WebApp.Areas.Admin.Controllers
             _logger = logger;
         }
 
-        // GET: /Admin/Orders
         public async Task<IActionResult> Index(string statusFilter, int pageNumber = 1)
         {
             var client = CreateApiClient();
-            var pageSize = 10; // Số đơn hàng trên mỗi trang
-
+            var pageSize = 10;
             var apiUrl = $"api/orders/all?pageNumber={pageNumber}&pageSize={pageSize}";
             if (!string.IsNullOrEmpty(statusFilter))
             {
@@ -37,45 +35,42 @@ namespace FlowerShop_WebApp.Areas.Admin.Controllers
             }
 
             var response = await client.GetAsync(apiUrl);
+            var pagedResult = new PagedResultViewModel<OrderViewModel>();
 
             if (response.IsSuccessStatusCode)
             {
-                var pagedResult = await response.Content.ReadFromJsonAsync<
-                    PagedResultViewModel<OrderViewModel>
-                >(_jsonOptions);
-
-                // Truyền dữ liệu phân trang và bộ lọc về View
-                ViewBag.CurrentPage = pageNumber;
-                ViewBag.TotalPages = (int)
-                    Math.Ceiling((pagedResult?.TotalCount ?? 0) / (double)pageSize);
-                ViewBag.CurrentStatusFilter = statusFilter;
-
-                // Lấy danh sách trạng thái cho dropdown
-                var enumsResponse = await client.GetAsync("api/utility/enums");
-                if (enumsResponse.IsSuccessStatusCode)
-                {
-                    var enums = await enumsResponse.Content.ReadFromJsonAsync<AllEnumsResponse>(
+                pagedResult =
+                    await response.Content.ReadFromJsonAsync<PagedResultViewModel<OrderViewModel>>(
                         _jsonOptions
-                    );
-                    ViewBag.OrderStatuses = enums?.OrderStatus ?? new List<EnumDto>();
-                }
-                else
-                {
-                    ViewBag.OrderStatuses = new List<string>();
-                }
-
-                return View(pagedResult);
+                    ) ?? new PagedResultViewModel<OrderViewModel>();
             }
 
-            _logger.LogError(
-                "Failed to fetch orders from API. Status code: {StatusCode}",
-                response.StatusCode
-            );
-            return View(new PagedResultViewModel<OrderViewModel>());
+            ViewBag.CurrentStatusFilter = statusFilter;
+
+            var enumsResponse = await client.GetAsync("api/utility/enums");
+            if (enumsResponse.IsSuccessStatusCode)
+            {
+                var enums = await enumsResponse.Content.ReadFromJsonAsync<AllEnumsResponse>(
+                    _jsonOptions
+                );
+                ViewBag.OrderStatuses = enums?.OrderStatus ?? new List<EnumDto>();
+            }
+            else
+            {
+                ViewBag.OrderStatuses = new List<EnumDto>();
+            }
+
+            // Nếu là request AJAX thì chỉ trả về partial view của bảng
+            if (HttpContext.Request.Headers["X-Requested-With"] == "XMLHttpRequest")
+            {
+                return PartialView("_OrderTablePartial", pagedResult);
+            }
+
+            return View(pagedResult);
         }
 
-        // GET: /Admin/Orders/Details/{id}
-        public async Task<IActionResult> Details(Guid id)
+        [HttpGet]
+        public async Task<IActionResult> DetailsPartial(Guid id)
         {
             var client = CreateApiClient();
             var response = await client.GetAsync($"api/orders/{id}");
@@ -94,46 +89,41 @@ namespace FlowerShop_WebApp.Areas.Admin.Controllers
                     );
                     ViewBag.OrderStatuses = enums?.OrderStatus ?? new List<EnumDto>();
                 }
-                else
-                {
-                    // Fallback to a hard-coded list if the API call fails
-                    ViewBag.OrderStatuses = new List<EnumDto>();
-                }
-
-                return View(order);
+                return PartialView("_OrderDetailsPartial", order);
             }
-
             return NotFound();
         }
 
-        // POST: /Admin/Orders/UpdateStatus
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> UpdateStatus(Guid orderId, string status)
         {
             if (string.IsNullOrEmpty(status))
             {
-                TempData["ErrorMessage"] = "Vui lòng chọn một trạng thái hợp lệ.";
-                return RedirectToAction("Details", new { id = orderId });
+                return new BadRequestObjectResult(
+                    new
+                    {
+                        success = false,
+                        errors = new[] { "Vui lòng chọn một trạng thái hợp lệ." },
+                    }
+                );
             }
 
             var client = CreateApiClient();
             var updateRequest = new { OrderId = orderId, Status = status };
-
             var response = await client.PutAsJsonAsync("api/orders/status", updateRequest);
 
             if (response.IsSuccessStatusCode)
             {
-                TempData["SuccessMessage"] = "Cập nhật trạng thái đơn hàng thành công!";
-            }
-            else
-            {
-                var errorContent = await response.Content.ReadAsStringAsync();
-                _logger.LogError("Failed to update order status. Response: {Error}", errorContent);
-                TempData["ErrorMessage"] = "Cập nhật trạng thái đơn hàng thất bại.";
+                return new OkObjectResult(
+                    new { success = true, message = "Cập nhật trạng thái thành công!" }
+                );
             }
 
-            return RedirectToAction("Details", new { id = orderId });
+            _logger.LogError("Failed to update order status. OrderId: {OrderId}", orderId);
+            return new BadRequestObjectResult(
+                new { success = false, errors = new[] { "Cập nhật trạng thái thất bại." } }
+            );
         }
 
         private HttpClient CreateApiClient()
@@ -147,16 +137,10 @@ namespace FlowerShop_WebApp.Areas.Admin.Controllers
                     token
                 );
             }
-            else
-            {
-                _logger.LogError("Admin action initiated but JWT token is missing from session.");
-            }
             return client;
         }
     }
 
-    // You might need to add this class if it's not accessible
-    // or referenced from another project
     public class AllEnumsResponse
     {
         public List<EnumDto> OrderStatus { get; set; } = new();

@@ -1,22 +1,8 @@
 ﻿@model PagedResultViewModel<OrderViewModel>
-
 @{
     ViewData["Title"] = "Quản lý Đơn hàng";
-    var currentPage = Model?.PageNumber ?? 1;
-    var totalPages = Model != null ? (int)Math.Ceiling((double)Model.TotalCount / Model.PageSize) : 1;
-    var currentStatusFilter = ViewBag.CurrentStatusFilter as string;
     var orderStatuses = ViewBag.OrderStatuses as List<EnumDto> ?? new List<EnumDto>();
-
-    // Cập nhật logic với trạng thái tiếng Việt
-    Func<string, string> getStatusBadgeClass = status => status switch
-    {
-        "Chờ xử lý" => "bg-warning text-dark",
-        "Đã xác nhận" => "bg-info text-dark",
-        "Đang giao hàng" => "bg-primary",
-        "Hoàn thành" => "bg-success",
-        "Đã hủy" => "bg-danger",
-        _ => "bg-secondary"
-    };
+    var currentStatusFilter = ViewBag.CurrentStatusFilter as string;
 }
 
 <div class="d-flex justify-content-between align-items-center pt-3 pb-2 mb-3 border-bottom">
@@ -25,80 +11,31 @@
 
 <div class="card shadow-sm">
     <div class="card-header">
-        <form asp-action="Index" method="get" class="d-flex justify-content-end">
+        <form id="filterForm" asp-action="Index" method="get" class="d-flex justify-content-end">
             <div class="input-group w-50">
-                <select name="statusFilter" class="form-select" onchange="this.form.submit()">
+                <select name="statusFilter" class="form-select">
                     <option value="">-- Lọc theo trạng thái --</option>
                     @foreach (var status in orderStatuses)
                     {
                         <option value="@status.Value" selected="@(status.Value == currentStatusFilter)">@status.DisplayName</option>
                     }
                 </select>
-                <a asp-action="Index" class="btn btn-outline-secondary" title="Xóa bộ lọc"><i class="fas fa-times"></i></a>
             </div>
         </form>
     </div>
-    <div class="card-body">
-        <table class="table table-striped table-hover">
-            <thead class="table-light">
-                <tr>
-                    <th>Mã ĐH</th>
-                    <th>Email Khách hàng</th>
-                    <th>Ngày đặt</th>
-                    <th>Tổng tiền</th>
-                    <th>Trạng thái</th>
-                    <th></th>
-                </tr>
-            </thead>
-            <tbody>
-                @if (Model != null && Model.Items.Any())
-                {
-                    @foreach (var order in Model.Items)
-                    {
-                        <tr>
-                            <td><code>#@order.OrderId.ToString().Substring(0, 8)</code></td>
-                            <td>@order.CustomerEmail</td>
-                            <td>@order.CreatedAt.ToString("d")</td>
-                            <td>@order.Total.ToString("N0") VNĐ</td>
-                            <td><span class="badge @getStatusBadgeClass(order.Status) rounded-pill">@order.Status</span></td>
-                            <td class="text-end">
-                                <a asp-action="Details" asp-route-id="@order.OrderId" class="btn btn-sm btn-outline-primary">Xem chi tiết</a>
-                            </td>
-                        </tr>
-                    }
-                }
-                else
-                {
-                    <tr><td colspan="6" class="text-center">Không tìm thấy đơn hàng nào.</td></tr>
-                }
-            </tbody>
-        </table>
+    <div id="orderTableContainer">
+        @await Html.PartialAsync("_OrderTablePartial", Model)
     </div>
-    @if (totalPages > 1)
-    {
-        <div class="card-footer">
-            <nav>
-                <ul class="pagination justify-content-center mb-0">
-                    <li class="page-item @(currentPage == 1 ? "disabled" : "")">
-                        <a class="page-link" asp-action="Index" asp-route-pageNumber="1" asp-route-statusFilter="@currentStatusFilter">Đầu</a>
-                    </li>
-                    <li class="page-item @(currentPage == 1 ? "disabled" : "")">
-                        <a class="page-link" asp-action="Index" asp-route-pageNumber="@(currentPage - 1)" asp-route-statusFilter="@currentStatusFilter">Trước</a>
-                    </li>
-                    @for (int i = 1; i <= totalPages; i++)
-                    {
-                        <li class="page-item @(i == currentPage ? "active" : "")">
-                            <a class="page-link" asp-action="Index" asp-route-pageNumber="@i" asp-route-statusFilter="@currentStatusFilter">@i</a>
-                        </li>
-                    }
-                    <li class="page-item @(currentPage == totalPages ? "disabled" : "")">
-                        <a class="page-link" asp-action="Index" asp-route-pageNumber="@(currentPage + 1)" asp-route-statusFilter="@currentStatusFilter">Sau</a>
-                    </li>
-                    <li class="page-item @(currentPage == totalPages ? "disabled" : "")">
-                        <a class="page-link" asp-action="Index" asp-route-pageNumber="@totalPages" asp-route-statusFilter="@currentStatusFilter">Cuối</a>
-                    </li>
-                </ul>
-            </nav>
-        </div>
-    }
 </div>
+
+<div class="modal fade" id="orderModal" tabindex="-1" aria-labelledby="orderModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-xl modal-dialog-centered">
+        <div class="modal-content" id="orderModalContent">
+            @* Nội dung sẽ được load bằng AJAX vào đây *@
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script src="~/js/order-manager.js" asp-append-version="true"></script>
+}
