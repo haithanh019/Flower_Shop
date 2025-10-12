@@ -84,5 +84,19 @@ namespace Flower_Shop_API.Controllers
             await _facadeService.ProductService.DeleteProductAsync(id);
             return NoContent();
         }
+
+        [HttpPost("delete-image")]
+        [Authorize(Roles = "Admin")]
+        public async Task<IActionResult> DeleteProductImage(
+            [FromBody] ProductImageDeleteRequest request
+        )
+        {
+            var success = await _facadeService.ProductService.DeleteProductImageAsync(request);
+            if (success)
+            {
+                return Ok(new { message = "Image deleted successfully." });
+            }
+            return BadRequest("Failed to delete image.");
+        }
     }
 }

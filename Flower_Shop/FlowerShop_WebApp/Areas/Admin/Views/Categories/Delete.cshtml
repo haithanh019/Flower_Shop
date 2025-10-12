@@ -1,6 +1,0 @@
-﻿@model FlowerShop_WebApp.Models.Categories.CategoryViewModel
-@{
-    ViewData["Title"] = "Xóa danh mục";
-}
-<div class="page-header"><h1 class="h2 text-danger">@ViewData["Title"]</h1></div>
-<div class="row justify-content-center"><div class="col-md-8"><div class="card border-danger"><div class="card-header bg-danger text-white"><h5 class="my-0 fw-normal"><i class="fas fa-exclamation-triangle me-2"></i>Xác nhận xóa</h5></div><div class="card-body"><p class="fs-5">Bạn có chắc chắn muốn xóa danh mục "<strong>@Model.Name</strong>"?</p><p class="text-danger">Các sản phẩm thuộc danh mục này sẽ không bị xóa nhưng sẽ không còn danh mục.</p><hr /><form asp-action="Delete"><input type="hidden" asp-for="CategoryId" /><div class="mt-4"><button type="submit" class="btn btn-danger"><i class="fas fa-trash-alt me-2"></i>Đồng ý, Xóa</button><a asp-action="Index" class="btn btn-secondary"><i class="fas fa-times me-2"></i>Hủy</a></div></form></div></div></div></div>

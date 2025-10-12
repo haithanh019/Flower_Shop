@@ -112,15 +112,6 @@ namespace BusinessLogic.Services
 
             if (updateRequest.ImageFiles != null && updateRequest.ImageFiles.Count > 0)
             {
-                foreach (var oldImage in productToUpdate.Images.ToList())
-                {
-                    if (!string.IsNullOrEmpty(oldImage.PublicId))
-                    {
-                        await _unitOfWork.ProductImage.DeleteImageAsync(oldImage.PublicId);
-                    }
-                }
-                productToUpdate.Images.Clear();
-
                 foreach (var file in updateRequest.ImageFiles)
                 {
                     var newImage = new ProductImage();
@@ -203,6 +194,37 @@ namespace BusinessLogic.Services
                 includeProperties: "Category,Images"
             );
             return product == null ? null : _mapper.Map<ProductDto>(product);
+        }
+
+        public async Task<bool> DeleteProductImageAsync(ProductImageDeleteRequest request)
+        {
+            var product = await _unitOfWork.Product.GetAsync(
+                p => p.ProductId == request.ProductId,
+                includeProperties: "Images"
+            );
+
+            if (product == null)
+            {
+                throw new KeyNotFoundException("Product not found.");
+            }
+
+            var imageToDelete = product.Images.FirstOrDefault(i => i.Url == request.ImageUrl);
+
+            if (imageToDelete?.PublicId == null)
+            {
+                return false;
+            }
+
+            var success = await _unitOfWork.ProductImage.DeleteImageAsync(imageToDelete.PublicId);
+
+            if (success)
+            {
+                product.Images.Remove(imageToDelete);
+                await _unitOfWork.SaveAsync();
+                return true;
+            }
+
+            return false;
         }
     }
 }

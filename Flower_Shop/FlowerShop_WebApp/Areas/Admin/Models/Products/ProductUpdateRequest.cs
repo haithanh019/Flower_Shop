@@ -16,7 +16,8 @@ namespace FlowerShop_WebApp.Areas.Admin.Models.Products
         public string? Description { get; set; }
 
         [Display(Name = "Giá bán")]
-        [Range(0.01, double.MaxValue, ErrorMessage = "Giá phải lớn hơn 0.")]
+        [Range(0, double.MaxValue, ErrorMessage = "Giá phải lớn hơn 0.")]
+        [DisplayFormat(DataFormatString = "{0:N0}", ApplyFormatInEditMode = true)]
         public decimal Price { get; set; }
 
         [Display(Name = "Danh mục")]

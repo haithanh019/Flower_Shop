@@ -1,0 +1,31 @@
+﻿@model FlowerShop_WebApp.Areas.Admin.Models.Categories.CategoryUpdateRequest
+
+<form asp-action="@(Model.CategoryId == Guid.Empty ? "Create" : "Edit")" id="categoryForm">
+    @Html.AntiForgeryToken()
+    <input type="hidden" asp-for="CategoryId" />
+    <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
+
+    <div class="modal-header">
+        <h5 class="modal-title">@(Model.CategoryId == Guid.Empty ? "Thêm danh mục mới" : "Chỉnh sửa danh mục")</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Đóng"></button>
+    </div>
+    <div class="modal-body">
+        <div id="modal-alert-placeholder"></div>
+        <div class="mb-3">
+            <label asp-for="Name" class="form-label">Tên danh mục</label>
+            <input asp-for="Name" class="form-control" />
+            <span asp-validation-for="Name" class="text-danger"></span>
+        </div>
+        <div class="mb-3">
+            <label asp-for="Description" class="form-label">Mô tả</label>
+            <textarea asp-for="Description" class="form-control" rows="3"></textarea>
+            <span asp-validation-for="Description" class="text-danger"></span>
+        </div>
+    </div>
+    <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
+        <button type="submit" class="btn btn-primary">
+            <i class="fas fa-save me-2"></i>Lưu
+        </button>
+    </div>
+</form>
