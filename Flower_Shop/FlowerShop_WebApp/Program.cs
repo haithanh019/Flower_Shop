@@ -1,5 +1,7 @@
-﻿using System.Net.Http.Headers;
+﻿using System.Globalization;
+using System.Net.Http.Headers;
 using Microsoft.AspNetCore.DataProtection;
+using Microsoft.AspNetCore.Localization;
 
 namespace FlowerShop_WebApp
 {
@@ -8,7 +10,13 @@ namespace FlowerShop_WebApp
         public static void Main(string[] args)
         {
             var builder = WebApplication.CreateBuilder(args);
-
+            builder.Services.Configure<RequestLocalizationOptions>(options =>
+            {
+                var supportedCultures = new[] { new CultureInfo("vi-VN") };
+                options.DefaultRequestCulture = new RequestCulture("vi-VN");
+                options.SupportedCultures = supportedCultures;
+                options.SupportedUICultures = supportedCultures;
+            });
             builder.Services.AddHttpClient(
                 "ApiClient",
                 client =>

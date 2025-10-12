@@ -207,6 +207,51 @@ namespace FlowerShop_WebApp.Controllers
             return RedirectToAction("Index", "Cart");
         }
 
+        // === BẮT ĐẦU THÊM MỚI ===
+        [HttpGet]
+        public async Task<IActionResult> HistoryPartial()
+        {
+            var client = await CreateApiClientAsync();
+            var response = await client.GetAsync("api/orders");
+
+            if (response.IsSuccessStatusCode)
+            {
+                var jsonString = await response.Content.ReadAsStringAsync();
+                var pagedResult = JsonSerializer.Deserialize<PagedResultViewModel<OrderViewModel>>(
+                    jsonString,
+                    _jsonOptions
+                );
+                return PartialView(
+                    "~/Views/Shared/_OrderHistoryPartial.cshtml",
+                    pagedResult?.Items ?? new List<OrderViewModel>()
+                );
+            }
+
+            return PartialView(
+                "~/Views/Shared/_OrderHistoryPartial.cshtml",
+                new List<OrderViewModel>()
+            );
+        }
+
+        [HttpGet]
+        public async Task<IActionResult> DetailsPartial(Guid id)
+        {
+            var client = await CreateApiClientAsync();
+            var response = await client.GetAsync($"api/orders/{id}");
+
+            if (response.IsSuccessStatusCode)
+            {
+                var jsonString = await response.Content.ReadAsStringAsync();
+                var order = JsonSerializer.Deserialize<OrderViewModel>(jsonString, _jsonOptions);
+                if (order == null)
+                    return NotFound();
+                return PartialView("~/Views/Shared/_OrderDetailsPartial.cshtml", order);
+            }
+
+            return NotFound();
+        }
+
+        // === KẾT THÚC THÊM MỚI ===
         private Task<HttpClient> CreateApiClientAsync()
         {
             var client = _httpClientFactory.CreateClient("ApiClient");

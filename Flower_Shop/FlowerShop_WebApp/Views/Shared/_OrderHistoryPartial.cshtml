@@ -1,0 +1,60 @@
+﻿@model IEnumerable<FlowerShop_WebApp.Models.Orders.OrderViewModel>
+
+@{
+    Func<string, string> getStatusBadgeClass = status => status switch
+    {
+        "Chờ xử lý" => "bg-warning text-dark",
+        "Đã xác nhận" => "bg-info text-dark",
+        "Đang giao hàng" => "bg-primary",
+        "Hoàn thành" => "bg-success",
+        "Đã hủy" => "bg-danger",
+        _ => "bg-secondary"
+    };
+}
+<div class="modal-header">
+    <h5 class="modal-title" id="orderHistoryModalLabel">Lịch sử Đơn hàng của tôi</h5>
+    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Đóng"></button>
+</div>
+<div class="modal-body">
+    @if (Model != null && Model.Any())
+    {
+        <table class="table table-hover">
+            <thead class="table-light">
+                <tr>
+                    <th>Mã ĐH</th>
+                    <th>Ngày đặt</th>
+                    <th>Tổng tiền</th>
+                    <th>Trạng thái</th>
+                    <th></th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var order in Model)
+                {
+                    <tr>
+                        <td><code>#@order.OrderId.ToString().Substring(0, 8)</code></td>
+                        <td>@order.CreatedAt.ToString("g")</td>
+                        <td>@order.Total.ToString("N0") VNĐ</td>
+                        <td>
+                            <span class="badge @getStatusBadgeClass(order.Status) rounded-pill">@order.Status</span>
+                        </td>
+                        <td>
+                            <button type="button" class="btn btn-sm btn-outline-primary view-details-btn" data-order-id="@order.OrderId">
+                                Xem chi tiết
+                            </button>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    }
+    else
+    {
+        <div class="alert alert-info" role="alert">
+            Bạn chưa có đơn hàng nào.
+        </div>
+    }
+</div>
+<div class="modal-footer">
+    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Đóng</button>
+</div>

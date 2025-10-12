@@ -11,98 +11,199 @@ namespace FlowerShop_WebApp.Controllers
     public class ProfileController : Controller
     {
         private readonly IHttpClientFactory _httpClientFactory;
-        private readonly ILogger<ProfileController> _logger;
-        private readonly JsonSerializerOptions _apiJsonOptions = new()
+        private readonly JsonSerializerOptions _jsonOptions = new()
         {
             PropertyNameCaseInsensitive = true,
-            PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
         };
 
-        public ProfileController(
-            IHttpClientFactory httpClientFactory,
-            ILogger<ProfileController> logger
-        )
+        public ProfileController(IHttpClientFactory httpClientFactory)
         {
             _httpClientFactory = httpClientFactory;
-            _logger = logger;
         }
 
-        // GET: /Profile/Index
         public async Task<IActionResult> Index()
         {
-            var profile = await GetCurrentProfileForView();
+            var client = CreateApiClient();
+            var profileResponse = await client.GetAsync("api/profile");
+
+            if (!profileResponse.IsSuccessStatusCode)
+            {
+                // Thêm xử lý lỗi nếu cần
+                return View(new CustomerProfileViewModel());
+            }
+
+            var profileJsonString = await profileResponse.Content.ReadAsStringAsync();
+            var profile = JsonSerializer.Deserialize<CustomerProfileViewModel>(
+                profileJsonString,
+                _jsonOptions
+            );
+
+            var addressResponse = await client.GetAsync("api/address");
+            if (addressResponse.IsSuccessStatusCode)
+            {
+                var addressJsonString = await addressResponse.Content.ReadAsStringAsync();
+                var addresses = JsonSerializer.Deserialize<List<AddressViewModel>>(
+                    addressJsonString,
+                    _jsonOptions
+                );
+                if (profile != null)
+                {
+                    profile.Addresses = addresses ?? new List<AddressViewModel>();
+                }
+            }
+
             return View(profile);
         }
 
-        // POST: /Profile/Index
         [HttpPost]
-        [ValidateAntiForgeryToken]
         public async Task<IActionResult> UpdateProfile(CustomerProfileUpdateViewModel model)
         {
             if (!ModelState.IsValid)
             {
-                var profile = await GetCurrentProfileForView();
-                profile.FullName = model.FullName;
-                profile.PhoneNumber = model.PhoneNumber;
-                return View(profile);
-            }
-
-            var client = CreateApiClient();
-            var jsonContent = new StringContent(
-                JsonSerializer.Serialize(model, _apiJsonOptions),
-                Encoding.UTF8,
-                "application/json"
-            );
-            var response = await client.PutAsync("api/profile", jsonContent);
-
-            if (response.IsSuccessStatusCode)
-            {
-                TempData["SuccessMessage"] = "Cập nhật thông tin thành công!";
-            }
-            else
-            {
-                TempData["ErrorMessage"] = "Cập nhật thông tin thất bại.";
-            }
-            return RedirectToAction("Index");
-        }
-
-        // LOẠI BỎ: [HttpGet] ChangePassword() đã bị xóa.
-
-        // POST: /Profile/ChangePassword (Xử lý yêu cầu từ modal)
-        [HttpPost]
-        [ValidateAntiForgeryToken]
-        public async Task<IActionResult> ChangePassword(ChangePasswordViewModel model)
-        {
-            if (!ModelState.IsValid)
-            {
-                // Nếu dữ liệu không hợp lệ, tạo một thông báo lỗi chung và quay lại trang Index.
-                // Các lỗi chi tiết sẽ được hiển thị bởi validation summary trên modal.
-                TempData["ErrorMessage"] =
-                    "Thông tin đổi mật khẩu không hợp lệ. Vui lòng kiểm tra lại.";
                 return RedirectToAction("Index");
             }
 
             var client = CreateApiClient();
             var jsonContent = new StringContent(
-                JsonSerializer.Serialize(model, _apiJsonOptions),
+                JsonSerializer.Serialize(model),
                 Encoding.UTF8,
                 "application/json"
             );
-            var response = await client.PutAsync("api/profile/change-password", jsonContent);
+
+            var response = await client.PutAsync("api/profile", jsonContent);
 
             if (response.IsSuccessStatusCode)
             {
-                TempData["SuccessMessage"] = "Đổi mật khẩu thành công!";
+                TempData["SuccessMessage"] = "Profile updated successfully!";
             }
             else
             {
-                TempData["ErrorMessage"] =
-                    "Đổi mật khẩu thất bại. Vui lòng kiểm tra lại mật khẩu hiện tại.";
+                TempData["ErrorMessage"] = "Failed to update profile.";
             }
             return RedirectToAction("Index");
         }
 
-        // --- CÁC PHƯƠNG THỨC HỖ TRỢ ---
+        // Action GET không đổi, chỉ dùng để lấy View rỗng ban đầu cho modal
+        public IActionResult ChangePassword()
+        {
+            return View(new ChangePasswordViewModel());
+        }
+
+        // === BẮT ĐẦU THAY ĐỔI ===
+        [HttpPost]
+        public async Task<IActionResult> ChangePassword(ChangePasswordViewModel model)
+        {
+            if (!ModelState.IsValid)
+            {
+                var errors = ModelState
+                    .Values.SelectMany(v => v.Errors)
+                    .Select(e => e.ErrorMessage);
+                return new BadRequestObjectResult(new { success = false, errors });
+            }
+
+            var client = CreateApiClient();
+            var jsonContent = new StringContent(
+                JsonSerializer.Serialize(model),
+                Encoding.UTF8,
+                "application/json"
+            );
+
+            var response = await client.PutAsync("api/profile/change-password", jsonContent);
+
+            if (response.IsSuccessStatusCode)
+            {
+                return new OkObjectResult(
+                    new { success = true, message = "Password changed successfully!" }
+                );
+            }
+
+            // Lấy lỗi từ API nếu có
+            var errorContent = await response.Content.ReadAsStringAsync();
+            // Cố gắng parse lỗi từ API (nếu API trả về cấu trúc lỗi chuẩn)
+            // Trong trường hợp này, ta trả về một lỗi chung
+            return new BadRequestObjectResult(
+                new
+                {
+                    success = false,
+                    errors = new[]
+                    {
+                        "Failed to change password. Please check your current password.",
+                    },
+                }
+            );
+        }
+
+        // === KẾT THÚC THAY ĐỔI ===
+
+        [HttpPost]
+        public async Task<IActionResult> AddAddress(AddressViewModel model)
+        {
+            if (ModelState.IsValid)
+            {
+                var client = CreateApiClient();
+                var jsonContent = new StringContent(
+                    JsonSerializer.Serialize(model),
+                    Encoding.UTF8,
+                    "application/json"
+                );
+
+                var response = await client.PostAsync("api/address", jsonContent);
+
+                if (response.IsSuccessStatusCode)
+                {
+                    TempData["SuccessMessage"] = "Address added successfully!";
+                }
+                else
+                {
+                    TempData["ErrorMessage"] = "Failed to add address.";
+                }
+            }
+            return RedirectToAction("Index");
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> EditAddress(AddressViewModel model)
+        {
+            if (ModelState.IsValid)
+            {
+                var client = CreateApiClient();
+                var jsonContent = new StringContent(
+                    JsonSerializer.Serialize(model),
+                    Encoding.UTF8,
+                    "application/json"
+                );
+
+                var response = await client.PutAsync($"api/address/{model.AddressId}", jsonContent);
+
+                if (response.IsSuccessStatusCode)
+                {
+                    TempData["SuccessMessage"] = "Address updated successfully!";
+                }
+                else
+                {
+                    TempData["ErrorMessage"] = "Failed to update address.";
+                }
+            }
+            return RedirectToAction("Index");
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> DeleteAddress(Guid addressId)
+        {
+            var client = CreateApiClient();
+            var response = await client.DeleteAsync($"api/address/{addressId}");
+
+            if (response.IsSuccessStatusCode)
+            {
+                TempData["SuccessMessage"] = "Address deleted successfully!";
+            }
+            else
+            {
+                TempData["ErrorMessage"] = "Failed to delete address.";
+            }
+
+            return RedirectToAction("Index");
+        }
 
         private HttpClient CreateApiClient()
         {
@@ -116,23 +217,6 @@ namespace FlowerShop_WebApp.Controllers
                 );
             }
             return client;
-        }
-
-        private async Task<CustomerProfileViewModel> GetCurrentProfileForView()
-        {
-            var client = CreateApiClient();
-            var profileResponse = await client.GetAsync("api/profile");
-
-            if (profileResponse.IsSuccessStatusCode)
-            {
-                var profile =
-                    await profileResponse.Content.ReadFromJsonAsync<CustomerProfileViewModel>(
-                        _apiJsonOptions
-                    );
-                return profile ?? new CustomerProfileViewModel();
-            }
-
-            return new CustomerProfileViewModel();
         }
     }
 }

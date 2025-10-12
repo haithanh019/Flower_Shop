@@ -7,116 +7,109 @@
     <h1 class="page-section-title">@ViewData["Title"]</h1>
 
     <form asp-action="PlaceOrder" method="post">
-        <div class="row">
-            <div class="col-lg-7">
-                <div class="card">
-                    <div class="card-header">
-                        <h5><i class="fas fa-user-circle me-2"></i>Thông tin người nhận</h5>
-                    </div>
+        <div class="row mt-4">
+            <div class="col-md-7">
+                <div class="card shadow-sm">
                     <div class="card-body">
-                        <div class="row">
-                            <div class="col-md-6 mb-3">
-                                <label asp-for="ShippingFullName" class="form-label"></label>
-                                <input asp-for="ShippingFullName" class="form-control" />
-                                <span asp-validation-for="ShippingFullName" class="text-danger"></span>
-                            </div>
-                            <div class="col-md-6 mb-3">
-                                <label asp-for="ShippingPhoneNumber" class="form-label"></label>
-                                <input asp-for="ShippingPhoneNumber" class="form-control" />
-                                <span asp-validation-for="ShippingPhoneNumber" class="text-danger"></span>
-                            </div>
-                        </div>
-                    </div>
-                </div>
+                        <h4 class="card-title">Thông tin giao hàng</h4>
+                        <hr />
+                        <div asp-validation-summary="ModelOnly" class="text-danger" role="alert"></div>
 
-                <div class="card">
-                    <div class="card-header">
-                        <h5><i class="fas fa-map-marker-alt me-2"></i>Địa chỉ giao hàng</h5>
-                    </div>
-                    <div class="card-body">
+                        <div class="mb-3">
+                            <label asp-for="ShippingFullName" class="form-label">Họ và tên người nhận</label>
+                            <input asp-for="ShippingFullName" class="form-control" />
+                            <span asp-validation-for="ShippingFullName" class="text-danger"></span>
+                        </div>
+                        <div class="mb-3">
+                            <label asp-for="ShippingPhoneNumber" class="form-label">Số điện thoại người nhận</label>
+                            <input asp-for="ShippingPhoneNumber" class="form-control" />
+                            <span asp-validation-for="ShippingPhoneNumber" class="text-danger"></span>
+                        </div>
+
                         @if (Model.SavedAddresses.Any())
                         {
-                            <div id="address-list">
-                                @foreach (var address in Model.SavedAddresses)
-                                {
-                                    <label class="saved-address-item" for="address-@address.AddressId">
-                                        <input type="radio" asp-for="SelectedAddressId" id="address-@address.AddressId" value="@address.AddressId" />
-                                        <strong>@address.Detail</strong><br>
-                                        <small class="text-muted">@address.Ward, @address.District, @address.City</small>
-                                    </label>
-                                }
+                            @* === PHẦN ĐỊA CHỈ ĐÃ ĐƯỢC THAY ĐỔI THÀNH DROPDOWN === *@
+                            <div class="mb-3">
+                                <label asp-for="SelectedAddressId" class="form-label">Địa chỉ giao hàng</label>
+                                <select asp-for="SelectedAddressId" class="form-select form-select-lg">
+                                    <option value="">-- Chọn địa chỉ đã lưu --</option>
+                                    @foreach (var address in Model.SavedAddresses)
+                                    {
+                                        <option value="@address.AddressId">
+                                            @address.Detail, @address.Ward, @address.District, @address.City
+                                        </option>
+                                    }
+                                </select>
+                                <span asp-validation-for="SelectedAddressId" class="text-danger"></span>
                             </div>
-                            <span asp-validation-for="SelectedAddressId" class="text-danger"></span>
                         }
                         else
                         {
                             <div class="alert alert-warning">
-                                Bạn chưa có địa chỉ nào. <a asp-controller="Profile" asp-action="Index">Vui lòng thêm địa chỉ</a> trong trang cá nhân.
+                                Bạn chưa có địa chỉ nào được lưu. Vui lòng
+                                <a asp-controller="Profile" asp-action="Index">vào trang cá nhân</a>
+                                để thêm địa chỉ.
                             </div>
                         }
-                    </div>
-                </div>
 
-                <div class="card">
-                    <div class="card-header">
-                        <h5><i class="fas fa-credit-card me-2"></i>Phương thức thanh toán</h5>
-                    </div>
-                    <div class="card-body">
-                        <label class="payment-method-item" for="cod">
+                        <div class="mb-3">
+                            <label asp-for="CustomerNote" class="form-label">Ghi chú cho đơn hàng</label>
+                            <textarea asp-for="CustomerNote" class="form-control" rows="3"></textarea>
+                        </div>
+
+                        <h4 class="mt-4">Phương thức thanh toán</h4>
+                        <hr />
+                        <div class="form-check">
                             <input class="form-check-input" type="radio" asp-for="PaymentMethod" value="CashOnDelivery" id="cod" checked>
-                            <i class="fas fa-truck payment-icon"></i>
-                            <div>
-                                <strong>Thanh toán khi nhận hàng (COD)</strong>
-                                <p class="text-muted mb-0 small">Trả tiền mặt khi shipper giao hàng.</p>
-                            </div>
-                        </label>
-                        <label class="payment-method-item" for="payos">
+                            <label class="form-check-label" for="cod">
+                                Thanh toán khi nhận hàng (COD)
+                            </label>
+                        </div>
+                        <div class="form-check">
                             <input class="form-check-input" type="radio" asp-for="PaymentMethod" value="PayOS" id="payos">
-                            <i class="fas fa-wallet payment-icon"></i>
-                            <div>
-                                <strong>Thanh toán qua PayOS</strong>
-                                <p class="text-muted mb-0 small">Hỗ trợ thẻ ATM, Ví điện tử, ...</p>
-                            </div>
-                        </label>
+                            <label class="form-check-label" for="payos">
+                                Thanh toán qua PayOS (Thẻ ATM, Ví điện tử,...)
+                            </label>
+                        </div>
                         <span asp-validation-for="PaymentMethod" class="text-danger"></span>
                     </div>
                 </div>
             </div>
 
-            <div class="col-lg-5">
-                <div class="order-summary-card">
-                    <h5><i class="fas fa-receipt me-2"></i>Đơn hàng của bạn</h5>
-                    @if (Model.Cart.Items.Any())
-                    {
-                        @foreach (var item in Model.Cart.Items)
+            <div class="col-md-5">
+                <div class="card shadow-sm">
+                    <div class="card-body">
+                        <h4 class="card-title">Đơn hàng của bạn</h4>
+                        <hr />
+                        @if (Model.Cart.Items.Any())
                         {
-                            <div class="summary-item">
-                                <img src="@(item.ProductThumbnailUrl ?? "https://via.placeholder.com/150")" class="summary-item-image" alt="@item.ProductName">
-                                <div class="summary-item-details">
-                                    <div class="summary-item-name">@item.ProductName</div>
-                                    <div class="summary-item-quantity">Số lượng: @item.Quantity</div>
-                                </div>
-                                <div class="summary-item-price">@item.LineTotal.ToString("N0") VND</div>
-                            </div>
+                            <ul class="list-group list-group-flush">
+                                @foreach (var item in Model.Cart.Items)
+                                {
+                                    <li class="list-group-item d-flex justify-content-between align-items-center">
+                                        <div>
+                                            <h6 class="my-0">@item.ProductName</h6>
+                                            <small class="text-muted">Số lượng: @item.Quantity</small>
+                                        </div>
+                                        <span class="text-muted">@item.LineTotal.ToString("N0") VNĐ</span>
+                                    </li>
+                                }
+                                <li class="list-group-item d-flex justify-content-between">
+                                    <strong>Tạm tính</strong>
+                                    <strong>@Model.Cart.SubTotal.ToString("N0") VNĐ</strong>
+                                </li>
+                            </ul>
                         }
-                    }
-                    <ul>
-                        <li class="total-row">
-                            <span>Tổng cộng</span>
-                            <span>@(Model.Cart.SubTotal.ToString("N0") ?? "0") VND</span>
-                        </li>
-                    </ul>
-                    <div class="d-grid mt-4">
-                        @if (Model.SavedAddresses.Any())
-                        {
-                            <button type="submit" class="btn btn-primary btn-lg">
-                                Đặt hàng <i class="fas fa-check-circle ms-2"></i>
-                            </button>
-                        }
-                        else
-                        {
-                            <button type="submit" class="btn btn-primary btn-lg" disabled>Đặt hàng</button>
-                        }
+                        <div class="d-grid mt-4">
+                            @if (Model.SavedAddresses.Any())
+                            {
+                                <button type="submit" class="btn btn-primary btn-lg">Đặt hàng</button>
+                            }
+                            else
+                            {
+                                <button type="submit" class="btn btn-primary btn-lg" disabled>Đặt hàng</button>
+                            }
+                        </div>
                     </div>
                 </div>
             </div>

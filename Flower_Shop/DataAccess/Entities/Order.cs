@@ -38,19 +38,19 @@ namespace DataAccess.Entities
 
     public enum OrderStatus
     {
-        [Display(Name = "Pending")]
+        [Display(Name = "Chờ xử lý")]
         Pending = 0,
 
-        [Display(Name = "Confirmed")]
+        [Display(Name = "Đã xác nhận")]
         Confirmed = 1,
 
-        [Display(Name = "Shipping")]
+        [Display(Name = "Đang giao hàng")]
         Shipping = 2,
 
-        [Display(Name = "Completed")]
+        [Display(Name = "Hoàn thành")]
         Completed = 3,
 
-        [Display(Name = "Cancelled")]
+        [Display(Name = "Đã hủy")]
         Cancelled = 4,
     }
 }

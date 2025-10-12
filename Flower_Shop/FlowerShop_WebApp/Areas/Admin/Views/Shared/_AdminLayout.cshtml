@@ -1,86 +1,90 @@
 ﻿<!DOCTYPE html>
-<html lang="en">
+<html lang="vi">
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>@ViewData["Title"] - Admin Panel</title>
-
-    <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;500;700&family=Quicksand:wght@600;700&display=swap" rel="stylesheet">
-
+    <title>@ViewData["Title"] - Trang quản trị</title>
     <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
+    <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" />
+
+    @* Thêm link đến file CSS mới *@
+    <link rel="stylesheet" href="~/css/sidebar.css" asp-append-version="true" />
     <link rel="stylesheet" href="~/css/admin.css" asp-append-version="true" />
-    @await RenderSectionAsync("Styles", required: false)
+
+    @RenderSection("Styles", required: false)
 </head>
 <body>
-    <div class="d-flex" id="admin-wrapper">
-        <div class="border-end" id="sidebar-wrapper">
-            <div class="sidebar-heading">
+    <div class="d-flex" id="wrapper">
+        <div class="bg-dark border-right" id="sidebar-wrapper">
+            <div class="sidebar-heading text-white">
                 <i class="fas fa-crown me-2"></i>FlowerShop Admin
             </div>
             <div class="list-group list-group-flush">
-                <a class="list-group-item list-group-item-action" asp-area="Admin" asp-controller="Dashboard" asp-action="Index"><i class="fas fa-tachometer-alt fa-fw me-2"></i>Dashboard</a>
-                <a class="list-group-item list-group-item-action" asp-area="Admin" asp-controller="Products" asp-action="Index"><i class="fas fa-box-open fa-fw me-2"></i>Products</a>
-                <a class="list-group-item list-group-item-action" asp-area="Admin" asp-controller="Categories" asp-action="Index"><i class="fas fa-tags fa-fw me-2"></i>Categories</a>
-                <a class="list-group-item list-group-item-action" asp-area="Admin" asp-controller="Orders" asp-action="Index"><i class="fas fa-receipt fa-fw me-2"></i>Orders</a>
-                <a class="list-group-item list-group-item-action" asp-area="Admin" asp-controller="Users" asp-action="Index"><i class="fas fa-users fa-fw me-2"></i>Users</a>
+                <a asp-area="Admin" asp-controller="Dashboard" asp-action="Index" class="list-group-item list-group-item-action bg-dark text-white"><i class="fas fa-tachometer-alt fa-fw me-2"></i>Bảng điều khiển</a>
+                <a asp-area="Admin" asp-controller="Products" asp-action="Index" class="list-group-item list-group-item-action bg-dark text-white"><i class="fas fa-box-open fa-fw me-2"></i>Sản phẩm</a>
+                <a asp-area="Admin" asp-controller="Categories" asp-action="Index" class="list-group-item list-group-item-action bg-dark text-white"><i class="fas fa-tags fa-fw me-2"></i>Danh mục</a>
+                <a asp-area="Admin" asp-controller="Orders" asp-action="Index" class="list-group-item list-group-item-action bg-dark text-white"><i class="fas fa-receipt fa-fw me-2"></i>Đơn hàng</a>
+                <a asp-area="Admin" asp-controller="Users" asp-action="Index" class="list-group-item list-group-item-action bg-dark text-white"><i class="fas fa-users fa-fw me-2"></i>Người dùng</a>
+                <a asp-area="" asp-controller="Home" asp-action="Index" target="_blank" class="list-group-item list-group-item-action bg-dark text-white"><i class="fas fa-store fa-fw me-2"></i>Xem trang web</a>
             </div>
         </div>
-
         <div id="page-content-wrapper">
-            <nav class="navbar navbar-expand-lg navbar-light admin-topbar">
+            <nav class="navbar navbar-expand-lg navbar-light bg-light border-bottom">
                 <div class="container-fluid">
-                    <div class="collapse navbar-collapse">
-                        <ul class="navbar-nav ms-auto mt-2 mt-lg-0">
-                            <li class="nav-item">
-                                <a class="nav-link" asp-area="" asp-controller="Home" asp-action="Index" target="_blank">
-                                    <i class="fas fa-store me-1"></i>View Site
+                    <button class="btn btn-primary" id="menu-toggle"><i class="fas fa-bars"></i></button>
+
+                    <ul class="navbar-nav ms-auto mt-2 mt-lg-0">
+                        @if (User.Identity != null && User.Identity.IsAuthenticated)
+                        {
+                            <li class="nav-item dropdown">
+                                <a class="nav-link dropdown-toggle" id="navbarDropdown" href="#" role="button" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                                    <i class="fas fa-user-circle me-1"></i>Xin chào, @User.Claims.FirstOrDefault(c => c.Type == System.Security.Claims.ClaimTypes.Email)?.Value
                                 </a>
+                                <div class="dropdown-menu dropdown-menu-end" aria-labelledby="navbarDropdown">
+                                    <form class="form-inline" asp-area="" asp-controller="Account" asp-action="Logout" method="post">
+                                        <button type="submit" class="dropdown-item btn btn-link text-dark"><i class="fas fa-sign-out-alt me-1"></i>Đăng xuất</button>
+                                    </form>
+                                </div>
                             </li>
-                            @if (User.Identity != null && User.Identity.IsAuthenticated)
-                            {
-                                <li class="nav-item dropdown">
-                                    <a class="nav-link dropdown-toggle" id="navbarDropdown" href="#" role="button" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-                                        <i class="fas fa-user-circle me-1"></i>
-                                        @User.Claims.FirstOrDefault(c => c.Type == System.Security.Claims.ClaimTypes.Email)?.Value
-                                    </a>
-                                    <div class="dropdown-menu dropdown-menu-end" aria-labelledby="navbarDropdown">
-                                        <form class="form-inline" asp-area="" asp-controller="Account" asp-action="Logout" method="post">
-                                            <button type="submit" class="dropdown-item">
-                                                <i class="fas fa-sign-out-alt fa-sm fa-fw me-2 text-gray-400"></i>Logout
-                                            </button>
-                                        </form>
-                                    </div>
-                                </li>
-                            }
-                        </ul>
-                    </div>
+                        }
+                    </ul>
                 </div>
             </nav>
 
-            <div class="container-fluid p-4">
+            <div class="container-fluid mt-4">
                 @if (TempData["SuccessMessage"] != null)
                 {
                     <div class="alert alert-success alert-dismissible fade show" role="alert">
                         @TempData["SuccessMessage"]
-                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Đóng"></button>
                     </div>
                 }
                 @if (TempData["ErrorMessage"] != null)
                 {
                     <div class="alert alert-danger alert-dismissible fade show" role="alert">
                         @TempData["ErrorMessage"]
-                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Đóng"></button>
                     </div>
                 }
                 @RenderBody()
             </div>
         </div>
     </div>
-
     <script src="~/lib/jquery/dist/jquery.min.js"></script>
     <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
-    <script src="~/js/admin.js" asp-append-version="true"></script>
+    <script>
+        // Script cho sidebar toggle
+        document.addEventListener("DOMContentLoaded", function() {
+            const menuToggle = document.getElementById('menu-toggle');
+            if (menuToggle) {
+                menuToggle.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    document.getElementById('wrapper').classList.toggle('toggled');
+                });
+            }
+        });
+    </script>
     @await RenderSectionAsync("Scripts", required: false)
 </body>
 </html>
