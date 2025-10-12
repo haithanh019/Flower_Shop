@@ -5,7 +5,7 @@
     var currentPage = Model?.PageNumber ?? 1;
     var totalPages = Model != null ? (int)Math.Ceiling((double)Model.TotalCount / Model.PageSize) : 1;
     var currentStatusFilter = ViewBag.CurrentStatusFilter as string;
-    var orderStatuses = ViewBag.OrderStatuses as List<string> ?? new List<string>();
+    var orderStatuses = ViewBag.OrderStatuses as List<EnumDto> ?? new List<EnumDto>();
 
     // Cập nhật logic với trạng thái tiếng Việt
     Func<string, string> getStatusBadgeClass = status => status switch
@@ -31,7 +31,7 @@
                     <option value="">-- Lọc theo trạng thái --</option>
                     @foreach (var status in orderStatuses)
                     {
-                        <option value="@status" selected="@(status == currentStatusFilter)">@status</option>
+                        <option value="@status.Value" selected="@(status.Value == currentStatusFilter)">@status.DisplayName</option>
                     }
                 </select>
                 <a asp-action="Index" class="btn btn-outline-secondary" title="Xóa bộ lọc"><i class="fas fa-times"></i></a>
@@ -58,7 +58,7 @@
                         <tr>
                             <td><code>#@order.OrderId.ToString().Substring(0, 8)</code></td>
                             <td>@order.CustomerEmail</td>
-                            <td>@order.CreatedAt.ToString("g")</td>
+                            <td>@order.CreatedAt.ToString("d")</td>
                             <td>@order.Total.ToString("N0") VNĐ</td>
                             <td><span class="badge @getStatusBadgeClass(order.Status) rounded-pill">@order.Status</span></td>
                             <td class="text-end">

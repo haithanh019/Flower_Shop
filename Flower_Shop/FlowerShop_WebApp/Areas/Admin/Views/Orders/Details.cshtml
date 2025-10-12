@@ -1,7 +1,7 @@
 ﻿@model FlowerShop_WebApp.Models.Orders.OrderViewModel
 @{
     ViewData["Title"] = $"Chi tiết Đơn hàng #{Model.OrderId.ToString().Substring(0, 8)}";
-    var orderStatuses = ViewBag.OrderStatuses as List<string> ?? new List<string>();
+    var orderStatuses = ViewBag.OrderStatuses as List<EnumDto> ?? new List<EnumDto>();
 }
 
 @if (TempData["SuccessMessage"] != null)
@@ -54,7 +54,7 @@
                     </li>
                     <li class="list-group-item d-flex justify-content-between">
                         <span>Ngày đặt:</span>
-                        <span>@Model.CreatedAt.ToString("F")</span>
+                        <span>@Model.CreatedAt.ToString("d")</span>
                     </li>
                     <li class="list-group-item">
                         <span>Địa chỉ giao hàng:</span>
@@ -83,7 +83,7 @@
                         <select name="status" class="form-select">
                             @foreach (var status in orderStatuses)
                             {
-                                <option value="@status" selected="@(Model.Status == status)">@status</option>
+                                <option value="@status.Value" selected="@(Model.Status == status.DisplayName)">@status.DisplayName</option>
                             }
                         </select>
                         <button type="submit" class="btn btn-primary"><i class="fas fa-save"></i></button>

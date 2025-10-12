@@ -69,7 +69,10 @@ namespace FlowerShop_WebApp
             }
 
             app.UseHttpsRedirection();
+
             app.UseStaticFiles();
+
+            app.UseRequestLocalization();
 
             app.UseRouting();
 
@@ -78,6 +81,7 @@ namespace FlowerShop_WebApp
             app.UseAuthentication();
 
             app.UseAuthorization();
+
             app.MapControllerRoute(
                 name: "AdminArea",
                 pattern: "{area:exists}/{controller=Home}/{action=Index}/{id?}"

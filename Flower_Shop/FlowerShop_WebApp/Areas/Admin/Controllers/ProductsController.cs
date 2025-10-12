@@ -1,16 +1,12 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Net.Http.Headers;
+﻿using System.Net.Http.Headers;
 using System.Text;
 using System.Text.Json;
-using System.Threading.Tasks;
-using FlowerShop_WebApp.Areas.Admin.Models.Products; // Using mới
+using FlowerShop_WebApp.Areas.Admin.Models.Products;
 using FlowerShop_WebApp.Models.Categories;
 using FlowerShop_WebApp.Models.Products;
 using FlowerShop_WebApp.Models.Shared;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
-using Microsoft.Extensions.Logging;
 
 namespace FlowerShop_WebApp.Areas.Admin.Controllers
 {

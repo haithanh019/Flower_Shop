@@ -1,9 +1,5 @@
-﻿using System.Collections.Generic;
-using System.Linq;
-using System.Net.Http.Headers;
+﻿using System.Net.Http.Headers;
 using System.Text.Json;
-using System.Threading.Tasks;
-using FlowerShop_WebApp.Models; // Ensure this using directive is present
 using FlowerShop_WebApp.Models.Orders;
 using FlowerShop_WebApp.Models.Shared;
 using Microsoft.AspNetCore.Mvc;
@@ -61,22 +57,21 @@ namespace FlowerShop_WebApp.Areas.Admin.Controllers
                     var enums = await enumsResponse.Content.ReadFromJsonAsync<AllEnumsResponse>(
                         _jsonOptions
                     );
-                    ViewBag.OrderStatuses =
-                        enums?.OrderStatus.Select(e => e.Value).ToList() ?? new List<string>();
+                    ViewBag.OrderStatuses = enums?.OrderStatus ?? new List<EnumDto>();
                 }
                 else
                 {
                     ViewBag.OrderStatuses = new List<string>();
                 }
 
-                return View(pagedResult); // Truyền cả đối tượng pagedResult về View
+                return View(pagedResult);
             }
 
             _logger.LogError(
                 "Failed to fetch orders from API. Status code: {StatusCode}",
                 response.StatusCode
             );
-            return View(new PagedResultViewModel<OrderViewModel>()); // Trả về model trống
+            return View(new PagedResultViewModel<OrderViewModel>());
         }
 
         // GET: /Admin/Orders/Details/{id}
@@ -91,27 +86,18 @@ namespace FlowerShop_WebApp.Areas.Admin.Controllers
                 if (order == null)
                     return NotFound();
 
-                // Lấy danh sách các trạng thái đơn hàng từ API
                 var enumsResponse = await client.GetAsync("api/utility/enums");
                 if (enumsResponse.IsSuccessStatusCode)
                 {
                     var enums = await enumsResponse.Content.ReadFromJsonAsync<AllEnumsResponse>(
                         _jsonOptions
                     );
-                    ViewBag.OrderStatuses =
-                        enums?.OrderStatus.Select(e => e.Value).ToList() ?? new List<string>();
+                    ViewBag.OrderStatuses = enums?.OrderStatus ?? new List<EnumDto>();
                 }
                 else
                 {
                     // Fallback to a hard-coded list if the API call fails
-                    ViewBag.OrderStatuses = new List<string>
-                    {
-                        "Pending",
-                        "Confirmed",
-                        "Shipping",
-                        "Completed",
-                        "Cancelled",
-                    };
+                    ViewBag.OrderStatuses = new List<EnumDto>();
                 }
 
                 return View(order);
