@@ -1,0 +1,155 @@
+﻿/*
+ * CSS dành riêng cho Trang Giỏ hàng (Bố cục ngang)
+*/
+
+/* 1. Bảng danh sách sản phẩm */
+.cart-table {
+    background-color: #fff;
+    border-radius: 12px;
+    padding: 1rem;
+    border: 1px solid var(--border-color);
+}
+
+    .cart-table thead th {
+        font-family: var(--font-family-serif);
+        font-weight: 700;
+        text-transform: uppercase;
+        color: var(--text-light);
+        border-bottom: 2px solid var(--border-color);
+        padding-bottom: 1rem;
+    }
+
+    .cart-table tbody tr {
+        border-bottom: 1px solid var(--border-color);
+    }
+
+        .cart-table tbody tr:last-child {
+            border-bottom: none;
+        }
+
+    .cart-table td {
+        padding: 1.5rem 0.5rem;
+        vertical-align: middle;
+    }
+
+.product-info {
+    display: flex;
+    align-items: center;
+}
+
+    .product-info .product-image {
+        width: 80px;
+        height: 80px;
+        object-fit: cover;
+        border-radius: 8px;
+        margin-right: 1rem;
+    }
+
+    .product-info .product-name {
+        font-family: var(--font-family-serif);
+        font-weight: 700;
+        font-size: 1.1rem;
+        color: var(--text-dark);
+    }
+
+.unit-price, .line-total {
+    font-weight: 700;
+    font-size: 1.1rem;
+}
+
+.line-total {
+    color: var(--primary-pink-dark);
+}
+
+/* --- Bộ điều chỉnh số lượng với JS --- */
+.quantity-adjuster {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+    .quantity-adjuster .btn-quantity {
+        cursor: pointer;
+        border-radius: 50%;
+        width: 32px;
+        height: 32px;
+        padding: 0;
+        line-height: 30px;
+        text-align: center;
+        border: 1px solid var(--border-color);
+        background-color: #f8f9fa;
+        color: var(--text-dark);
+        font-size: 1rem;
+    }
+
+        .quantity-adjuster .btn-quantity:hover {
+            background-color: #e9ecef;
+        }
+
+    .quantity-adjuster .quantity-input {
+        width: 50px;
+        text-align: center;
+        border: 1px solid var(--border-color);
+        border-radius: 8px;
+        margin: 0 10px;
+        font-weight: 700;
+    }
+/* Ẩn mũi tên mặc định của input number */
+.quantity-input::-webkit-outer-spin-button,
+.quantity-input::-webkit-inner-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+}
+
+.quantity-input[type=number] {
+    -moz-appearance: textfield;
+}
+
+.btn-remove {
+    color: var(--text-light);
+    background: none;
+    border: none;
+    font-size: 1.2rem;
+}
+
+    .btn-remove:hover {
+        color: #e74a3b;
+    }
+
+
+/* 2. Tóm tắt đơn hàng (Giữ nguyên từ trước) */
+.order-summary-card {
+    background-color: #fff;
+    border-radius: 12px;
+    padding: 1.5rem;
+    border: 1px solid var(--border-color);
+    position: sticky;
+    top: 20px;
+}
+
+    .order-summary-card h5 {
+        font-family: var(--font-family-serif);
+        font-weight: 700;
+        margin-bottom: 1.5rem;
+    }
+
+    .order-summary-card ul {
+        padding: 0;
+        list-style: none;
+    }
+
+    .order-summary-card li {
+        display: flex;
+        justify-content: space-between;
+        margin-bottom: 1rem;
+        color: var(--text-light);
+    }
+
+    .order-summary-card .total-row {
+        font-size: 1.25rem;
+        font-weight: 700;
+        color: var(--text-dark);
+        margin-top: 1.5rem;
+        padding-top: 1.5rem;
+        border-top: 1px dashed var(--border-color);
+    }

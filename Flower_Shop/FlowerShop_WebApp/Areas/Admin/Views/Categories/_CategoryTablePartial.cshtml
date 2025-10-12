@@ -1,0 +1,31 @@
+﻿@model IEnumerable<FlowerShop_WebApp.Models.Categories.CategoryViewModel>
+
+<table class="table table-hover table-striped mb-0">
+    <thead class="table-light">
+        <tr>
+            <th>Tên danh mục</th>
+            <th>Mô tả</th>
+            <th></th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var item in Model)
+        {
+            <tr>
+                <td><strong>@item.Name</strong></td>
+                <td>@item.Description</td>
+                <td class="text-end">
+                    <button type="button" class="btn btn-sm btn-outline-secondary btn-edit" title="Sửa"
+                            data-bs-toggle="modal" data-bs-target="#categoryModal"
+                            data-url="@Url.Action("_CreateOrEditPartial", new { id = item.CategoryId })">
+                        <i class="fas fa-edit"></i>
+                    </button>
+                    <button type="button" class="btn btn-sm btn-outline-danger btn-delete" title="Xóa"
+                            data-id="@item.CategoryId" data-name="@item.Name">
+                        <i class="fas fa-trash"></i>
+                    </button>
+                </td>
+            </tr>
+        }
+    </tbody>
+</table>

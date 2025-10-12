@@ -94,13 +94,15 @@ namespace BusinessLogic.Services
             {
                 throw new KeyNotFoundException($"User with ID {userId} not found.");
             }
-
-            // Cập nhật thông tin
-            if (!string.IsNullOrEmpty(request.FullName))
+            if (request.FullName != null)
+            {
                 userToUpdate.FullName = request.FullName;
+            }
 
-            if (!string.IsNullOrEmpty(request.PhoneNumber))
+            if (request.PhoneNumber != null)
+            {
                 userToUpdate.PhoneNumber = request.PhoneNumber;
+            }
 
             await _unitOfWork.SaveAsync();
 

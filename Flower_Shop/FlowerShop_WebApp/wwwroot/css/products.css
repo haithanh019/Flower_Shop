@@ -1,0 +1,68 @@
+﻿/*
+ * CSS dành riêng cho Trang Cửa hàng (Shop Page)
+*/
+
+/* 1. Bộ lọc danh mục (Category Filter) */
+.category-filter .card-header {
+    background-color: #fff;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.category-filter h5 {
+    margin: 0;
+    font-size: 1.25rem;
+    color: var(--text-dark);
+}
+
+.category-filter .list-group-item {
+    border: none;
+    padding: 12px 20px;
+    font-weight: 500;
+    color: var(--text-light);
+    border-radius: 0 !important;
+    transition: all 0.2s ease-in-out;
+}
+
+    .category-filter .list-group-item:hover {
+        background-color: #fdf2f4; /* Màu hồng rất nhạt */
+        color: var(--primary-pink-dark);
+    }
+
+    .category-filter .list-group-item.active {
+        background-color: var(--primary-pink-dark);
+        color: #fff;
+        border: none;
+    }
+
+/* 2. Lưới sản phẩm (Product Grid) */
+/*
+   Chúng ta sẽ tái sử dụng .product-card từ site.css
+   nhưng có thể thêm một số tùy chỉnh nhỏ nếu cần.
+   Hiện tại, không cần thêm gì.
+*/
+
+
+/* 3. Phân trang (Pagination) */
+.pagination .page-item .page-link {
+    color: var(--primary-pink-dark);
+    border-radius: 50%; /* Bo tròn thành hình tròn */
+    margin: 0 5px;
+    border: 1px solid var(--border-color);
+    transition: all 0.2s ease-in-out;
+}
+
+    .pagination .page-item .page-link:hover {
+        background-color: #fdf2f4;
+        border-color: var(--primary-pink);
+    }
+
+.pagination .page-item.active .page-link {
+    background-color: var(--primary-pink-dark);
+    border-color: var(--primary-pink-dark);
+    color: #fff;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+}
+
+.pagination .page-item.disabled .page-link {
+    color: #ccc;
+}

@@ -1,0 +1,72 @@
+﻿/*
+ * CSS dành riêng cho Trang Dashboard
+*/
+
+.stat-card {
+    border: none;
+    border-left: .25rem solid;
+    border-radius: .35rem;
+    box-shadow: 0 0.15rem 1.75rem 0 rgba(58, 59, 69, .15) !important;
+    transition: transform 0.2s ease-in-out;
+}
+
+    .stat-card:hover {
+        transform: translateY(-5px);
+    }
+
+    .stat-card .card-body {
+        padding: 1.5rem;
+    }
+
+    .stat-card .text-xs {
+        font-size: .8rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        margin-bottom: .25rem;
+    }
+
+    .stat-card .h5 {
+        font-family: 'Nunito', sans-serif; /* Dùng font thường cho số liệu */
+        font-size: 1.5rem;
+        font-weight: 700;
+        color: var(--admin-text-dark);
+    }
+
+    .stat-card .card-icon {
+        font-size: 2.5rem;
+        color: var(--admin-border-color);
+    }
+
+
+/* --- Định nghĩa màu cho các thẻ --- */
+.border-left-primary {
+    border-left-color: var(--admin-primary) !important;
+}
+
+.text-primary {
+    color: var(--admin-primary) !important;
+}
+
+.border-left-success {
+    border-left-color: var(--admin-success) !important;
+}
+
+.text-success {
+    color: var(--admin-success) !important;
+}
+
+.border-left-info {
+    border-left-color: var(--admin-info) !important;
+}
+
+.text-info {
+    color: var(--admin-info) !important;
+}
+
+.border-left-warning {
+    border-left-color: var(--admin-warning) !important;
+}
+
+.text-warning {
+    color: var(--admin-warning) !important;
+}

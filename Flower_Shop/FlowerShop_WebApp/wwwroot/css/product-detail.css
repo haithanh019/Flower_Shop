@@ -1,0 +1,104 @@
+﻿/*
+ * CSS dành riêng cho Trang Chi tiết sản phẩm
+*/
+
+/* 1. Khu vực ảnh sản phẩm */
+.main-product-image {
+    width: 100%;
+    height: 500px;
+    object-fit: cover;
+    border-radius: 12px;
+    border: 1px solid var(--border-color);
+}
+
+.thumbnail-gallery {
+    display: flex;
+    gap: 10px;
+    margin-top: 15px;
+    cursor: pointer;
+}
+
+.thumbnail-item img {
+    width: 80px;
+    height: 80px;
+    object-fit: cover;
+    border-radius: 8px;
+    border: 2px solid transparent;
+    transition: border-color 0.2s ease;
+}
+
+    .thumbnail-item img:hover {
+        border-color: var(--primary-pink);
+    }
+
+.thumbnail-item.active img {
+    border-color: var(--primary-pink-dark);
+    box-shadow: 0 0 10px rgba(231, 84, 128, 0.5);
+}
+
+
+/* 2. Khu vực thông tin sản phẩm */
+.product-info h1 {
+    font-size: 2.8rem;
+    font-weight: 700;
+}
+
+.product-info .category-name {
+    font-size: 1rem;
+    color: var(--text-light);
+    font-weight: 500;
+}
+
+.product-info .price {
+    font-size: 2.5rem;
+    font-weight: 700;
+    color: var(--primary-pink-dark);
+    margin: 1rem 0;
+}
+
+.product-info .stock-status {
+    font-weight: 500;
+}
+
+.stock-status .in-stock {
+    color: #1cc88a;
+}
+
+.stock-status .out-of-stock {
+    color: #e74a3b;
+}
+
+.product-info .btn-lg {
+    padding: 15px 30px;
+    font-size: 1.1rem;
+}
+
+/* 3. Khu vực mô tả dạng Tab */
+.product-description-tabs {
+    margin-top: 4rem;
+    border-top: 1px solid var(--border-color);
+    padding-top: 2rem;
+}
+
+    .product-description-tabs .nav-tabs {
+        border-bottom: 2px solid var(--border-color);
+    }
+
+        .product-description-tabs .nav-tabs .nav-link {
+            border: none;
+            border-bottom: 2px solid transparent;
+            color: var(--text-light);
+            font-weight: 700;
+            padding: 10px 20px;
+        }
+
+            .product-description-tabs .nav-tabs .nav-link.active {
+                color: var(--primary-pink-dark);
+                border-bottom-color: var(--primary-pink-dark);
+                background-color: transparent;
+            }
+
+    .product-description-tabs .tab-content {
+        padding: 2rem 0;
+        line-height: 1.8;
+    }

@@ -1,7 +1,8 @@
-﻿document.addEventListener("DOMContentLoaded", function () {
-    const host = "https://provinces.open-api.vn/api/";
+﻿// File: FlowerShop_WebApp/wwwroot/js/profile.js
 
-    // Hàm gọi API
+$(function () { // THAY ĐỔI: Sử dụng cú pháp ngắn gọn và hiện đại hơn
+    // --- PHẦN XỬ LÝ ĐỊA CHỈ (GIỮ NGUYÊN) ---
+    const host = "https://provinces.open-api.vn/api/";
     const callAPI = async (api) => {
         try {
             const response = await fetch(api);
@@ -10,106 +11,145 @@
             console.error('API call failed:', error);
         }
     };
-
-    // Hàm render options cho thẻ select
     const renderOptions = (data, selectElement, selectValue = null) => {
-        selectElement.innerHTML = '<option value="" disabled selected>Chọn một tùy chọn</option>';
+        selectElement.innerHTML = '<option value="" disabled>-- Chọn --</option>';
         data.forEach(item => {
-            const option = document.createElement('option');
-            option.value = item.name;
-            option.textContent = item.name;
-            option.setAttribute('data-code', item.code);
-            selectElement.appendChild(option);
+            const option = new Option(item.name, item.name);
+            option.dataset.code = item.code;
+            selectElement.add(option);
         });
-        if (selectValue) {
-            selectElement.value = selectValue;
-        }
+        if (selectValue) selectElement.value = selectValue;
     };
-
-    // Hàm xử lý chuỗi sự kiện tải địa chỉ cho modal chỉnh sửa
-    const loadAddressForEdit = async (modalId, cityName, districtName, wardName) => {
-        const citySelect = document.getElementById(`city-edit-${modalId}`);
-        const districtSelect = document.getElementById(`district-edit-${modalId}`);
-        const wardSelect = document.getElementById(`ward-edit-${modalId}`);
+    // Xử lý modal "Thêm mới"
+    $('#addAddressModal').on('shown.bs.modal', function () {
+        const citySelect = $("#city-add");
+        const districtSelect = $("#district-add");
+        const wardSelect = $("#ward-add");
+        callAPI(host + '?depth=1').then(data => renderOptions(data, citySelect[0]));
+        citySelect.on('change', function () {
+            districtSelect.empty(); wardSelect.empty();
+            const code = $(this).find(':selected').data('code');
+            callAPI(host + 'p/' + code + '?depth=2').then(data => renderOptions(data.districts, districtSelect[0]));
+        });
+        districtSelect.on('change', function () {
+            wardSelect.empty();
+            const code = $(this).find(':selected').data('code');
+            callAPI(host + 'd/' + code + '?depth=2').then(data => renderOptions(data.wards, wardSelect[0]));
+        });
+    });
+    // Xử lý modal "Chỉnh sửa"
+    $('.edit-address-modal').on('shown.bs.modal', async function (event) {
+        const button = $(event.relatedTarget);
+        const addressId = button.data('address-id');
+        const city = button.data('city');
+        const district = button.data('district');
+        const ward = button.data('ward');
+        const citySelect = $(`#city-edit-${addressId}`);
+        const districtSelect = $(`#district-edit-${addressId}`);
+        const wardSelect = $(`#ward-edit-${addressId}`);
 
         const cities = await callAPI(host + '?depth=1');
-        renderOptions(cities, citySelect, cityName);
+        renderOptions(cities, citySelect[0], city);
 
-        const selectedCity = Array.from(citySelect.options).find(opt => opt.value === cityName);
-        if (selectedCity) {
-            const cityCode = selectedCity.getAttribute('data-code');
+        const cityCode = citySelect.find(':selected').data('code');
+        if (cityCode) {
             const districts = await callAPI(`${host}p/${cityCode}?depth=2`);
-            renderOptions(districts.districts, districtSelect, districtName);
-
-            const selectedDistrict = Array.from(districtSelect.options).find(opt => opt.value === districtName);
-            if (selectedDistrict) {
-                const districtCode = selectedDistrict.getAttribute('data-code');
-                const wards = await callAPI(`${host}d/${districtCode}?depth=2`);
-                renderOptions(wards.wards, wardSelect, wardName);
-            }
+            renderOptions(districts.districts, districtSelect[0], district);
         }
-    };
 
-    // Xử lý cho modal "Thêm mới"
-    const addAddressModal = document.getElementById('addAddressModal');
-    if (addAddressModal) {
-        const addCitySelect = document.getElementById("city-add");
-        const addDistrictSelect = document.getElementById("district-add");
-        const addWardSelect = document.getElementById("ward-add");
+        const districtCode = districtSelect.find(':selected').data('code');
+        if (districtCode) {
+            const wards = await callAPI(`${host}d/${districtCode}?depth=2`);
+            renderOptions(wards.wards, wardSelect[0], ward);
+        }
 
-        addAddressModal.addEventListener('shown.bs.modal', function () {
-            callAPI(host + '?depth=1').then(data => renderOptions(data, addCitySelect));
+        citySelect.on('change', function () {
+            districtSelect.empty(); wardSelect.empty();
+            const code = $(this).find(':selected').data('code');
+            callAPI(host + 'p/' + code + '?depth=2').then(data => renderOptions(data.districts, districtSelect[0]));
         });
 
-        addCitySelect.addEventListener('change', function () {
-            const selectedOption = this.options[this.selectedIndex];
-            addDistrictSelect.innerHTML = '';
-            addWardSelect.innerHTML = '';
-            callAPI(host + 'p/' + selectedOption.getAttribute('data-code') + '?depth=2')
-                .then(data => renderOptions(data.districts, addDistrictSelect));
+        districtSelect.on('change', function () {
+            wardSelect.empty();
+            const code = $(this).find(':selected').data('code');
+            callAPI(host + 'd/' + code + '?depth=2').then(data => renderOptions(data.wards, wardSelect[0]));
         });
+    });
 
-        addDistrictSelect.addEventListener('change', function () {
-            const selectedOption = this.options[this.selectedIndex];
-            addWardSelect.innerHTML = '';
-            callAPI(host + 'd/' + selectedOption.getAttribute('data-code') + '?depth=2')
-                .then(data => renderOptions(data.wards, addWardSelect));
+    // --- PHẦN XỬ LÝ MODAL ---
+
+    // Xử lý form đổi mật khẩu
+    $('#changePasswordModal form').on('submit', function (e) {
+        e.preventDefault();
+        var form = $(this);
+        var alertPlaceholder = $('#changePasswordAlertPlaceholder');
+        alertPlaceholder.empty();
+
+        $.ajax({
+            url: form.attr('action'),
+            method: form.attr('method'),
+            data: form.serialize(),
+            success: function (response) {
+                if (response.success) {
+                    $('#changePasswordModal').modal('hide');
+                    form[0].reset();
+                    showToast(response.message, 'success');
+                }
+            },
+            error: function (xhr) {
+                var response = xhr.responseJSON;
+                var errorMsg = 'Đã có lỗi không mong muốn xảy ra.';
+                if (response && response.errors) {
+                    errorMsg = response.errors.join('<br>');
+                }
+                alertPlaceholder.html(
+                    `<div class="alert alert-danger">${errorMsg}</div>`
+                );
+            }
         });
+    });
+
+    // Xử lý modal lịch sử đơn hàng
+    $('#orderHistoryModal').on('show.bs.modal', function () {
+        var modalContent = $('#orderHistoryModalContent');
+        modalContent.html('<div class="modal-body text-center"><div class="spinner-border" role="status"><span class="visually-hidden">Loading...</span></div></div>');
+
+        $.get('/Orders/HistoryPartial', function (data) {
+            modalContent.html(data);
+        }).fail(function () {
+            modalContent.html('<div class="modal-body"><p class="text-danger">Không thể tải lịch sử đơn hàng.</p></div>');
+        });
+    });
+
+    // Xử lý click nút "View Details" trong modal lịch sử
+    $('#orderHistoryModal').on('click', '.view-details-btn', function (e) {
+        e.preventDefault();
+        var orderId = $(this).data('order-id');
+        var modalContent = $('#orderDetailModalContent');
+
+        modalContent.html('<div class="modal-body text-center"><div class="spinner-border" role="status"><span class="visually-hidden">Loading...</span></div></div>');
+        $('#orderDetailModal').modal('show');
+
+        $.get('/Orders/DetailsPartial?id=' + orderId, function (data) {
+            modalContent.html(data);
+        }).fail(function () {
+            modalContent.html('<div class="modal-body"><p class="text-danger">Không thể tải chi tiết đơn hàng.</p></div>');
+        });
+    });
+
+    // Reset form khi modal đổi mật khẩu đóng lại
+    $('#changePasswordModal').on('hidden.bs.modal', function () {
+        $(this).find('form')[0].reset();
+        $('#changePasswordAlertPlaceholder').empty();
+    });
+
+    // Lấy tham số 'openModal' từ URL để tự động mở modal
+    const urlParams = new URLSearchParams(window.location.search);
+    const modalToOpenId = urlParams.get('openModal');
+    if (modalToOpenId) {
+        const modalSelector = '#' + modalToOpenId;
+        if ($(modalSelector).length) {
+            $(modalSelector).modal('show');
+        }
     }
-
-    // Xử lý cho các modal "Chỉnh sửa"
-    document.querySelectorAll('.edit-address-modal').forEach(modal => {
-        modal.addEventListener('shown.bs.modal', function () {
-            const button = document.querySelector(`[data-bs-target="#${modal.id}"]`);
-            const addressId = button.dataset.addressId;
-            const city = button.dataset.city;
-            const district = button.dataset.district;
-            const ward = button.dataset.ward;
-            loadAddressForEdit(addressId, city, district, ward);
-        });
-    });
-
-    document.querySelectorAll('.city-select').forEach(select => {
-        select.addEventListener('change', function () {
-            const selectedOption = this.options[this.selectedIndex];
-            const modalBody = this.closest('.modal-body');
-            const districtSelect = modalBody.querySelector('.district-select');
-            const wardSelect = modalBody.querySelector('.ward-select');
-            districtSelect.innerHTML = '';
-            wardSelect.innerHTML = '';
-            callAPI(host + 'p/' + selectedOption.getAttribute('data-code') + '?depth=2')
-                .then(data => renderOptions(data.districts, districtSelect));
-        });
-    });
-
-    document.querySelectorAll('.district-select').forEach(select => {
-        select.addEventListener('change', function () {
-            const selectedOption = this.options[this.selectedIndex];
-            const modalBody = this.closest('.modal-body');
-            const wardSelect = modalBody.querySelector('.ward-select');
-            wardSelect.innerHTML = '';
-            callAPI(host + 'd/' + selectedOption.getAttribute('data-code') + '?depth=2')
-                .then(data => renderOptions(data.wards, wardSelect));
-        });
-    });
-});
+}); // THAY ĐỔI: Đóng cú pháp ngắn gọn

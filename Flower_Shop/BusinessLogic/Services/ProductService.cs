@@ -24,7 +24,7 @@ namespace BusinessLogic.Services
         public async Task<ProductDto?> GetProductByIdAsync(Guid productId)
         {
             var product = await _unitOfWork.Product.GetAsync(
-                filter: p => p.ProductId == productId,
+                filter: p => p.ProductId == productId && p.IsActive,
                 includeProperties: "Category,Images"
             );
 
@@ -94,19 +94,8 @@ namespace BusinessLogic.Services
             return _mapper.Map<ProductDto>(newProduct);
         }
 
-        public async Task UpdateProductAsync(ProductUpdateRequest updateRequest)
+        public async Task<ProductDto> UpdateProductAsync(ProductUpdateRequest updateRequest)
         {
-            // Kiểm tra nghiệp vụ: Giới hạn tối đa 5 ảnh khi cập nhật
-            if (updateRequest.ImageFiles != null && updateRequest.ImageFiles.Count > 5)
-            {
-                throw new CustomValidationException(
-                    new Dictionary<string, string[]>
-                    {
-                        { "ImageUrls", new[] { "A product can have a maximum of 5 images." } },
-                    }
-                );
-            }
-
             var productToUpdate = await _unitOfWork.Product.GetAsync(
                 filter: p => p.ProductId == updateRequest.ProductId,
                 includeProperties: "Images"
@@ -121,19 +110,8 @@ namespace BusinessLogic.Services
 
             _mapper.Map(updateRequest, productToUpdate);
 
-            // Xử lý ảnh: Xóa ảnh cũ và thêm ảnh mới nếu có
             if (updateRequest.ImageFiles != null && updateRequest.ImageFiles.Count > 0)
             {
-                // Xóa tất cả ảnh cũ trên Cloudinary và DB
-                foreach (var oldImage in productToUpdate.Images)
-                {
-                    if (!string.IsNullOrEmpty(oldImage.PublicId))
-                    {
-                        await _unitOfWork.ProductImage.DeleteImageAsync(oldImage.PublicId);
-                    }
-                }
-
-                // Upload ảnh mới
                 foreach (var file in updateRequest.ImageFiles)
                 {
                     var newImage = new ProductImage();
@@ -143,6 +121,8 @@ namespace BusinessLogic.Services
             }
 
             await _unitOfWork.SaveAsync();
+
+            return _mapper.Map<ProductDto>(productToUpdate);
         }
 
         public async Task DeleteProductAsync(Guid productId)
@@ -164,7 +144,10 @@ namespace BusinessLogic.Services
             var productsQuery = _unitOfWork.Product.GetQueryable(
                 includeProperties: "Category,Images"
             );
-
+            if (queryParameters.FilterBool == null || queryParameters.FilterBool == true)
+            {
+                productsQuery = productsQuery.Where(p => p.IsActive);
+            }
             if (queryParameters.FilterCategoryId.HasValue)
             {
                 productsQuery = productsQuery.Where(p =>
@@ -202,6 +185,46 @@ namespace BusinessLogic.Services
                 PageNumber = queryParameters.PageNumber,
                 PageSize = queryParameters.PageSize,
             };
+        }
+
+        public async Task<ProductDto?> GetProductByIdForAdminAsync(Guid productId)
+        {
+            var product = await _unitOfWork.Product.GetAsync(
+                filter: p => p.ProductId == productId,
+                includeProperties: "Category,Images"
+            );
+            return product == null ? null : _mapper.Map<ProductDto>(product);
+        }
+
+        public async Task<bool> DeleteProductImageAsync(ProductImageDeleteRequest request)
+        {
+            var product = await _unitOfWork.Product.GetAsync(
+                p => p.ProductId == request.ProductId,
+                includeProperties: "Images"
+            );
+
+            if (product == null)
+            {
+                throw new KeyNotFoundException("Product not found.");
+            }
+
+            var imageToDelete = product.Images.FirstOrDefault(i => i.Url == request.ImageUrl);
+
+            if (imageToDelete?.PublicId == null)
+            {
+                return false;
+            }
+
+            var success = await _unitOfWork.ProductImage.DeleteImageAsync(imageToDelete.PublicId);
+
+            if (success)
+            {
+                product.Images.Remove(imageToDelete);
+                await _unitOfWork.SaveAsync();
+                return true;
+            }
+
+            return false;
         }
     }
 }

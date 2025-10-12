@@ -1,5 +1,7 @@
-﻿using System.Net.Http.Headers;
+﻿using System.Globalization;
+using System.Net.Http.Headers;
 using Microsoft.AspNetCore.DataProtection;
+using Microsoft.AspNetCore.Localization;
 
 namespace FlowerShop_WebApp
 {
@@ -8,7 +10,13 @@ namespace FlowerShop_WebApp
         public static void Main(string[] args)
         {
             var builder = WebApplication.CreateBuilder(args);
-
+            builder.Services.Configure<RequestLocalizationOptions>(options =>
+            {
+                var supportedCultures = new[] { new CultureInfo("vi-VN") };
+                options.DefaultRequestCulture = new RequestCulture("vi-VN");
+                options.SupportedCultures = supportedCultures;
+                options.SupportedUICultures = supportedCultures;
+            });
             builder.Services.AddHttpClient(
                 "ApiClient",
                 client =>
@@ -43,7 +51,7 @@ namespace FlowerShop_WebApp
                     options =>
                     {
                         options.Cookie.Name = "FlowerShop.Auth";
-                        options.LoginPath = "/Account/Login"; // Đường dẫn đến trang đăng nhập
+                        options.LoginPath = "/Account/Login";
                         options.AccessDeniedPath = "/Home/AccessDenied";
                     }
                 );
@@ -57,12 +65,14 @@ namespace FlowerShop_WebApp
             if (!app.Environment.IsDevelopment())
             {
                 app.UseExceptionHandler("/Home/Error");
-                // The default HSTS value is 30 days. You may want to change this for production scenarios, see https://aka.ms/aspnetcore-hsts.
                 app.UseHsts();
             }
 
             app.UseHttpsRedirection();
+
             app.UseStaticFiles();
+
+            app.UseRequestLocalization();
 
             app.UseRouting();
 
@@ -71,6 +81,7 @@ namespace FlowerShop_WebApp
             app.UseAuthentication();
 
             app.UseAuthorization();
+
             app.MapControllerRoute(
                 name: "AdminArea",
                 pattern: "{area:exists}/{controller=Home}/{action=Index}/{id?}"

@@ -24,12 +24,9 @@ namespace FlowerShop_WebApp.Areas.Admin.Controllers
             _logger = logger;
         }
 
-        // GET: /Admin/Users
         public async Task<IActionResult> Index(string searchString)
         {
             var client = CreateApiClient();
-
-            // Xây dựng URL động để bao gồm cả từ khóa tìm kiếm nếu có
             var apiUrl = "api/users?pageSize=100";
             if (!string.IsNullOrEmpty(searchString))
             {
@@ -37,24 +34,21 @@ namespace FlowerShop_WebApp.Areas.Admin.Controllers
             }
 
             var response = await client.GetAsync(apiUrl);
+            var users = new List<UserViewModel>();
 
             if (response.IsSuccessStatusCode)
             {
                 var pagedResult = await response.Content.ReadFromJsonAsync<
                     PagedResultViewModel<UserViewModel>
                 >(_jsonOptions);
-
-                // Gửi lại từ khóa tìm kiếm về view
-                ViewBag.CurrentFilter = searchString;
-
-                return View(pagedResult?.Items ?? new List<UserViewModel>());
+                users = pagedResult?.Items.ToList() ?? new List<UserViewModel>();
             }
-
-            return View(new List<UserViewModel>());
+            ViewBag.CurrentFilter = searchString;
+            return View(users);
         }
 
-        // GET: /Admin/Users/Edit/{id}
-        public async Task<IActionResult> Edit(Guid id)
+        [HttpGet]
+        public async Task<IActionResult> _EditPartial(Guid id)
         {
             var client = CreateApiClient();
             var response = await client.GetAsync($"api/users/{id}");
@@ -65,36 +59,47 @@ namespace FlowerShop_WebApp.Areas.Admin.Controllers
                 if (user == null)
                     return NotFound();
 
-                ViewBag.Roles = new List<string> { "Customer", "Admin" };
-                return View(user);
+                ViewBag.Roles = new List<string> { "Khách hàng", "Quản trị viên" };
+                return PartialView("_UserFormPartial", user);
             }
 
             return NotFound();
         }
 
-        // POST: /Admin/Users/Edit/{id}
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Edit(Guid id, UserViewModel model)
+        public async Task<IActionResult> Edit(UserViewModel model)
         {
-            if (id != model.UserId)
-                return BadRequest();
+            if (!ModelState.IsValid)
+            {
+                return new BadRequestObjectResult(
+                    new
+                    {
+                        success = false,
+                        errors = ModelState
+                            .Values.SelectMany(v => v.Errors)
+                            .Select(e => e.ErrorMessage),
+                    }
+                );
+            }
 
-            // Chỉ cập nhật vai trò
-            var updateRequest = new { model.UserId, model.Role };
+            var roleToSend = model.Role == "Quản trị viên" ? "Admin" : "Customer";
+            var updateRequest = new { model.UserId, Role = roleToSend };
 
             var client = CreateApiClient();
             var response = await client.PutAsJsonAsync("api/users", updateRequest);
 
             if (response.IsSuccessStatusCode)
             {
-                return RedirectToAction(nameof(Index));
+                return new OkObjectResult(
+                    new { success = true, message = "Cập nhật vai trò thành công!" }
+                );
             }
 
-            _logger.LogError("Failed to update user role for UserId {UserId}", id);
-            ModelState.AddModelError(string.Empty, "Error updating user role.");
-            ViewBag.Roles = new List<string> { "Customer", "Admin" };
-            return View(model);
+            _logger.LogError("Failed to update user role for UserId {UserId}", model.UserId);
+            return new BadRequestObjectResult(
+                new { success = false, errors = new[] { "Lỗi khi cập nhật vai trò." } }
+            );
         }
 
         private HttpClient CreateApiClient()

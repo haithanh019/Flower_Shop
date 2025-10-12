@@ -7,7 +7,7 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace FlowerShop_WebApp.Controllers
 {
-    [Authorize] // Chỉ cho phép user đã đăng nhập
+    [Authorize]
     public class ProfileController : Controller
     {
         private readonly IHttpClientFactory _httpClientFactory;
@@ -28,6 +28,7 @@ namespace FlowerShop_WebApp.Controllers
 
             if (!profileResponse.IsSuccessStatusCode)
             {
+                // Thêm xử lý lỗi nếu cần
                 return View(new CustomerProfileViewModel());
             }
 
@@ -73,26 +74,31 @@ namespace FlowerShop_WebApp.Controllers
 
             if (response.IsSuccessStatusCode)
             {
-                TempData["SuccessMessage"] = "Profile updated successfully!";
+                TempData["SuccessMessage"] = "Cập nhật hồ sơ thành công!";
             }
             else
             {
-                TempData["ErrorMessage"] = "Failed to update profile.";
+                TempData["ErrorMessage"] = "Cập nhật hồ sơ thất bại.";
             }
             return RedirectToAction("Index");
         }
 
+        // Action GET không đổi, chỉ dùng để lấy View rỗng ban đầu cho modal
         public IActionResult ChangePassword()
         {
             return View(new ChangePasswordViewModel());
         }
 
+        // === BẮT ĐẦU THAY ĐỔI ===
         [HttpPost]
         public async Task<IActionResult> ChangePassword(ChangePasswordViewModel model)
         {
             if (!ModelState.IsValid)
             {
-                return View(model);
+                var errors = ModelState
+                    .Values.SelectMany(v => v.Errors)
+                    .Select(e => e.ErrorMessage);
+                return new BadRequestObjectResult(new { success = false, errors });
             }
 
             var client = CreateApiClient();
@@ -106,13 +112,18 @@ namespace FlowerShop_WebApp.Controllers
 
             if (response.IsSuccessStatusCode)
             {
-                TempData["SuccessMessage"] = "Password changed successfully!";
-                return RedirectToAction("Index");
+                return new OkObjectResult(
+                    new { success = true, message = "Đổi mật khẩu thành công!" }
+                );
             }
-
-            TempData["ErrorMessage"] =
-                "Failed to change password. Please check your current password.";
-            return View(model);
+            var errorContent = await response.Content.ReadAsStringAsync();
+            return new BadRequestObjectResult(
+                new
+                {
+                    success = false,
+                    errors = new[] { "Đổi mật khẩu thất bại, xem lại mật khẩu cũ của bạn." },
+                }
+            );
         }
 
         [HttpPost]
@@ -131,11 +142,11 @@ namespace FlowerShop_WebApp.Controllers
 
                 if (response.IsSuccessStatusCode)
                 {
-                    TempData["SuccessMessage"] = "Address added successfully!";
+                    TempData["SuccessMessage"] = "Thêm địa chỉ thành công!";
                 }
                 else
                 {
-                    TempData["ErrorMessage"] = "Failed to add address.";
+                    TempData["ErrorMessage"] = "Thêm địa chỉ thất bại.";
                 }
             }
             return RedirectToAction("Index");
@@ -157,11 +168,11 @@ namespace FlowerShop_WebApp.Controllers
 
                 if (response.IsSuccessStatusCode)
                 {
-                    TempData["SuccessMessage"] = "Address updated successfully!";
+                    TempData["SuccessMessage"] = "Cập nhật địa chỉ thành công!";
                 }
                 else
                 {
-                    TempData["ErrorMessage"] = "Failed to update address.";
+                    TempData["ErrorMessage"] = "Cập nhật địa chỉ thất bại.";
                 }
             }
             return RedirectToAction("Index");
@@ -175,11 +186,11 @@ namespace FlowerShop_WebApp.Controllers
 
             if (response.IsSuccessStatusCode)
             {
-                TempData["SuccessMessage"] = "Address deleted successfully!";
+                TempData["SuccessMessage"] = "Xóa địa chỉ thành công!";
             }
             else
             {
-                TempData["ErrorMessage"] = "Failed to delete address.";
+                TempData["ErrorMessage"] = "Xóa địa chỉ thất bại.";
             }
 
             return RedirectToAction("Index");

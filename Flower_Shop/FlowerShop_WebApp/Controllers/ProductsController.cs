@@ -23,14 +23,12 @@ namespace FlowerShop_WebApp.Controllers
         {
             var client = _httpClientFactory.CreateClient("ApiClient");
 
-            // Xây dựng URL cho API request, bao gồm cả phân trang và lọc
             var apiUrl = $"api/products?pageNumber={pageNumber}";
             if (categoryId.HasValue)
             {
                 apiUrl += $"&categoryId={categoryId}";
             }
 
-            // Lấy danh sách sản phẩm
             var productsResponse = await client.GetAsync(apiUrl);
             PagedResultViewModel<ProductViewModel> pagedProducts = new();
             if (productsResponse.IsSuccessStatusCode)
@@ -43,7 +41,6 @@ namespace FlowerShop_WebApp.Controllers
                     ) ?? pagedProducts;
             }
 
-            // Lấy danh sách tất cả danh mục để hiển thị bộ lọc
             var categoriesResponse = await client.GetAsync("api/categories");
             List<CategoryViewModel> categories = new();
             if (categoriesResponse.IsSuccessStatusCode)
@@ -54,7 +51,6 @@ namespace FlowerShop_WebApp.Controllers
                     ?? categories;
             }
 
-            // Dùng ViewBag để gửi danh sách categories và thông tin phân trang sang View
             ViewBag.Categories = categories;
             ViewBag.CurrentPage = pageNumber;
             ViewBag.TotalPages = (int)

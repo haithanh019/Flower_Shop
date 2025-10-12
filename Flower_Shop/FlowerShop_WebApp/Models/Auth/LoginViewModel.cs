@@ -4,11 +4,13 @@ namespace FlowerShop_WebApp.Models.Auth
 {
     public class LoginViewModel
     {
-        [Required(ErrorMessage = "Email is required.")]
+        [Required(ErrorMessage = "Email là bắt buộc.")]
+        [Display(Name = "Email")]
         [EmailAddress]
         public required string Email { get; set; }
 
-        [Required(ErrorMessage = "Password is required.")]
+        [Required(ErrorMessage = "Mật khẩu là bắt buộc.")]
+        [Display(Name = "Mật khẩu")]
         [DataType(DataType.Password)]
         public required string Password { get; set; }
     }

@@ -1,0 +1,59 @@
+﻿@model IEnumerable<FlowerShop_WebApp.Models.Profile.AddressViewModel>
+@{
+    ViewData["Title"] = "Sổ địa chỉ";
+}
+
+<div class="container mt-5">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1 class="page-section-title" style="margin-bottom: 0;">@ViewData["Title"]</h1>
+        <a asp-action="Create" class="btn btn-primary">
+            <i class="fas fa-plus me-2"></i>Thêm địa chỉ mới
+        </a>
+    </div>
+
+    @if (TempData["SuccessMessage"] != null)
+    {
+        <div class="alert alert-success">@TempData["SuccessMessage"]</div>
+    }
+    @if (TempData["ErrorMessage"] != null)
+    {
+        <div class="alert alert-danger">@TempData["ErrorMessage"]</div>
+    }
+
+    <div class="profile-card">
+        <div class="card-body">
+            @if (Model.Any())
+            {
+                foreach (var address in Model)
+                {
+                    <div class="address-item">
+                        <div class="address-item-info">
+                            <strong>@address.Detail</strong><br>
+                            <small class="text-muted">@address.Ward, @address.District, @address.City</small>
+                        </div>
+                        <div>
+                            <a asp-action="Edit" asp-route-id="@address.AddressId" class="btn btn-sm btn-outline-secondary me-2">
+                                <i class="fas fa-edit"></i> Sửa
+                            </a>
+                            <form asp-action="Delete" asp-route-id="@address.AddressId" method="post" class="d-inline">
+                                @Html.AntiForgeryToken()
+                                <button type="submit" class="btn btn-sm btn-outline-danger" onclick="return confirm('Bạn có chắc muốn xóa địa chỉ này?');">
+                                    <i class="fas fa-trash"></i> Xóa
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+                }
+            }
+            else
+            {
+                <p class="text-center text-muted">Bạn chưa có địa chỉ nào được lưu.</p>
+            }
+        </div>
+    </div>
+    <div class="mt-4">
+        <a asp-controller="Profile" asp-action="Index" class="btn btn-secondary">
+            <i class="fas fa-arrow-left me-2"></i>Quay lại trang cá nhân
+        </a>
+    </div>
+</div>

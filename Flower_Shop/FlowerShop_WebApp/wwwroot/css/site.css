@@ -1,83 +1,84 @@
-﻿:root {
+﻿/*
+  * Flower Shop - Giao diện được làm mới
+  * Giai đoạn 1: Design System
+*/
+
+/* 1. Nền tảng: Bảng màu, Phông chữ, Biến toàn cục */
+:root {
     --primary-pink: #FFC0CB;
-    --secondary-blue: #B0E0E6;
+    --primary-pink-dark: #E75480;
+    --secondary-blue: #A2D2FF;
     --text-dark: #333;
     --text-light: #777;
-    --background-light: #fdfdfd;
+    --background-light: #FDFAF6; /* Nền trắng ngà ấm cúng */
     --border-color: #eee;
-    --font-family-sans-serif: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    /* Phông chữ mới */
+    --font-family-sans-serif: 'Nunito', sans-serif;
+    --font-family-serif: 'Quicksand', sans-serif;   
 }
+
+/* 2. Thiết lập cơ bản cho toàn trang */
 html {
     font-size: 16px;
-}
-
-@media (min-width: 768px) {
-  html {
-    font-size: 16px;
-  }
-}
-
-.btn:focus, .btn:active:focus, .btn-link.nav-link:focus, .form-control:focus, .form-check-input:focus {
-  box-shadow: 0 0 0 0.1rem white, 0 0 0 0.25rem #258cfb;
-}
-
-html {
-  position: relative;
-  min-height: 100%;
+    position: relative;
+    min-height: 100%;
 }
 
 body {
-    margin-bottom: 60px;
-    font-family: var(--font-family-sans-serif);
-    color: var(--text-dark);
     background-color: var(--background-light);
+    color: var(--text-dark);
+    font-family: var(--font-family-sans-serif);
+    margin-bottom: 60px; /* Dành không gian cho footer */
 }
-/* --- NAVBAR / HEADER --- */
-.navbar {
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
-    background-color: #fff !important;
+
+/* 3. Tùy chỉnh các thành phần Bootstrap & Chung */
+
+/* --- Tiêu đề & Tên thương hiệu --- */
+h1, h2, h3, h4, h5, .navbar-brand {
+    font-family: var(--font-family-serif);
+    font-weight: 700;
 }
 
 .navbar-brand {
-    font-weight: 600;
-    color: var(--primary-pink) !important;
+    color: var(--primary-pink-dark) !important;
 }
 
-    .navbar-brand:hover {
-        color: var(--secondary-blue) !important;
-    }
+/* --- Thanh điều hướng (Navbar) --- */
+.navbar {
+    background-color: #fff !important;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.07);
+}
 
 .nav-link {
     color: var(--text-light) !important;
     font-weight: 500;
+    transition: color 0.2s ease-in-out;
 }
 
     .nav-link:hover, .nav-link.active {
-        color: var(--primary-pink) !important;
+        color: var(--primary-pink-dark) !important;
     }
 
-/* --- BUTTONS --- */
-.btn-primary {
-    background-color: var(--primary-pink);
-    border-color: var(--primary-pink);
-    color: #fff;
+
+/* --- Nút (Buttons) --- */
+.btn {
+    border-radius: 20px; /* Bo tròn các nút */
+    padding: 10px 25px;
     font-weight: 500;
+    transition: all 0.2s ease-in-out;
+}
+
+.btn-primary {
+    background-color: var(--primary-pink-dark);
+    border-color: var(--primary-pink-dark);
+    color: #fff;
 }
 
     .btn-primary:hover {
-        background-color: #ffb6c1; /* Một sắc hồng đậm hơn một chút */
-        border-color: #ffb6c1;
-    }
-
-.btn-outline-primary {
-    color: var(--primary-pink);
-    border-color: var(--primary-pink);
-}
-
-    .btn-outline-primary:hover {
-        background-color: var(--primary-pink);
-        border-color: var(--primary-pink);
-        color: #fff;
+        background-color: #d14a6e; /* Đậm hơn một chút khi hover */
+        border-color: #d14a6e;
+        transform: translateY(-2px);
+        box-shadow: 0 4px 10px rgba(0,0,0,0.1);
     }
 
 .btn-secondary {
@@ -87,31 +88,33 @@ body {
 }
 
     .btn-secondary:hover {
-        background-color: #a9d9e0; /* Xanh đậm hơn một chút */
-        border-color: #a9d9e0;
+        background-color: #8dbde0;
+        border-color: #8dbde0;
     }
 
 
-/* --- CARD SẢN PHẨM --- */
+/* --- Thẻ sản phẩm (Product Card) --- */
 .product-card {
     border: 1px solid var(--border-color);
-    border-radius: 8px;
+    border-radius: 12px; /* Bo tròn nhiều hơn */
     transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
     overflow: hidden;
+    background-color: #fff;
 }
 
     .product-card:hover {
         transform: translateY(-5px);
-        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+        box-shadow: 0 6px 20px rgba(0, 0, 0, 0.1);
     }
 
 .product-card-img-top {
     width: 100%;
     height: 250px;
-    object-fit: cover; /* Đảm bảo ảnh luôn vừa vặn và đẹp */
+    object-fit: cover;
 }
 
 .product-card .card-title {
+    font-family: var(--font-family-serif);
     font-weight: 600;
     white-space: nowrap;
     overflow: hidden;
@@ -119,22 +122,18 @@ body {
 }
 
 .product-card .card-text {
-    color: var(--primary-pink);
-    font-size: 1.2rem;
+    color: var(--primary-pink-dark);
+    font-size: 1.25rem;
     font-weight: bold;
 }
 
-/* --- FOOTER --- */
-footer {
+/* --- Footer --- */
+.footer {
+    position: absolute;
+    bottom: 0;
+    width: 100%;
+    white-space: nowrap;
+    line-height: 60px;
+    background-color: #fff;
     border-top: 1px solid var(--border-color);
-    background-color: #fafafa;
-    color: var(--text-light);
-}
-
-/* --- HERO SECTION (BANNER TRANG CHỦ) --- */
-.hero-section {
-    background: linear-gradient(135deg, var(--primary-pink), var(--secondary-blue));
-    color: white;
-    padding: 6rem 0;
-    text-align: center;
 }

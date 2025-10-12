@@ -7,13 +7,13 @@ namespace FlowerShop_WebApp.Models.Profile
         public Guid UserId { get; set; }
         public string Email { get; set; } = "";
 
-        [Display(Name = "Full Name")]
+        [Display(Name = "Họ và tên")]
         public string? FullName { get; set; }
 
-        [Display(Name = "Phone Number")]
+        [Display(Name = "Số điện thoại")]
         public string? PhoneNumber { get; set; }
 
-        [Display(Name = "Address")]
+        [Display(Name = "Điạ chỉ")]
         public string? Address { get; set; }
 
         public DateTime CreatedAt { get; set; }
