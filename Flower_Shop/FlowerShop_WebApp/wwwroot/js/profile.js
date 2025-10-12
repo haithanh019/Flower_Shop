@@ -1,4 +1,7 @@
-﻿$(document).ready(function () {
+﻿// File: FlowerShop_WebApp/wwwroot/js/profile.js
+
+$(function () { // THAY ĐỔI: Sử dụng cú pháp ngắn gọn và hiện đại hơn
+    // --- PHẦN XỬ LÝ ĐỊA CHỈ (GIỮ NGUYÊN) ---
     const host = "https://provinces.open-api.vn/api/";
     const callAPI = async (api) => {
         try {
@@ -73,28 +76,14 @@
         });
     });
 
-
-    // --- PHẦN XỬ LÝ MỚI ---
-
-    // Hàm hiển thị thông báo
-    const showAlert = (placeholderId, message, type) => {
-        const alertPlaceholder = document.getElementById(placeholderId);
-        const wrapper = document.createElement('div');
-        wrapper.innerHTML = [
-            `<div class="alert alert-${type} alert-dismissible" role="alert">`,
-            `   <div>${message}</div>`,
-            '   <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>',
-            '</div>'
-        ].join('');
-        alertPlaceholder.append(wrapper);
-    };
+    // --- PHẦN XỬ LÝ MODAL ---
 
     // Xử lý form đổi mật khẩu
     $('#changePasswordModal form').on('submit', function (e) {
         e.preventDefault();
         var form = $(this);
         var alertPlaceholder = $('#changePasswordAlertPlaceholder');
-        alertPlaceholder.empty(); // Xóa thông báo cũ
+        alertPlaceholder.empty();
 
         $.ajax({
             url: form.attr('action'),
@@ -104,16 +93,18 @@
                 if (response.success) {
                     $('#changePasswordModal').modal('hide');
                     form[0].reset();
-                    showAlert('profile-alert-placeholder', response.message, 'success');
+                    showToast(response.message, 'success');
                 }
             },
             error: function (xhr) {
                 var response = xhr.responseJSON;
-                var errorMsg = 'An unexpected error occurred.';
+                var errorMsg = 'Đã có lỗi không mong muốn xảy ra.';
                 if (response && response.errors) {
                     errorMsg = response.errors.join('<br>');
                 }
-                showAlert('changePasswordAlertPlaceholder', errorMsg, 'danger');
+                alertPlaceholder.html(
+                    `<div class="alert alert-danger">${errorMsg}</div>`
+                );
             }
         });
     });
@@ -126,7 +117,7 @@
         $.get('/Orders/HistoryPartial', function (data) {
             modalContent.html(data);
         }).fail(function () {
-            modalContent.html('<div class="modal-body"><p class="text-danger">Failed to load order history.</p></div>');
+            modalContent.html('<div class="modal-body"><p class="text-danger">Không thể tải lịch sử đơn hàng.</p></div>');
         });
     });
 
@@ -142,7 +133,7 @@
         $.get('/Orders/DetailsPartial?id=' + orderId, function (data) {
             modalContent.html(data);
         }).fail(function () {
-            modalContent.html('<div class="modal-body"><p class="text-danger">Failed to load order details.</p></div>');
+            modalContent.html('<div class="modal-body"><p class="text-danger">Không thể tải chi tiết đơn hàng.</p></div>');
         });
     });
 
@@ -151,4 +142,14 @@
         $(this).find('form')[0].reset();
         $('#changePasswordAlertPlaceholder').empty();
     });
-});
+
+    // Lấy tham số 'openModal' từ URL để tự động mở modal
+    const urlParams = new URLSearchParams(window.location.search);
+    const modalToOpenId = urlParams.get('openModal');
+    if (modalToOpenId) {
+        const modalSelector = '#' + modalToOpenId;
+        if ($(modalSelector).length) {
+            $(modalSelector).modal('show');
+        }
+    }
+}); // THAY ĐỔI: Đóng cú pháp ngắn gọn

@@ -74,11 +74,11 @@ namespace FlowerShop_WebApp.Controllers
 
             if (response.IsSuccessStatusCode)
             {
-                TempData["SuccessMessage"] = "Profile updated successfully!";
+                TempData["SuccessMessage"] = "Cập nhật hồ sơ thành công!";
             }
             else
             {
-                TempData["ErrorMessage"] = "Failed to update profile.";
+                TempData["ErrorMessage"] = "Cập nhật hồ sơ thất bại.";
             }
             return RedirectToAction("Index");
         }
@@ -113,27 +113,18 @@ namespace FlowerShop_WebApp.Controllers
             if (response.IsSuccessStatusCode)
             {
                 return new OkObjectResult(
-                    new { success = true, message = "Password changed successfully!" }
+                    new { success = true, message = "Đổi mật khẩu thành công!" }
                 );
             }
-
-            // Lấy lỗi từ API nếu có
             var errorContent = await response.Content.ReadAsStringAsync();
-            // Cố gắng parse lỗi từ API (nếu API trả về cấu trúc lỗi chuẩn)
-            // Trong trường hợp này, ta trả về một lỗi chung
             return new BadRequestObjectResult(
                 new
                 {
                     success = false,
-                    errors = new[]
-                    {
-                        "Failed to change password. Please check your current password.",
-                    },
+                    errors = new[] { "Đổi mật khẩu thất bại, xem lại mật khẩu cũ của bạn." },
                 }
             );
         }
-
-        // === KẾT THÚC THAY ĐỔI ===
 
         [HttpPost]
         public async Task<IActionResult> AddAddress(AddressViewModel model)
@@ -151,11 +142,11 @@ namespace FlowerShop_WebApp.Controllers
 
                 if (response.IsSuccessStatusCode)
                 {
-                    TempData["SuccessMessage"] = "Address added successfully!";
+                    TempData["SuccessMessage"] = "Thêm địa chỉ thành công!";
                 }
                 else
                 {
-                    TempData["ErrorMessage"] = "Failed to add address.";
+                    TempData["ErrorMessage"] = "Thêm địa chỉ thất bại.";
                 }
             }
             return RedirectToAction("Index");
@@ -177,11 +168,11 @@ namespace FlowerShop_WebApp.Controllers
 
                 if (response.IsSuccessStatusCode)
                 {
-                    TempData["SuccessMessage"] = "Address updated successfully!";
+                    TempData["SuccessMessage"] = "Cập nhật địa chỉ thành công!";
                 }
                 else
                 {
-                    TempData["ErrorMessage"] = "Failed to update address.";
+                    TempData["ErrorMessage"] = "Cập nhật địa chỉ thất bại.";
                 }
             }
             return RedirectToAction("Index");
@@ -195,11 +186,11 @@ namespace FlowerShop_WebApp.Controllers
 
             if (response.IsSuccessStatusCode)
             {
-                TempData["SuccessMessage"] = "Address deleted successfully!";
+                TempData["SuccessMessage"] = "Xóa địa chỉ thành công!";
             }
             else
             {
-                TempData["ErrorMessage"] = "Failed to delete address.";
+                TempData["ErrorMessage"] = "Xóa địa chỉ thất bại.";
             }
 
             return RedirectToAction("Index");

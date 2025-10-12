@@ -33,7 +33,7 @@
                 {
                     <tr>
                         <td><code>#@order.OrderId.ToString().Substring(0, 8)</code></td>
-                        <td>@order.CreatedAt.ToString("g")</td>
+                        <td>@order.CreatedAt.ToString("d")</td>
                         <td>@order.Total.ToString("N0") VNĐ</td>
                         <td>
                             <span class="badge @getStatusBadgeClass(order.Status) rounded-pill">@order.Status</span>

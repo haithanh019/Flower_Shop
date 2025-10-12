@@ -66,12 +66,12 @@ namespace FlowerShop_WebApp.Areas.Admin.Controllers
                 var response = await client.PostAsync("api/categories", jsonContent);
                 if (response.IsSuccessStatusCode)
                 {
-                    TempData["SuccessMessage"] = "Category created successfully!";
+                    TempData["SuccessMessage"] = "Tạo danh mục thành công!";
                     return RedirectToAction(nameof(Index));
                 }
                 ModelState.AddModelError(
                     string.Empty,
-                    "Error creating category. The name might already exist."
+                    "Lỗi khi tạo danh mục. Tên có thể đã tồn tại."
                 );
             }
             return View(model);
@@ -123,10 +123,10 @@ namespace FlowerShop_WebApp.Areas.Admin.Controllers
 
                 if (response.IsSuccessStatusCode)
                 {
-                    TempData["SuccessMessage"] = "Category updated successfully!";
+                    TempData["SuccessMessage"] = "Cập nhật danh mục thành công!";
                     return RedirectToAction(nameof(Index));
                 }
-                ModelState.AddModelError(string.Empty, "Error updating category.");
+                ModelState.AddModelError(string.Empty, "Lỗi khi cập nhật danh mục.");
             }
             return View(model);
         }
@@ -157,24 +157,22 @@ namespace FlowerShop_WebApp.Areas.Admin.Controllers
             var response = await client.DeleteAsync($"api/categories/{id}");
             if (response.IsSuccessStatusCode)
             {
-                TempData["SuccessMessage"] = "Category deleted successfully!";
+                TempData["SuccessMessage"] = "Xóa danh mục thành công!";
             }
-            if (!response.IsSuccessStatusCode)
+            else // Sửa lại: chỉ cần else là đủ
             {
                 TempData["ErrorMessage"] =
-                    "Error deleting category. It might be in use by some products.";
+                    "Lỗi khi xóa danh mục. Có thể danh mục đang được sử dụng bởi sản phẩm.";
             }
             return RedirectToAction(nameof(Index));
         }
 
         // --- PHƯƠNG THỨC HỖ TRỢ ---
-        // Phương thức này tạo HttpClient và đính kèm token từ Session
         private HttpClient CreateApiClient()
         {
             var client = _httpClientFactory.CreateClient("ApiClient");
             var token = HttpContext.Session.GetString("JWToken");
 
-            // *** THÊM LOG CHI TIẾT Ở ĐÂY ***
             if (string.IsNullOrEmpty(token))
             {
                 _logger.LogError("CreateApiClient: Token is NULL or EMPTY in session!");

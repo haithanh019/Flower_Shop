@@ -30,7 +30,7 @@
                 <td>@user.Email</td>
                 <td>@user.PhoneNumber</td>
                 <td>
-                    @if (user.Role == "Admin")
+                    @if (user.Role == "Quản trị viên")
                     {
                         <span class="badge bg-danger rounded-pill">@user.Role</span>
                     }
@@ -46,3 +46,6 @@
         }
     </tbody>
 </table>
+@section Styles {
+    <link rel="stylesheet" href="~/css/admin-management.css" asp-append-version="true" />
+}

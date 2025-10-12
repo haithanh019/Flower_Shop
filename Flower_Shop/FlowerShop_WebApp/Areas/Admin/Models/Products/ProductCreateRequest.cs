@@ -6,28 +6,31 @@ namespace FlowerShop_WebApp.Areas.Admin.Models.Products
 {
     public class ProductCreateRequest
     {
-        [Required]
+        [Display(Name = "Tên sản phẩm")]
+        [Required(ErrorMessage = "Vui lòng nhập tên sản phẩm.")]
         public string Name { get; set; } = string.Empty;
 
+        [Display(Name = "Mô tả")]
         public string? Description { get; set; }
 
-        [Range(0.01, double.MaxValue, ErrorMessage = "Price must be greater than 0.")]
+        [Display(Name = "Giá bán")]
+        [Range(0.01, double.MaxValue, ErrorMessage = "Giá phải lớn hơn 0.")]
         public decimal Price { get; set; }
 
-        [Display(Name = "Category")]
-        [Required(ErrorMessage = "Please select a category.")]
+        [Display(Name = "Danh mục")]
+        [Required(ErrorMessage = "Vui lòng chọn một danh mục.")]
         public Guid CategoryId { get; set; }
 
-        [Range(0, int.MaxValue, ErrorMessage = "Stock must be a non-negative number.")]
+        [Display(Name = "Số lượng tồn kho")]
+        [Range(0, int.MaxValue, ErrorMessage = "Số lượng tồn kho phải là số không âm.")]
         public int StockQuantity { get; set; }
 
-        [Display(Name = "Is Active?")]
+        [Display(Name = "Kích hoạt hiển thị?")]
         public bool IsActive { get; set; } = true;
 
-        // Dùng để hiển thị dropdown, không gửi đi
         public SelectList? CategoryList { get; set; }
 
-        [Display(Name = "Product Images")]
+        [Display(Name = "Hình ảnh sản phẩm")]
         public List<IFormFile>? ImageFiles { get; set; }
     }
 }

@@ -29,7 +29,6 @@ namespace FlowerShop_WebApp.Areas.Admin.Controllers
         }
 
         // GET: /Admin/Orders
-        // GET: /Admin/Orders
         public async Task<IActionResult> Index(string statusFilter, int pageNumber = 1)
         {
             var client = CreateApiClient();
@@ -128,7 +127,7 @@ namespace FlowerShop_WebApp.Areas.Admin.Controllers
         {
             if (string.IsNullOrEmpty(status))
             {
-                TempData["ErrorMessage"] = "Please select a valid status.";
+                TempData["ErrorMessage"] = "Vui lòng chọn một trạng thái hợp lệ.";
                 return RedirectToAction("Details", new { id = orderId });
             }
 
@@ -139,13 +138,13 @@ namespace FlowerShop_WebApp.Areas.Admin.Controllers
 
             if (response.IsSuccessStatusCode)
             {
-                TempData["SuccessMessage"] = "Order status updated successfully!";
+                TempData["SuccessMessage"] = "Cập nhật trạng thái đơn hàng thành công!";
             }
             else
             {
                 var errorContent = await response.Content.ReadAsStringAsync();
                 _logger.LogError("Failed to update order status. Response: {Error}", errorContent);
-                TempData["ErrorMessage"] = "Failed to update order status.";
+                TempData["ErrorMessage"] = "Cập nhật trạng thái đơn hàng thất bại.";
             }
 
             return RedirectToAction("Details", new { id = orderId });

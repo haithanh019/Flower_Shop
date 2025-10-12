@@ -28,8 +28,6 @@ namespace FlowerShop_WebApp.Areas.Admin.Controllers
         public async Task<IActionResult> Index(string searchString)
         {
             var client = CreateApiClient();
-
-            // Xây dựng URL động để bao gồm cả từ khóa tìm kiếm nếu có
             var apiUrl = "api/users?pageSize=100";
             if (!string.IsNullOrEmpty(searchString))
             {
@@ -43,10 +41,7 @@ namespace FlowerShop_WebApp.Areas.Admin.Controllers
                 var pagedResult = await response.Content.ReadFromJsonAsync<
                     PagedResultViewModel<UserViewModel>
                 >(_jsonOptions);
-
-                // Gửi lại từ khóa tìm kiếm về view
                 ViewBag.CurrentFilter = searchString;
-
                 return View(pagedResult?.Items ?? new List<UserViewModel>());
             }
 
@@ -65,7 +60,8 @@ namespace FlowerShop_WebApp.Areas.Admin.Controllers
                 if (user == null)
                     return NotFound();
 
-                ViewBag.Roles = new List<string> { "Customer", "Admin" };
+                ViewBag.Roles = new List<string> { "Khách hàng", "Quản trị viên" };
+
                 return View(user);
             }
 
@@ -80,20 +76,31 @@ namespace FlowerShop_WebApp.Areas.Admin.Controllers
             if (id != model.UserId)
                 return BadRequest();
 
-            // Chỉ cập nhật vai trò
-            var updateRequest = new { model.UserId, model.Role };
+            // === BẮT ĐẦU SỬA LỖI ===
+            // Chuyển đổi giá trị tiếng Việt từ dropdown về giá trị Enum tiếng Anh trước khi gửi đi
+            var roleToSend = model.Role == "Quản trị viên" ? "Admin" : "Customer";
+            var updateRequest = new { model.UserId, Role = roleToSend };
+            // === KẾT THÚC SỬA LỖI ===
 
             var client = CreateApiClient();
             var response = await client.PutAsJsonAsync("api/users", updateRequest);
 
             if (response.IsSuccessStatusCode)
             {
+                TempData["SuccessMessage"] = "Cập nhật vai trò người dùng thành công!";
                 return RedirectToAction(nameof(Index));
             }
 
-            _logger.LogError("Failed to update user role for UserId {UserId}", id);
-            ModelState.AddModelError(string.Empty, "Error updating user role.");
-            ViewBag.Roles = new List<string> { "Customer", "Admin" };
+            var errorContent = await response.Content.ReadAsStringAsync();
+            _logger.LogError(
+                "Failed to update user role for UserId {UserId}. API Response: {Response}",
+                id,
+                errorContent
+            );
+            TempData["ErrorMessage"] = "Lỗi khi cập nhật vai trò người dùng.";
+
+            ViewBag.Roles = new List<string> { "Khách hàng", "Quản trị viên" };
+
             return View(model);
         }
 

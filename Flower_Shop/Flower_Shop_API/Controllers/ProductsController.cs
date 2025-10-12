@@ -36,6 +36,18 @@ namespace Flower_Shop_API.Controllers
             return Ok(product);
         }
 
+        [HttpGet("admin/{id}")]
+        [Authorize(Roles = "Admin")]
+        public async Task<IActionResult> GetProductByIdForAdmin(Guid id)
+        {
+            var product = await _facadeService.ProductService.GetProductByIdForAdminAsync(id);
+            if (product == null)
+            {
+                return NotFound();
+            }
+            return Ok(product);
+        }
+
         // Các endpoint dưới đây yêu cầu quyền Admin
         [HttpPost]
         [Authorize(Roles = "Admin")]

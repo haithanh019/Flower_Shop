@@ -36,8 +36,7 @@ namespace FlowerShop_WebApp.Areas.Admin.Controllers
         {
             var client = CreateApiClient();
 
-            // Xây dựng URL động để bao gồm cả từ khóa tìm kiếm nếu có
-            var apiUrl = "api/products?pageSize=100";
+            var apiUrl = "api/products?pageSize=100&filterBool=false";
             if (!string.IsNullOrEmpty(searchString))
             {
                 apiUrl += $"&search={searchString}";
@@ -106,12 +105,12 @@ namespace FlowerShop_WebApp.Areas.Admin.Controllers
 
                 if (response.IsSuccessStatusCode)
                 {
-                    TempData["SuccessMessage"] = "Product created successfully!";
+                    TempData["SuccessMessage"] = "Tạo sản phẩm thành công!";
                     return RedirectToAction(nameof(Index));
                 }
                 ModelState.AddModelError(
                     string.Empty,
-                    "Error creating product. Please check API logs."
+                    "Lỗi khi tạo sản phẩm. Vui lòng kiểm tra lại thông tin."
                 );
             }
             model.CategoryList = await GetCategorySelectListAsync();
@@ -122,7 +121,7 @@ namespace FlowerShop_WebApp.Areas.Admin.Controllers
         public async Task<IActionResult> Edit(Guid id)
         {
             var client = CreateApiClient();
-            var response = await client.GetAsync($"api/products/{id}");
+            var response = await client.GetAsync($"api/products/admin/{id}");
 
             if (response.IsSuccessStatusCode)
             {
@@ -186,10 +185,10 @@ namespace FlowerShop_WebApp.Areas.Admin.Controllers
 
                 if (response.IsSuccessStatusCode)
                 {
-                    TempData["SuccessMessage"] = "Product updated successfully!";
+                    TempData["SuccessMessage"] = "Cập nhật sản phẩm thành công!";
                     return RedirectToAction(nameof(Index));
                 }
-                ModelState.AddModelError(string.Empty, "Error updating product.");
+                ModelState.AddModelError(string.Empty, "Lỗi khi cập nhật sản phẩm.");
             }
             model.CategoryList = await GetCategorySelectListAsync(model.CategoryId);
             return View(model);
@@ -199,7 +198,7 @@ namespace FlowerShop_WebApp.Areas.Admin.Controllers
         public async Task<IActionResult> Delete(Guid id)
         {
             var client = CreateApiClient();
-            var response = await client.GetAsync($"api/products/{id}");
+            var response = await client.GetAsync($"api/products/admin/{id}");
             if (response.IsSuccessStatusCode)
             {
                 var product = await response.Content.ReadFromJsonAsync<ProductViewModel>(
@@ -219,11 +218,11 @@ namespace FlowerShop_WebApp.Areas.Admin.Controllers
             var response = await client.DeleteAsync($"api/products/{id}");
             if (response.IsSuccessStatusCode)
             {
-                TempData["SuccessMessage"] = "Product deleted successfully!";
+                TempData["SuccessMessage"] = "Xóa sản phẩm thành công!";
             }
             if (!response.IsSuccessStatusCode)
             {
-                TempData["ErrorMessage"] = "Error deleting product.";
+                TempData["ErrorMessage"] = "Lỗi xóa sản phẩm.";
             }
             return RedirectToAction(nameof(Index));
         }

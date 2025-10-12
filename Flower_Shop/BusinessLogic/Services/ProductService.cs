@@ -24,7 +24,7 @@ namespace BusinessLogic.Services
         public async Task<ProductDto?> GetProductByIdAsync(Guid productId)
         {
             var product = await _unitOfWork.Product.GetAsync(
-                filter: p => p.ProductId == productId,
+                filter: p => p.ProductId == productId && p.IsActive,
                 includeProperties: "Category,Images"
             );
 
@@ -153,7 +153,10 @@ namespace BusinessLogic.Services
             var productsQuery = _unitOfWork.Product.GetQueryable(
                 includeProperties: "Category,Images"
             );
-
+            if (queryParameters.FilterBool == null || queryParameters.FilterBool == true)
+            {
+                productsQuery = productsQuery.Where(p => p.IsActive);
+            }
             if (queryParameters.FilterCategoryId.HasValue)
             {
                 productsQuery = productsQuery.Where(p =>
@@ -191,6 +194,15 @@ namespace BusinessLogic.Services
                 PageNumber = queryParameters.PageNumber,
                 PageSize = queryParameters.PageSize,
             };
+        }
+
+        public async Task<ProductDto?> GetProductByIdForAdminAsync(Guid productId)
+        {
+            var product = await _unitOfWork.Product.GetAsync(
+                filter: p => p.ProductId == productId,
+                includeProperties: "Category,Images"
+            );
+            return product == null ? null : _mapper.Map<ProductDto>(product);
         }
     }
 }
