@@ -24,7 +24,6 @@ namespace FlowerShop_WebApp.Areas.Admin.Controllers
             _logger = logger;
         }
 
-        // GET: /Admin/Users
         public async Task<IActionResult> Index(string searchString)
         {
             var client = CreateApiClient();
@@ -35,21 +34,21 @@ namespace FlowerShop_WebApp.Areas.Admin.Controllers
             }
 
             var response = await client.GetAsync(apiUrl);
+            var users = new List<UserViewModel>();
 
             if (response.IsSuccessStatusCode)
             {
                 var pagedResult = await response.Content.ReadFromJsonAsync<
                     PagedResultViewModel<UserViewModel>
                 >(_jsonOptions);
-                ViewBag.CurrentFilter = searchString;
-                return View(pagedResult?.Items ?? new List<UserViewModel>());
+                users = pagedResult?.Items.ToList() ?? new List<UserViewModel>();
             }
-
-            return View(new List<UserViewModel>());
+            ViewBag.CurrentFilter = searchString;
+            return View(users);
         }
 
-        // GET: /Admin/Users/Edit/{id}
-        public async Task<IActionResult> Edit(Guid id)
+        [HttpGet]
+        public async Task<IActionResult> _EditPartial(Guid id)
         {
             var client = CreateApiClient();
             var response = await client.GetAsync($"api/users/{id}");
@@ -61,47 +60,46 @@ namespace FlowerShop_WebApp.Areas.Admin.Controllers
                     return NotFound();
 
                 ViewBag.Roles = new List<string> { "Khách hàng", "Quản trị viên" };
-
-                return View(user);
+                return PartialView("_UserFormPartial", user);
             }
 
             return NotFound();
         }
 
-        // POST: /Admin/Users/Edit/{id}
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Edit(Guid id, UserViewModel model)
+        public async Task<IActionResult> Edit(UserViewModel model)
         {
-            if (id != model.UserId)
-                return BadRequest();
+            if (!ModelState.IsValid)
+            {
+                return new BadRequestObjectResult(
+                    new
+                    {
+                        success = false,
+                        errors = ModelState
+                            .Values.SelectMany(v => v.Errors)
+                            .Select(e => e.ErrorMessage),
+                    }
+                );
+            }
 
-            // === BẮT ĐẦU SỬA LỖI ===
-            // Chuyển đổi giá trị tiếng Việt từ dropdown về giá trị Enum tiếng Anh trước khi gửi đi
             var roleToSend = model.Role == "Quản trị viên" ? "Admin" : "Customer";
             var updateRequest = new { model.UserId, Role = roleToSend };
-            // === KẾT THÚC SỬA LỖI ===
 
             var client = CreateApiClient();
             var response = await client.PutAsJsonAsync("api/users", updateRequest);
 
             if (response.IsSuccessStatusCode)
             {
-                TempData["SuccessMessage"] = "Cập nhật vai trò người dùng thành công!";
-                return RedirectToAction(nameof(Index));
+                return new OkObjectResult(
+                    new { success = true, message = "Cập nhật vai trò thành công!" }
+                );
             }
 
-            var errorContent = await response.Content.ReadAsStringAsync();
-            _logger.LogError(
-                "Failed to update user role for UserId {UserId}. API Response: {Response}",
-                id,
-                errorContent
+            _logger.LogError("Failed to update user role for UserId {UserId}", model.UserId);
+            return new BadRequestObjectResult(
+                new { success = false, errors = new[] { "Lỗi khi cập nhật vai trò." } }
             );
-            TempData["ErrorMessage"] = "Lỗi khi cập nhật vai trò người dùng.";
-
-            ViewBag.Roles = new List<string> { "Khách hàng", "Quản trị viên" };
-
-            return View(model);
         }
 
         private HttpClient CreateApiClient()
