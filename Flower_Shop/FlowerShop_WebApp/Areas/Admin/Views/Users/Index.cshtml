@@ -4,7 +4,7 @@
 }
 
 <div class="page-header">
-    <h1 class="h2">@ViewData["Title"]</h1>
+    <h1 class="display-font">@ViewData["Title"]</h1>
 </div>
 
 <div class="card management-card">
@@ -15,8 +15,8 @@
             <button type="submit" class="btn btn-outline-primary"><i class="fas fa-search"></i></button>
         </form>
     </div>
-    <div class="card-body p-0" id="userTableContainer">
-        @await Html.PartialAsync("_UserTablePartial", Model)
+    <div class="card-body" id="userTableContainer">
+       @await Html.PartialAsync("_UserTablePartial", Model)
     </div>
 </div>
 
@@ -28,11 +28,9 @@
     </div>
 </div>
 
-
 @section Styles {
     <link rel="stylesheet" href="~/css/admin-management.css" asp-append-version="true" />
 }
-
 @section Scripts {
     <partial name="_ValidationScriptsPartial" />
     <script src="~/js/user-manager.js" asp-append-version="true"></script>

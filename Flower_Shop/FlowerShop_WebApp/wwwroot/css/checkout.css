@@ -1,152 +1,73 @@
 ﻿/*
- * CSS dành riêng cho Trang Giỏ hàng & Thanh toán
+ * CSS Trang Thanh toán - Cải tiến
 */
 
-/* --- CÁC PHẦN CHUNG --- */
+.checkout-card {
+    background-color: var(--surface-color);
+    border-radius: 12px;
+    padding: 2.5rem;
+    box-shadow: var(--shadow-sm);
+    margin-bottom: 2rem;
+}
+
+    .checkout-card h4 {
+        font-family: var(--font-display);
+        font-size: 1.8rem;
+        margin-bottom: 1.5rem;
+        display: flex;
+        align-items: center;
+    }
+
+        .checkout-card h4 .step-icon {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            background-color: var(--secondary-color);
+            color: white;
+            font-size: 1.2rem;
+            margin-right: 1rem;
+            font-family: var(--font-primary);
+        }
+
+.form-label {
+    font-weight: 600;
+    margin-bottom: 0.5rem;
+}
+
 .form-control, .form-select {
     border-radius: 8px;
-    padding: 10px 15px;
+    padding: 12px 15px;
+    border: 1px solid var(--border-color);
 }
 
     .form-control:focus, .form-select:focus {
-        border-color: var(--primary-pink-dark);
-        box-shadow: 0 0 0 0.25rem rgba(231, 84, 128, 0.25);
+        border-color: var(--primary-color);
+        box-shadow: 0 0 0 0.25rem rgba(217, 102, 131, 0.25);
     }
 
-/* --- TRANG THANH TOÁN --- */
-
-.checkout-section .card {
-    border: 1px solid var(--border-color);
-    border-radius: 12px;
-    background-color: #fff;
-    margin-bottom: 1.5rem;
-}
-
-.checkout-section .card-header {
-    background-color: transparent;
-    border-bottom: 1px solid var(--border-color);
-    padding: 1rem 1.5rem;
-}
-
-    .checkout-section .card-header h5 {
-        margin: 0;
-        font-family: var(--font-family-serif);
-        font-weight: 700;
-    }
-
-.checkout-section .card-body {
+/* --- Lựa chọn địa chỉ/thanh toán --- */
+.choice-item {
     padding: 1.5rem;
-}
-
-/* --- Lựa chọn địa chỉ đã lưu --- */
-.saved-address-item {
-    padding: 1rem;
-    border: 1px solid var(--border-color);
+    border: 2px solid var(--border-color);
     border-radius: 8px;
     margin-bottom: 1rem;
     cursor: pointer;
     transition: all 0.2s ease-in-out;
 }
 
-    .saved-address-item:hover {
-        border-color: var(--primary-pink);
-        background-color: #fdf2f4;
+    .choice-item:hover {
+        border-color: var(--secondary-color);
     }
 
-    .saved-address-item.selected {
-        border-color: var(--primary-pink-dark);
-        background-color: #fdf2f4;
-        box-shadow: 0 0 10px rgba(231, 84, 128, 0.3);
+    .choice-item.selected {
+        border-color: var(--primary-color);
+        box-shadow: 0 0 15px rgba(217, 102, 131, 0.2);
     }
 
-    .saved-address-item input[type="radio"] {
-        display: none; /* Ẩn radio button mặc định */
-    }
-
-/* --- Lựa chọn phương thức thanh toán --- */
-.payment-method-item {
-    display: flex;
-    align-items: center;
-    padding: 1rem;
-    border: 1px solid var(--border-color);
-    border-radius: 8px;
-    cursor: pointer;
-    transition: all 0.2s ease-in-out;
-}
-
-    .payment-method-item:not(:last-child) {
-        margin-bottom: 1rem;
-    }
-
-    .payment-method-item:hover {
-        border-color: var(--primary-pink);
-        background-color: #fdf2f4;
-    }
-
-    .payment-method-item.selected {
-        border-color: var(--primary-pink-dark);
-        background-color: #fdf2f4;
-    }
-
-    .payment-method-item input[type="radio"] {
+    .choice-item input[type="radio"] {
+        transform: scale(1.2);
         margin-right: 1rem;
     }
-
-    .payment-method-item .payment-icon {
-        font-size: 1.5rem;
-        margin-right: 1rem;
-        color: var(--primary-pink-dark);
-    }
-
-
-/* --- Tóm tắt đơn hàng (Checkout) --- */
-.order-summary-card {
-    background-color: #fff;
-    border-radius: 12px;
-    padding: 1.5rem;
-    border: 1px solid var(--border-color);
-    position: sticky;
-    top: 20px;
-}
-
-    .order-summary-card h5 {
-        font-family: var(--font-family-serif);
-        font-weight: 700;
-        margin-bottom: 1.5rem;
-    }
-
-.summary-item {
-    display: flex;
-    align-items: center;
-    padding: 1rem 0;
-    border-bottom: 1px solid var(--border-color);
-}
-
-    .summary-item:last-child {
-        border-bottom: none;
-    }
-
-.summary-item-image {
-    width: 60px;
-    height: 60px;
-    object-fit: cover;
-    border-radius: 8px;
-    margin-right: 1rem;
-}
-
-.summary-item-details {
-    flex-grow: 1;
-}
-
-.summary-item-name {
-    font-weight: 500;
-}
-
-.summary-item-price {
-    font-weight: 700;
-}
-
-.summary-item-quantity {
-    color: var(--text-light);
-    font-size: 0.9rem;
-}

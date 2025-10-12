@@ -1,17 +1,18 @@
 ﻿/*
- * CSS chung cho các trang quản lý (Products, Categories, Orders, Users)
+ * CSS Chung cho các trang quản lý - Hoàn thiện
 */
 
-/* --- Card chứa nội dung chính --- */
 .management-card {
-    background-color: #fff;
-    border-radius: .35rem;
+    background-color: var(--admin-surface-color);
+    border-radius: 12px;
+    border: none;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.05);
 }
 
     .management-card .card-header {
-        background-color: #f8f9fc;
+        background-color: transparent;
         border-bottom: 1px solid var(--admin-border-color);
-        padding: 1rem 1.5rem;
+        padding: 1.5rem;
         display: flex;
         justify-content: space-between;
         align-items: center;
@@ -19,82 +20,55 @@
 
         .management-card .card-header .card-title {
             margin: 0;
-            font-size: 1.2rem;
-            font-weight: 700;
-            color: var(--admin-primary);
+            font-size: 1.25rem;
+            font-weight: 600;
         }
 
     .management-card .card-body {
-        padding: 1.5rem;
+        padding: 0;
+    }
+
+    .management-card .card-footer {
+        background-color: transparent;
+        border-top: 1px solid var(--admin-border-color);
     }
 
 /* --- Bảng dữ liệu --- */
-.table th {
-    white-space: nowrap;
+.table {
+    margin-bottom: 0;
 }
 
-.table .product-image-thumb {
-    width: 50px;
-    height: 50px;
-    object-fit: cover;
-    border-radius: .35rem;
-}
-
-/* --- Form --- */
-.form-card {
-    background-color: #fff;
-    border-radius: .35rem;
-}
-
-    .form-card .card-header {
-        background-color: #f8f9fc;
-        border-bottom: 1px solid var(--admin-border-color);
-        padding: 1rem 1.5rem;
+    .table th {
+        white-space: nowrap;
+        font-weight: 600;
+        color: var(--admin-text-light);
+        text-transform: uppercase;
+        font-size: 0.85rem;
+        border-bottom-width: 1px;
+        padding: 1.25rem 1.5rem;
     }
 
-        .form-card .card-header .card-title {
-            margin: 0;
-            font-size: 1.2rem;
-            font-weight: 700;
-            color: var(--admin-primary);
-        }
-
-    .form-card .card-body {
-        padding: 1.5rem;
+    .table td {
+        padding: 1.25rem 1.5rem;
+        vertical-align: middle;
     }
 
-/* --- Trang chi tiết đơn hàng (Admin) --- */
-.order-detail-admin .list-group-item strong {
-    color: var(--admin-text-dark);
-}
-
-.order-detail-admin .update-status-card {
-    background-color: #f8f9fc;
-}
-
-.image-thumbnail-container {
-    position: relative;
-    width: 80px;
-    height: 80px;
-}
-
-    .image-thumbnail-container .img-thumbnail {
-        width: 100%;
-        height: 100%;
+    .table .product-image-thumb {
+        width: 50px;
+        height: 50px;
         object-fit: cover;
+        border-radius: 8px;
     }
 
-    .image-thumbnail-container .btn-delete-image {
-        position: absolute;
-        top: -5px;
-        right: -5px;
-        background-color: white;
-        border-radius: 50%;
-        box-shadow: 0 1px 3px rgba(0,0,0,0.2);
-        opacity: 0.5;
-        transition: opacity 0.2s ease;
-    }
+/* Trạng thái badges */
+.badge {
+    padding: 0.5em 0.8em;
+    font-weight: 600;
+}
 
-    .image-thumbnail-container:hover .btn-delete-image {
-        opacity: 1;
-    }
+/* Nút hành động trong bảng */
+.action-buttons .btn {
+    margin-left: 0.5rem;
+}
+
+/* ... Các style khác cho form và modal vẫn giữ nguyên ... */

@@ -1,51 +1,53 @@
 ﻿@model IEnumerable<FlowerShop_WebApp.Models.Products.ProductViewModel>
 
-<table class="table table-hover table-striped mb-0">
-    <thead class="table-light">
-        <tr>
-            <th style="width: 40%;">Tên sản phẩm</th>
-            <th>Danh mục</th>
-            <th>Giá</th>
-            <th class="text-center">Tồn kho</th>
-            <th class="text-center">Trạng thái</th>
-            <th></th>
-        </tr>
-    </thead>
-    <tbody>
-        @foreach (var item in Model)
-        {
+<div class="table-responsive">
+    <table class="table table-hover mb-0">
+        <thead>
             <tr>
-                <td>
-                    <div class="d-flex align-items-center">
-                        <img src="@(item.ImageUrls?.FirstOrDefault() ?? "https://via.placeholder.com/150")" class="product-image-thumb me-3" />
-                        <strong>@item.Name</strong>
-                    </div>
-                </td>
-                <td>@item.CategoryName</td>
-                <td>@item.Price.ToString("N0") VNĐ</td>
-                <td class="text-center">@item.StockQuantity</td>
-                <td class="text-center">
-                    @if (item.IsActive)
-                    {
-                        <span class="badge bg-success">Hoạt động</span>
-                    }
-                    else
-                    {
-                        <span class="badge bg-secondary">Ẩn</span>
-                    }
-                </td>
-                <td class="text-end">
-                    <button type="button" class="btn btn-sm btn-outline-secondary btn-edit" title="Sửa"
-                            data-bs-toggle="modal" data-bs-target="#productModal"
-                            data-url="@Url.Action("_CreateOrEditPartial", new { id = item.ProductId })">
-                        <i class="fas fa-edit"></i>
-                    </button>
-                    <button type="button" class="btn btn-sm btn-outline-danger btn-delete" title="Xóa"
-                            data-id="@item.ProductId" data-name="@item.Name">
-                        <i class="fas fa-trash"></i>
-                    </button>
-                </td>
+                <th style="width: 40%;">Sản phẩm</th>
+                <th>Danh mục</th>
+                <th class="text-end">Giá</th>
+                <th class="text-center">Tồn kho</th>
+                <th class="text-center">Trạng thái</th>
+                <th class="text-end"></th>
             </tr>
-        }
-    </tbody>
-</table>
+        </thead>
+        <tbody>
+            @foreach (var item in Model)
+            {
+                <tr>
+                    <td>
+                        <div class="d-flex align-items-center">
+                            <img src="@(item.ImageUrls?.FirstOrDefault() ?? "https://via.placeholder.com/150")" class="product-image-thumb me-3" />
+                            <strong class="text-dark">@item.Name</strong>
+                        </div>
+                    </td>
+                    <td>@item.CategoryName</td>
+                    <td class="text-end fw-bold">@item.Price.ToString("N0") VNĐ</td>
+                    <td class="text-center">@item.StockQuantity</td>
+                    <td class="text-center">
+                        @if (item.IsActive)
+                        {
+                            <span class="badge bg-success">Hoạt động</span>
+                        }
+                        else
+                        {
+                            <span class="badge bg-secondary">Ẩn</span>
+                        }
+                    </td>
+                    <td class="text-end action-buttons">
+                        <button type="button" class="btn btn-sm btn-outline-secondary btn-edit" title="Sửa"
+                                data-bs-toggle="modal" data-bs-target="#productModal"
+                                data-url="@Url.Action("_CreateOrEditPartial", new { id = item.ProductId })">
+                            <i class="fas fa-edit"></i>
+                        </button>
+                        <button type="button" class="btn btn-sm btn-outline-danger btn-delete" title="Xóa"
+                                data-id="@item.ProductId" data-name="@item.Name">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+</div>
