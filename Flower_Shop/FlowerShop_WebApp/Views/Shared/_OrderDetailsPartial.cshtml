@@ -1,0 +1,88 @@
+﻿@model FlowerShop_WebApp.Models.Orders.OrderViewModel
+@{
+    // Logic cho màu sắc của trạng thái đơn hàng
+    Func<string, string> getOrderStatusBadgeClass = status => status switch
+    {
+        "Chờ xử lý" => "bg-warning text-dark",
+        "Đã xác nhận" => "bg-info text-dark",
+        "Đang giao hàng" => "bg-primary",
+        "Hoàn thành" => "bg-success",
+        "Đã hủy" => "bg-danger",
+        _ => "bg-secondary"
+    };
+
+    Func<string, string> getPaymentStatusBadgeClass = status => status switch
+    {
+        "Chờ thanh toán" => "bg-warning text-dark",
+        "Đã thanh toán" => "bg-success",
+        "Đã hoàn tiền" => "bg-info text-dark",
+        _ => "bg-secondary"
+    };
+}
+<div class="modal-header">
+    <h5 class="modal-title" id="orderDetailModalLabel">Chi tiết Đơn hàng <code>#@Model.OrderId.ToString().Substring(0, 8)</code></h5>
+    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Đóng"></button>
+</div>
+<div class="modal-body">
+    <div class="row">
+        <div class="col-md-7">
+            <div class="card">
+                <div class="card-header">
+                    Các sản phẩm trong đơn
+                </div>
+                <div class="card-body">
+                    @foreach (var item in Model.Items)
+                    {
+                        <div class="row mb-3 border-bottom pb-3">
+                            <div class="col-8">
+                                <h6 class="mb-0">@item.ProductName</h6>
+                                <small class="text-muted">Số lượng: @item.Quantity x @item.UnitPrice.ToString("N0") VNĐ</small>
+                            </div>
+                            <div class="col-4 text-end">
+                                <strong>@item.LineTotal.ToString("N0") VNĐ</strong>
+                            </div>
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
+        <div class="col-md-5">
+            <div class="card">
+                <div class="card-header">
+                    Tóm tắt đơn hàng
+                </div>
+                <div class="card-body">
+                    <ul class="list-group list-group-flush">
+                        <li class="list-group-item d-flex justify-content-between">
+                            <span>Ngày đặt hàng:</span>
+                            <span>@Model.CreatedAt.ToString("d")</span>
+                        </li>
+                        <li class="list-group-item d-flex justify-content-between">
+                            <span>Trạng thái:</span>
+                            <span class="badge bg-success rounded-pill">@Model.Status</span>
+                        </li>
+                        <li class="list-group-item d-flex justify-content-between">
+                            <span>Phương thức TT:</span>
+                            <span>@Model.PaymentMethod</span>
+                        </li>
+                        <li class="list-group-item d-flex justify-content-between">
+                            <span>Trạng thái TT:</span>
+                            <span class="badge bg-warning text-dark rounded-pill">@Model.PaymentStatus</span>
+                        </li>
+                        <li class="list-group-item">
+                            <span>Địa chỉ giao hàng:</span>
+                            <div class="fw-bold text-end">@Model.ShippingAddress</div>
+                        </li>
+                        <li class="list-group-item d-flex justify-content-between bg-light">
+                            <strong>Tổng cộng:</strong>
+                            <strong class="text-danger">@Model.Total.ToString("N0") VNĐ</strong>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<div class="modal-footer">
+    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Đóng</button>
+</div>

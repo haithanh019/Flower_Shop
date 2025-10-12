@@ -23,25 +23,25 @@ namespace DataAccess.Entities
 
     public enum PaymentMethod
     {
-        [Display(Name = "CashOnDelivery")]
+        [Display(Name = "Thanh toán khi nhận hàng")]
         CashOnDelivery = 0,
 
-        [Display(Name = "PayOS")]
+        [Display(Name = "Thanh toán qua PayOS")]
         PayOS = 1,
     }
 
     public enum PaymentStatus
     {
-        [Display(Name = "Pending")]
+        [Display(Name = "Chờ thanh toán")]
         Pending = 0,
 
-        [Display(Name = "Accepted")]
+        [Display(Name = "Đã thanh toán")]
         Accepted = 1,
 
-        [Display(Name = "Delivered")]
+        [Display(Name = "Đã giao hàng")]
         Delivered = 2,
 
-        [Display(Name = "Refunded")]
+        [Display(Name = "Đã hoàn tiền")]
         Refunded = 3,
     }
 }

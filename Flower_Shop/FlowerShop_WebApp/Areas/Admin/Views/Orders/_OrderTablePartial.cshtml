@@ -1,0 +1,86 @@
+﻿@model PagedResultViewModel<OrderViewModel>
+
+@{
+    var currentPage = Model?.PageNumber ?? 1;
+    var totalPages = Model != null ? (int)Math.Ceiling((double)Model.TotalCount / Model.PageSize) : 1;
+    var currentStatusFilter = ViewBag.CurrentStatusFilter as string;
+
+    Func<string, string> getStatusBadgeClass = status => status switch
+    {
+        "Chờ xử lý" => "bg-warning text-dark",
+        "Đã xác nhận" => "bg-info text-dark",
+        "Đang giao hàng" => "bg-primary",
+        "Hoàn thành" => "bg-success",
+        "Đã hủy" => "bg-danger",
+        _ => "bg-secondary"
+    };
+}
+
+<div class="card-body p-0">
+    <table class="table table-striped table-hover mb-0">
+        <thead class="table-light">
+            <tr>
+                <th>Mã ĐH</th>
+                <th>Email Khách hàng</th>
+                <th>Ngày đặt</th>
+                <th>Tổng tiền</th>
+                <th>Trạng thái</th>
+                <th></th>
+            </tr>
+        </thead>
+        <tbody>
+            @if (Model != null && Model.Items.Any())
+            {
+                @foreach (var order in Model.Items)
+                {
+                    <tr>
+                        <td><code>#@order.OrderId.ToString().Substring(0, 8)</code></td>
+                        <td>@order.CustomerEmail</td>
+                        <td>@order.CreatedAt.ToString("d")</td>
+                        <td>@order.Total.ToString("N0") VNĐ</td>
+                        <td><span class="badge @getStatusBadgeClass(order.Status) rounded-pill">@order.Status</span></td>
+                        <td class="text-end">
+                            <button type="button" class="btn btn-sm btn-outline-primary btn-view-details"
+                                    data-bs-toggle="modal" data-bs-target="#orderModal"
+                                    data-url="@Url.Action("DetailsPartial", new { id = order.OrderId })">
+                                Xem chi tiết
+                            </button>
+                        </td>
+                    </tr>
+                }
+            }
+            else
+            {
+                <tr><td colspan="6" class="text-center">Không tìm thấy đơn hàng nào.</td></tr>
+            }
+        </tbody>
+    </table>
+</div>
+
+@if (totalPages > 1)
+{
+    <div class="card-footer">
+        <nav>
+            <ul class="pagination justify-content-center mb-0">
+                <li class="page-item @(currentPage == 1 ? "disabled" : "")">
+                    <a class="page-link" href="#" data-page="1" data-filter="@currentStatusFilter">Đầu</a>
+                </li>
+                <li class="page-item @(currentPage == 1 ? "disabled" : "")">
+                    <a class="page-link" href="#" data-page="@(currentPage - 1)" data-filter="@currentStatusFilter">Trước</a>
+                </li>
+                @for (int i = 1; i <= totalPages; i++)
+                {
+                    <li class="page-item @(i == currentPage ? "active" : "")">
+                        <a class="page-link" href="#" data-page="@i" data-filter="@currentStatusFilter">@i</a>
+                    </li>
+                }
+                <li class="page-item @(currentPage == totalPages ? "disabled" : "")">
+                    <a class="page-link" href="#" data-page="@(currentPage + 1)" data-filter="@currentStatusFilter">Sau</a>
+                </li>
+                <li class="page-item @(currentPage == totalPages ? "disabled" : "")">
+                    <a class="page-link" href="#" data-page="@totalPages" data-filter="@currentStatusFilter">Cuối</a>
+                </li>
+            </ul>
+        </nav>
+    </div>
+}

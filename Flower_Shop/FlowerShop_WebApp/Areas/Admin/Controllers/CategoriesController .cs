@@ -43,50 +43,21 @@ namespace FlowerShop_WebApp.Areas.Admin.Controllers
             return View(new List<CategoryViewModel>());
         }
 
-        // GET: /Admin/Categories/Create
-        public IActionResult Create()
+        [HttpGet]
+        public async Task<IActionResult> _CreateOrEditPartial(Guid? id)
         {
-            return View(new CategoryCreateRequest());
-        }
-
-        // POST: /Admin/Categories/Create
-        [HttpPost]
-        [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Create(CategoryCreateRequest model)
-        {
-            if (ModelState.IsValid)
+            if (id == null || id == Guid.Empty)
             {
-                var client = CreateApiClient();
-                var jsonContent = new StringContent(
-                    JsonSerializer.Serialize(model),
-                    Encoding.UTF8,
-                    "application/json"
-                );
-
-                var response = await client.PostAsync("api/categories", jsonContent);
-                if (response.IsSuccessStatusCode)
-                {
-                    TempData["SuccessMessage"] = "Category created successfully!";
-                    return RedirectToAction(nameof(Index));
-                }
-                ModelState.AddModelError(
-                    string.Empty,
-                    "Error creating category. The name might already exist."
-                );
+                // Trường hợp tạo mới
+                return PartialView("_CategoryFormPartial", new CategoryUpdateRequest());
             }
-            return View(model);
-        }
 
-        // GET: /Admin/Categories/Edit/{id}
-        public async Task<IActionResult> Edit(Guid id)
-        {
+            // Trường hợp chỉnh sửa
             var client = CreateApiClient();
             var response = await client.GetAsync($"api/categories/{id}");
             if (response.IsSuccessStatusCode)
             {
-                var jsonString = await response.Content.ReadAsStringAsync();
-                var category = JsonSerializer.Deserialize<CategoryViewModel>(
-                    jsonString,
+                var category = await response.Content.ReadFromJsonAsync<CategoryViewModel>(
                     _jsonOptions
                 );
                 if (category == null)
@@ -98,83 +69,104 @@ namespace FlowerShop_WebApp.Areas.Admin.Controllers
                     Name = category.Name,
                     Description = category.Description,
                 };
-                return View(model);
+                return PartialView("_CategoryFormPartial", model);
             }
             return NotFound();
         }
 
-        // POST: /Admin/Categories/Edit/{id}
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Edit(Guid id, CategoryUpdateRequest model)
+        public async Task<IActionResult> Create(CategoryUpdateRequest model)
         {
-            if (id != model.CategoryId)
-                return BadRequest();
-
-            if (ModelState.IsValid)
+            if (!ModelState.IsValid)
             {
-                var client = CreateApiClient();
-                var jsonContent = new StringContent(
-                    JsonSerializer.Serialize(model),
-                    Encoding.UTF8,
-                    "application/json"
+                return new BadRequestObjectResult(
+                    new
+                    {
+                        success = false,
+                        errors = ModelState
+                            .Values.SelectMany(v => v.Errors)
+                            .Select(e => e.ErrorMessage),
+                    }
                 );
-                var response = await client.PutAsync("api/categories", jsonContent);
-
-                if (response.IsSuccessStatusCode)
-                {
-                    TempData["SuccessMessage"] = "Category updated successfully!";
-                    return RedirectToAction(nameof(Index));
-                }
-                ModelState.AddModelError(string.Empty, "Error updating category.");
             }
-            return View(model);
-        }
 
-        // GET: /Admin/Categories/Delete/{id}
-        public async Task<IActionResult> Delete(Guid id)
-        {
             var client = CreateApiClient();
-            var response = await client.GetAsync($"api/categories/{id}");
+            var response = await client.PostAsJsonAsync("api/categories", model);
+
             if (response.IsSuccessStatusCode)
             {
-                var jsonString = await response.Content.ReadAsStringAsync();
-                var category = JsonSerializer.Deserialize<CategoryViewModel>(
-                    jsonString,
-                    _jsonOptions
+                return new OkObjectResult(
+                    new { success = true, message = "Tạo danh mục thành công!" }
                 );
-                return View(category);
             }
-            return NotFound();
+
+            return new BadRequestObjectResult(
+                new
+                {
+                    success = false,
+                    errors = new[] { "Lỗi khi tạo danh mục. Tên có thể đã tồn tại." },
+                }
+            );
         }
 
-        // POST: /Admin/Categories/Delete/{id}
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> Edit(CategoryUpdateRequest model)
+        {
+            if (!ModelState.IsValid)
+            {
+                return new BadRequestObjectResult(
+                    new
+                    {
+                        success = false,
+                        errors = ModelState
+                            .Values.SelectMany(v => v.Errors)
+                            .Select(e => e.ErrorMessage),
+                    }
+                );
+            }
+
+            var client = CreateApiClient();
+            var response = await client.PutAsJsonAsync("api/categories", model);
+
+            if (response.IsSuccessStatusCode)
+            {
+                return new OkObjectResult(
+                    new { success = true, message = "Cập nhật danh mục thành công!" }
+                );
+            }
+
+            return new BadRequestObjectResult(
+                new { success = false, errors = new[] { "Lỗi khi cập nhật danh mục." } }
+            );
+        }
+
         [HttpPost, ActionName("Delete")]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> DeleteConfirmed(Guid id)
         {
             var client = CreateApiClient();
             var response = await client.DeleteAsync($"api/categories/{id}");
+
             if (response.IsSuccessStatusCode)
             {
-                TempData["SuccessMessage"] = "Category deleted successfully!";
+                return new OkObjectResult(
+                    new { success = true, message = "Xóa danh mục thành công!" }
+                );
             }
-            if (!response.IsSuccessStatusCode)
-            {
-                TempData["ErrorMessage"] =
-                    "Error deleting category. It might be in use by some products.";
-            }
-            return RedirectToAction(nameof(Index));
+
+            return new BadRequestObjectResult(
+                new { success = false, message = "Lỗi khi xóa. Danh mục có thể đang được sử dụng." }
+            );
         }
 
         // --- PHƯƠNG THỨC HỖ TRỢ ---
-        // Phương thức này tạo HttpClient và đính kèm token từ Session
         private HttpClient CreateApiClient()
         {
             var client = _httpClientFactory.CreateClient("ApiClient");
             var token = HttpContext.Session.GetString("JWToken");
 
-            // *** THÊM LOG CHI TIẾT Ở ĐÂY ***
             if (string.IsNullOrEmpty(token))
             {
                 _logger.LogError("CreateApiClient: Token is NULL or EMPTY in session!");

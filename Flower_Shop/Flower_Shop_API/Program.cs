@@ -79,7 +79,6 @@ namespace Flower_Shop_API
             builder.Services.AddHostedService<BackgroundEmailSender>();
             builder.Services.AddSingleton<IEmailQueue, EmailQueue>();
             builder.Services.AddScoped<IPayOSService, PayOSService>();
-            builder.Services.AddScoped<IVietQRService, VietQRService>();
 
             // LLM client
             builder.Services.AddHttpClient<IGroqClient, GroqClient>(client =>

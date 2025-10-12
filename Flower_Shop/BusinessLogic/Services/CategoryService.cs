@@ -65,15 +65,13 @@ namespace BusinessLogic.Services
             return _mapper.Map<CategoryDto>(newCategory);
         }
 
-        public async Task UpdateCategoryAsync(CategoryUpdateRequest updateRequest)
+        public async Task<CategoryDto> UpdateCategoryAsync(CategoryUpdateRequest updateRequest)
         {
             var categoryToUpdate = await _unitOfWork.Category.GetAsync(c =>
                 c.CategoryId == updateRequest.CategoryId
             );
             if (categoryToUpdate == null)
             {
-                // Ném một exception chung khi không tìm thấy đối tượng để CẬP NHẬT/XÓA.
-                // Middleware sẽ bắt lỗi này và trả về 500 Internal Server Error.
                 throw new KeyNotFoundException(
                     $"Category with ID {updateRequest.CategoryId} not found."
                 );
@@ -81,6 +79,9 @@ namespace BusinessLogic.Services
 
             _mapper.Map(updateRequest, categoryToUpdate);
             await _unitOfWork.SaveAsync();
+
+            // Bổ sung: Trả về đối tượng DTO đã được cập nhật
+            return _mapper.Map<CategoryDto>(categoryToUpdate);
         }
 
         public async Task DeleteCategoryAsync(Guid categoryId)

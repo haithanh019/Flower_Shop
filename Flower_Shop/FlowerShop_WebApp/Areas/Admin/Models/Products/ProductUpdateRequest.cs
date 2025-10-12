@@ -8,31 +8,34 @@ namespace FlowerShop_WebApp.Areas.Admin.Models.Products
         [Required]
         public Guid ProductId { get; set; }
 
-        [Required]
+        [Display(Name = "Tên sản phẩm")]
+        [Required(ErrorMessage = "Vui lòng nhập tên sản phẩm.")]
         public string Name { get; set; } = string.Empty;
 
+        [Display(Name = "Mô tả")]
         public string? Description { get; set; }
 
-        [Range(0.01, double.MaxValue, ErrorMessage = "Price must be greater than 0.")]
+        [Display(Name = "Giá bán")]
+        [Range(0, double.MaxValue, ErrorMessage = "Giá phải lớn hơn 0.")]
+        [DisplayFormat(DataFormatString = "{0:N0}", ApplyFormatInEditMode = true)]
         public decimal Price { get; set; }
 
-        [Display(Name = "Category")]
-        [Required(ErrorMessage = "Please select a category.")]
+        [Display(Name = "Danh mục")]
+        [Required(ErrorMessage = "Vui lòng chọn một danh mục.")]
         public Guid CategoryId { get; set; }
 
-        [Range(0, int.MaxValue, ErrorMessage = "Stock must be a non-negative number.")]
+        [Display(Name = "Số lượng tồn kho")]
+        [Range(0, int.MaxValue, ErrorMessage = "Số lượng tồn kho phải là số không âm.")]
         public int StockQuantity { get; set; }
 
-        [Display(Name = "Is Active?")]
+        [Display(Name = "Kích hoạt hiển thị?")]
         public bool IsActive { get; set; }
 
-        // Dùng để hiển thị dropdown, không gửi đi
         public SelectList? CategoryList { get; set; }
 
-        [Display(Name = "New Images")]
+        [Display(Name = "Tải ảnh mới")]
         public List<IFormFile>? ImageFiles { get; set; }
 
-        // Có thể thêm thuộc tính để hiển thị ảnh cũ
         public ICollection<string>? ExistingImageUrls { get; set; }
     }
 }

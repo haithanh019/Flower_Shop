@@ -1,5 +1,5 @@
 ﻿@{
-    ViewData["Title"] = "Dashboard";
+    ViewData["Title"] = "Bảng điều khiển";
 }
 
 <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
@@ -12,8 +12,8 @@
             <div class="card-body">
                 <div class="row no-gutters align-items-center">
                     <div class="col me-2">
-                        <div class="text-xs fw-bold text-primary text-uppercase mb-1">Doanh thu (Completed)</div>
-                        <div class="h5 mb-0 fw-bold text-gray-800">@ViewBag.TotalRevenue.ToString("N0") VND</div>
+                        <div class="text-xs fw-bold text-primary text-uppercase mb-1">Doanh thu (Hoàn thành)</div>
+                        <div class="h5 mb-0 fw-bold text-gray-800">@ViewBag.TotalRevenue.ToString("N0") VNĐ</div>
                     </div>
                     <div class="col-auto">
                         <i class="fas fa-dollar-sign fa-2x text-gray-300"></i>
@@ -77,5 +77,5 @@
 </div>
 
 @section Styles {
-    <link rel="stylesheet" href="~/css/admin.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/css/dashboard.css" asp-append-version="true" />
 }

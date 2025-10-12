@@ -6,7 +6,7 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace FlowerShop_WebApp.Controllers
 {
-    [Authorize] // Bất kỳ ai muốn vào trang giỏ hàng đều phải đăng nhập
+    [Authorize]
     public class CartController : Controller
     {
         private readonly IHttpClientFactory _httpClientFactory;
@@ -32,7 +32,6 @@ namespace FlowerShop_WebApp.Controllers
             return View(new CartViewModel());
         }
 
-        [Authorize] // Thêm attribute ở đây để khi bấm nút, người dùng sẽ bị chuyển đến trang đăng nhập nếu chưa login
         public async Task<IActionResult> AddToCart(Guid productId, int quantity = 1)
         {
             var client = CreateApiClient();
@@ -42,7 +41,7 @@ namespace FlowerShop_WebApp.Controllers
 
             if (!response.IsSuccessStatusCode)
             {
-                TempData["ErrorMessage"] = "Could not add item to cart.";
+                TempData["ErrorMessage"] = "Không thể thêm mặt hàng vào giỏ hàng.";
             }
 
             return Redirect(Request.Headers["Referer"].ToString() ?? "/");

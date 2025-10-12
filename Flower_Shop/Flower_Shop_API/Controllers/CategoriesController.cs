@@ -52,8 +52,8 @@ namespace Flower_Shop_API.Controllers
         [Authorize(Roles = "Admin")]
         public async Task<IActionResult> UpdateCategory([FromBody] CategoryUpdateRequest request)
         {
-            await _facadeService.CategoryService.UpdateCategoryAsync(request);
-            return NoContent(); // HTTP 204 No Content
+            var updatedCategory = await _facadeService.CategoryService.UpdateCategoryAsync(request);
+            return Ok(updatedCategory);
         }
 
         [HttpDelete("{id}")]

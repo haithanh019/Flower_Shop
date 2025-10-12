@@ -3,37 +3,92 @@
     ViewData["Title"] = "Home Page";
 }
 
-<div class="hero-section mb-5">
-    <h1 class="display-4">Welcome to Our Flower Shop</h1>
-    <p class="lead">Find the perfect flowers for any occasion.</p>
-    <a asp-controller="Products" asp-action="Index" class="btn btn-light btn-lg">Shop Now</a>
+<div class="hero-section">
+    <div class="container">
+        <h1 class="display-4">Vẻ Đẹp Tỏa Sáng Từ Những Bông Hoa</h1>
+        <p class="lead">Gửi gắm yêu thương qua từng đóa hoa tươi thắm.</p>
+        <a asp-controller="Products" asp-action="Index" class="btn btn-primary btn-lg">
+            <i class="fas fa-shopping-bag me-2"></i>Khám Phá Ngay
+        </a>
+    </div>
 </div>
 
-
-<h2 class="text-center mb-4">Featured Products</h2>
-<div class="row">
-    @if (Model != null && Model.Any())
-    {
-        @foreach (var product in Model)
+<div class="container mt-5">
+    <h2 class="page-section-title">Sản phẩm nổi bật</h2>
+    <div class="row">
+        @if (Model != null && Model.Any())
         {
-            <div class="col-lg-3 col-md-4 col-sm-6 mb-4">
-                <div class="card h-100 product-card">
-                    <img src="@(product.ImageUrls?.FirstOrDefault() ?? "https://via.placeholder.com/300x250?text=Flower")" class="product-card-img-top" alt="@product.Name">
-                    <div class="card-body d-flex flex-column">
-                        <h5 class="card-title">
-                            <a class="text-decoration-none text-dark" asp-controller="Home" asp-action="ProductDetail" asp-route-id="@product.ProductId">@product.Name</a>
-                        </h5>
-                        <p class="card-text">@product.Price.ToString("N0") VND</p>
-                        <div class="mt-auto">
-                            <a asp-controller="Cart" asp-action="AddToCart" asp-route-productId="@product.ProductId" class="btn btn-primary w-100">Add to Cart</a>
+            @foreach (var product in Model)
+            {
+                <div class="col-lg-3 col-md-4 col-sm-6 mb-4">
+                    <div class="card h-100 product-card">
+                        <img src="@(product.ImageUrls?.FirstOrDefault() ?? "https://via.placeholder.com/300x250?text=Flower")" class="product-card-img-top" alt="@product.Name">
+                        <div class="card-body d-flex flex-column">
+                            <h5 class="card-title">
+                                <a class="text-decoration-none text-dark" asp-controller="Home" asp-action="ProductDetail" asp-route-id="@product.ProductId">@product.Name</a>
+                            </h5>
+                            <p class="card-text">@product.Price.ToString("N0") VND</p>
+                            <div class="mt-auto">
+                                <a asp-controller="Cart" asp-action="AddToCart" asp-route-productId="@product.ProductId" class="btn btn-primary w-100">
+                                    <i class="fas fa-cart-plus me-2"></i>Thêm vào giỏ
+                                </a>
+                            </div>
                         </div>
                     </div>
                 </div>
-            </div>
+            }
         }
-    }
-    else
-    {
-        <p class="text-center">No featured products available at the moment.</p>
-    }
+        else
+        {
+            <p class="text-center">Chưa có sản phẩm nổi bật nào.</p>
+        }
+    </div>
 </div>
+
+<div class="feature-section">
+    <div class="container">
+        <h2 class="page-section-title">Dịch vụ của chúng tôi</h2>
+        <div class="row text-center">
+            <div class="col-md-4">
+                <div class="feature-icon">
+                    <i class="fas fa-shipping-fast"></i>
+                </div>
+                <h3>Giao Hàng Nhanh</h3>
+                <p class="text-muted">Giao hoa tận nơi trong vòng 2 giờ tại nội thành.</p>
+            </div>
+            <div class="col-md-4">
+                <div class="feature-icon">
+                    <i class="fas fa-gift"></i>
+                </div>
+                <h3>Gói Quà Miễn Phí</h3>
+                <p class="text-muted">Mỗi bó hoa đều được gói cẩn thận và kèm thiệp miễn phí.</p>
+            </div>
+            <div class="col-md-4">
+                <div class="feature-icon">
+                    <i class="fas fa-check-circle"></i>
+                </div>
+                <h3>Hoa Tươi Mỗi Ngày</h3>
+                <p class="text-muted">Chúng tôi cam kết hoa luôn tươi mới khi đến tay bạn.</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="testimonial-section">
+    <div class="container">
+        <h2 class="page-section-title">Khách hàng nói gì</h2>
+        <div class="row">
+            <div class="col-md-8 mx-auto">
+                <div class="testimonial-item">
+                    <img src="https://i.pravatar.cc/150?img=12" alt="Customer photo">
+                    <p class="lead">"Hoa rất tươi và đẹp, giao hàng đúng giờ. Mình rất hài lòng và sẽ tiếp tục ủng hộ shop!"</p>
+                    <p class="customer-name">- Chị An Nhiên -</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Styles {
+    <link rel="stylesheet" href="~/css/home.css" asp-append-version="true" />
+}

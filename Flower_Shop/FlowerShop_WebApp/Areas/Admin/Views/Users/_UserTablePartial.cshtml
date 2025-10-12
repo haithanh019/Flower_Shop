@@ -1,0 +1,40 @@
+﻿@model IEnumerable<FlowerShop_WebApp.Models.Users.UserViewModel>
+
+<table class="table table-striped table-bordered">
+    <thead class="table-light">
+        <tr>
+            <th>Họ và tên</th>
+            <th>Email</th>
+            <th>Số điện thoại</th>
+            <th>Vai trò</th>
+            <th></th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var user in Model)
+        {
+            <tr>
+                <td>@user.FullName</td>
+                <td>@user.Email</td>
+                <td>@user.PhoneNumber</td>
+                <td>
+                    @if (user.Role == "Quản trị viên")
+                    {
+                        <span class="badge bg-danger rounded-pill">@user.Role</span>
+                    }
+                    else
+                    {
+                        <span class="badge bg-secondary rounded-pill">@user.Role</span>
+                    }
+                </td>
+                <td class="text-end">
+                    <button type="button" class="btn btn-sm btn-outline-secondary btn-edit" title="Sửa"
+                            data-bs-toggle="modal" data-bs-target="#userModal"
+                            data-url="@Url.Action("_EditPartial", new { id = user.UserId })">
+                        <i class="fas fa-edit"></i> Sửa vai trò
+                    </button>
+                </td>
+            </tr>
+        }
+    </tbody>
+</table>

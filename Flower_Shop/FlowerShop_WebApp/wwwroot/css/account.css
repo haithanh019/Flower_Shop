@@ -1,0 +1,45 @@
+﻿/*
+ * CSS dành riêng cho các trang Tài khoản (Đăng nhập, Đăng ký)
+*/
+
+.account-page {
+    min-height: 70vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: url('https://images.unsplash.com/photo-1560269386-2f1728237937?q=80&w=1936&auto=format&fit=crop') no-repeat center center;
+    background-size: cover;
+    padding: 4rem 0;
+    border-radius: 20px;
+    margin-top: 2rem;
+}
+
+.account-card {
+    width: 100%;
+    max-width: 450px;
+    background-color: rgba(255, 255, 255, 0.95); /* Nền mờ để nhìn thấy ảnh nền */
+    backdrop-filter: blur(10px);
+    border-radius: 12px;
+    border: 1px solid var(--border-color);
+    box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.15);
+}
+
+    .account-card .card-body {
+        padding: 2.5rem;
+    }
+
+    .account-card .card-title {
+        font-family: var(--font-family-serif);
+        font-weight: 700;
+        margin-bottom: 2rem;
+        font-size: 2rem;
+    }
+
+.form-floating > .form-control {
+    height: calc(3.5rem + 2px);
+    padding: 1rem .75rem;
+}
+
+.form-floating > label {
+    padding: 1rem .75rem;
+}
