@@ -1,5 +1,6 @@
 ﻿using System.Globalization;
 using System.Net.Http.Headers;
+using System.Text.Json;
 using Microsoft.AspNetCore.DataProtection;
 using Microsoft.AspNetCore.Localization;
 
@@ -53,7 +54,12 @@ namespace FlowerShop_WebApp
                     }
                 );
             // Add services to the container.
-            builder.Services.AddControllersWithViews();
+            builder
+                .Services.AddControllersWithViews()
+                .AddJsonOptions(options =>
+                {
+                    options.JsonSerializerOptions.PropertyNamingPolicy = JsonNamingPolicy.CamelCase;
+                });
             builder.Services.AddHttpContextAccessor();
 
             var app = builder.Build();
