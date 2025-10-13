@@ -1,114 +1,92 @@
 ﻿/*
- * Giao diện làm mới cho Admin Panel
+ * Giao diện Admin - Cải tiến
 */
 
 :root {
     --admin-bg: #f8f9fa;
-    --admin-sidebar-bg: #212529;
-    --admin-header-bg: #fff;
-    --admin-card-bg: #fff;
-    --admin-primary: #4e73df;
-    --admin-success: #1cc88a;
-    --admin-info: #36b9cc;
-    --admin-warning: #f6c23e;
-    --admin-danger: #e74a3b;
-    --admin-text-dark: #3a3b45;
-    --admin-text-light: #858796;
-    --admin-border-color: #e3e6f0;
+    --admin-sidebar-bg: #2c3e50; /* Xanh đen than */
+    --admin-header-bg: #ffffff;
+    --admin-surface-color: #ffffff;
+    --admin-primary: #3498db; /* Xanh dương sáng */
+    --admin-success: #2ecc71;
+    --admin-info: #9b59b6; /* Tím */
+    --admin-warning: #f1c40f;
+    --admin-danger: #e74c3c;
+    --admin-text-dark: #34495e;
+    --admin-text-light: #95a5a6;
+    --admin-border-color: #ecf0f1;
 }
 
 body {
     background-color: var(--admin-bg);
-    font-family: 'Nunito', sans-serif; /* Sử dụng lại font Nunito cho đồng bộ */
 }
 
-/* --- Layout chính --- */
-#admin-wrapper {
+/* --- Layout chính & Sidebar --- */
+#wrapper {
     display: flex;
 }
 
 #sidebar-wrapper {
-    min-height: 100vh;
-    width: 250px;
+    width: 260px;
     background-color: var(--admin-sidebar-bg);
-    transition: margin-left 0.25s ease-out;
+    transition: margin-left 0.3s ease;
+    min-height: 100vh;
 }
 
-#page-content-wrapper {
-    width: 100%;
+#wrapper.toggled #sidebar-wrapper {
+    margin-left: -260px;
 }
 
-/* --- Sidebar --- */
 .sidebar-heading {
-    padding: 1.5rem 1.25rem;
-    font-family: 'Quicksand', sans-serif;
+    padding: 1.5rem;
+    font-family: var(--font-primary);
     font-weight: 700;
     color: #fff;
-    font-size: 1.2rem;
+    font-size: 1.5rem;
     border-bottom: 1px solid rgba(255, 255, 255, 0.1);
 }
 
+    .sidebar-heading i {
+        color: var(--admin-primary);
+    }
+
 .list-group-item-action {
-    background-color: var(--admin-sidebar-bg);
+    background-color: transparent;
     border: none;
     color: rgba(255, 255, 255, 0.7);
-    padding: 1rem 1.25rem;
-    font-weight: 700;
+    padding: 1rem 1.5rem;
+    font-weight: 600;
+    border-left: 4px solid transparent;
 }
 
     .list-group-item-action:hover, .list-group-item-action:focus {
-        background-color: #343a40;
+        background-color: rgba(255, 255, 255, 0.05);
         color: #fff;
     }
 
     .list-group-item-action.active {
-        background-color: var(--admin-primary);
+        background-color: rgba(0,0,0,0.2);
         color: #fff;
+        border-left-color: var(--admin-primary);
     }
 
-/* --- Header / Topbar --- */
-.admin-topbar {
-    background-color: var(--admin-header-bg);
-    border-bottom: 1px solid var(--admin-border-color);
-    box-shadow: 0 0.15rem 1.75rem 0 rgba(58, 59, 69, .15);
-    padding: 1rem 1.5rem;
+/* --- Content & Topbar --- */
+#page-content-wrapper {
+    width: 100%;
 }
 
-/* --- Nội dung trang --- */
-.page-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 1.5rem 0;
-    margin-bottom: 1.5rem;
+.navbar.admin-topbar {
+    background-color: var(--admin-header-bg);
     border-bottom: 1px solid var(--admin-border-color);
+    box-shadow: 0 1px 5px rgba(0,0,0,0.05);
+}
+
+.page-header {
+    padding: 2rem 0 1.5rem 0;
 }
 
     .page-header h1 {
         margin: 0;
-        font-size: 1.75rem;
+        font-size: 2.2rem;
         color: var(--admin-text-dark);
     }
-
-/* --- Card & Table --- */
-.card {
-    border: 1px solid var(--admin-border-color);
-    box-shadow: 0 0.15rem 1.75rem 0 rgba(58, 59, 69, .15) !important;
-}
-
-.table {
-    color: var(--admin-text-light);
-}
-
-    .table thead th {
-        color: var(--admin-primary);
-        font-weight: 700;
-    }
-
-    .table tbody tr {
-        background-color: var(--admin-card-bg);
-    }
-
-.table-hover tbody tr:hover {
-    background-color: #f8f9fc;
-}

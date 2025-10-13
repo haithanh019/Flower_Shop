@@ -1,68 +1,64 @@
 ﻿/*
- * CSS dành riêng cho Trang Cửa hàng (Shop Page)
+ * CSS dành riêng cho Trang Cửa hàng (Shop Page) - Cải tiến
 */
 
 /* 1. Bộ lọc danh mục (Category Filter) */
-.category-filter .card-header {
-    background-color: #fff;
-    border-bottom: 1px solid var(--border-color);
-}
-
-.category-filter h5 {
-    margin: 0;
-    font-size: 1.25rem;
-    color: var(--text-dark);
-}
-
 .category-filter .list-group-item {
     border: none;
-    padding: 12px 20px;
-    font-weight: 500;
-    color: var(--text-light);
-    border-radius: 0 !important;
+    padding: 1rem 1.5rem;
+    font-weight: 600;
+    color: var(--text-secondary);
+    border-radius: 8px !important;
+    margin-bottom: 0.5rem;
     transition: all 0.2s ease-in-out;
 }
 
+    .category-filter .list-group-item i {
+        margin-right: 10px;
+        width: 20px;
+    }
+
     .category-filter .list-group-item:hover {
-        background-color: #fdf2f4; /* Màu hồng rất nhạt */
-        color: var(--primary-pink-dark);
+        background-color: var(--background-color);
+        color: var(--primary-color);
     }
 
     .category-filter .list-group-item.active {
-        background-color: var(--primary-pink-dark);
+        background: linear-gradient(90deg, var(--primary-color), #d966a0);
         color: #fff;
-        border: none;
+        box-shadow: 0 4px 15px rgba(217, 102, 131, 0.4);
     }
 
 /* 2. Lưới sản phẩm (Product Grid) */
 /*
-   Chúng ta sẽ tái sử dụng .product-card từ site.css
-   nhưng có thể thêm một số tùy chỉnh nhỏ nếu cần.
-   Hiện tại, không cần thêm gì.
+   Tái sử dụng .product-card từ site.css.
+   Đảm bảo các card được căn chỉnh đều và đẹp.
 */
-
 
 /* 3. Phân trang (Pagination) */
 .pagination .page-item .page-link {
-    color: var(--primary-pink-dark);
-    border-radius: 50%; /* Bo tròn thành hình tròn */
+    color: var(--primary-color);
+    border-radius: 8px;
     margin: 0 5px;
     border: 1px solid var(--border-color);
+    font-weight: 600;
+    padding: 0.75rem 1rem;
     transition: all 0.2s ease-in-out;
 }
 
     .pagination .page-item .page-link:hover {
-        background-color: #fdf2f4;
-        border-color: var(--primary-pink);
+        background-color: var(--background-color);
+        border-color: var(--primary-color);
     }
 
 .pagination .page-item.active .page-link {
-    background-color: var(--primary-pink-dark);
-    border-color: var(--primary-pink-dark);
+    background-color: var(--primary-color);
+    border-color: var(--primary-color);
     color: #fff;
-    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+    box-shadow: var(--shadow-sm);
 }
 
 .pagination .page-item.disabled .page-link {
     color: #ccc;
+    background-color: #fff;
 }

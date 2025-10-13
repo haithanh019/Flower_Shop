@@ -3,18 +3,20 @@
     ViewData["Title"] = "Giỏ hàng của bạn";
 }
 
-<div class="container mt-5">
-    <h1 class="page-section-title">@ViewData["Title"]</h1>
+<div class="container my-5">
+    <div class="page-header">
+        <h1 class="display-font">@ViewData["Title"]</h1>
+    </div>
 
-    <div class="row">
-        @if (Model != null && Model.Items.Any())
-        {
+    @if (Model != null && Model.Items.Any())
+    {
+        <div class="row">
             <div class="col-lg-8">
                 <div class="cart-table">
-                    <table class="table align-middle">
+                    <table class="table">
                         <thead>
                             <tr>
-                                <th scope="col" style="width: 40%;">Sản phẩm</th>
+                                <th scope="col" style="width: 50%;">Sản phẩm</th>
                                 <th scope="col" class="text-center">Giá</th>
                                 <th scope="col" class="text-center">Số lượng</th>
                                 <th scope="col" class="text-end">Tạm tính</th>
@@ -29,15 +31,13 @@
                                         <div class="product-info">
                                             <img src="@(item.ProductThumbnailUrl ?? "https://via.placeholder.com/150")" class="product-image" alt="@item.ProductName">
                                             <div>
-                                                <a class="text-decoration-none" asp-controller="Home" asp-action="ProductDetail" asp-route-id="@item.ProductId">
-                                                    <span class="product-name">@item.ProductName</span>
+                                                <a class="text-decoration-none product-name" asp-controller="Home" asp-action="ProductDetail" asp-route-id="@item.ProductId">
+                                                    @item.ProductName
                                                 </a>
                                             </div>
                                         </div>
                                     </td>
-                                    <td class="text-center">
-                                        <span class="unit-price">@item.UnitPrice.ToString("N0")</span>
-                                    </td>
+                                    <td class="text-center unit-price">@item.UnitPrice.ToString("N0") VNĐ</td>
                                     <td>
                                         <form asp-action="UpdateQuantity" method="post" class="quantity-form">
                                             <input type="hidden" name="cartItemId" value="@item.CartItemId" />
@@ -48,14 +48,12 @@
                                             </div>
                                         </form>
                                     </td>
-                                    <td class="text-end">
-                                        <span class="line-total">@item.LineTotal.ToString("N0") VND</span>
-                                    </td>
+                                    <td class="text-end line-total">@item.LineTotal.ToString("N0") VNĐ</td>
                                     <td class="text-center">
                                         <form asp-action="RemoveFromCart" method="post">
                                             <input type="hidden" name="cartItemId" value="@item.CartItemId" />
                                             <button type="submit" class="btn-remove" title="Xóa sản phẩm">
-                                                <i class="fas fa-times"></i>
+                                                <i class="fas fa-trash-alt"></i>
                                             </button>
                                         </form>
                                     </td>
@@ -68,20 +66,11 @@
 
             <div class="col-lg-4">
                 <div class="order-summary-card">
-                    <h5>Tóm tắt đơn hàng</h5>
+                    <h4>Tóm tắt đơn hàng</h4>
                     <ul>
-                        <li>
-                            <span>Tạm tính</span>
-                            <span>@(Model?.SubTotal.ToString("N0") ?? "0") VND</span>
-                        </li>
-                        <li>
-                            <span>Phí vận chuyển</span>
-                            <span>Miễn phí</span>
-                        </li>
-                        <li class="total-row">
-                            <span>Tổng cộng</span>
-                            <span>@(Model?.SubTotal.ToString("N0") ?? "0") VND</span>
-                        </li>
+                        <li><span>Tạm tính</span> <span>@(Model?.SubTotal.ToString("N0") ?? "0") VNĐ</span></li>
+                        <li><span>Phí vận chuyển</span> <span>Miễn phí</span></li>
+                        <li class="total-row"><span>Tổng cộng</span> <span>@(Model?.SubTotal.ToString("N0") ?? "0") VNĐ</span></li>
                     </ul>
                     <div class="d-grid mt-4">
                         <a asp-controller="Orders" asp-action="Checkout" class="btn btn-primary btn-lg">
@@ -90,21 +79,20 @@
                     </div>
                 </div>
             </div>
-        }
-        else
-        {
-            <div class="col-12 text-center py-5">
-                <i class="fas fa-shopping-cart fa-4x text-muted mb-3"></i>
-                <h4 class="text-muted">Giỏ hàng của bạn đang trống</h4>
-                <p>Hãy khám phá cửa hàng và chọn cho mình những sản phẩm ưng ý nhé!</p>
-                <a asp-controller="Products" asp-action="Index" class="btn btn-primary mt-3">
-                    <i class="fas fa-store me-2"></i>Về trang cửa hàng
-                </a>
-            </div>
-        }
-    </div>
+        </div>
+    }
+    else
+    {
+        <div class="cart-empty">
+            <i class="fas fa-shopping-bag"></i>
+            <h4>Giỏ hàng của bạn đang trống</h4>
+            <p class="text-secondary">Hãy khám phá cửa hàng và chọn cho mình những sản phẩm ưng ý nhé!</p>
+            <a asp-controller="Products" asp-action="Index" class="btn btn-primary mt-3">
+                <i class="fas fa-store me-2"></i>Về trang cửa hàng
+            </a>
+        </div>
+    }
 </div>
-
 
 @section Styles {
     <link rel="stylesheet" href="~/css/cart.css" asp-append-version="true" />

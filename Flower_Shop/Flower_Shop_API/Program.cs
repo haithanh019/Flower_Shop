@@ -98,7 +98,11 @@ namespace Flower_Shop_API
                     policy =>
                     {
                         policy
-                            .WithOrigins("https://unarriving-unswaying-winifred.ngrok-free.dev")
+                            .WithOrigins(
+                                "https://unarriving-unswaying-winifred.ngrok-free.dev",
+                                "https://flowershopwebapp.azurewebsites.net",
+                                "https://myhongshop.com"
+                            )
                             .AllowAnyMethod()
                             .AllowAnyHeader()
                             .AllowCredentials();

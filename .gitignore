@@ -117,3 +117,8 @@ logs/
 .idea/
 .vs/
 /appsettings.json
+Flower_Shop/Flower_Shop_API/Properties/PublishProfiles/FlowerShopAPI - Web Deploy.pubxml
+Flower_Shop/Flower_Shop_API/Properties/ServiceDependencies/FlowerShopAPI - Web Deploy/profile.arm.json
+Flower_Shop/Flower_Shop_API/Properties/PublishProfiles/FlowerShopWebApp - Web Deploy.pubxml
+Flower_Shop/Flower_Shop_API/Properties/ServiceDependencies/FlowerShopWebApp - Web Deploy/profile.arm.json
+ 

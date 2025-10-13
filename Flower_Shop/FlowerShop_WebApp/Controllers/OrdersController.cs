@@ -197,14 +197,41 @@ namespace FlowerShop_WebApp.Controllers
         public IActionResult PaymentSuccess()
         {
             TempData["SuccessMessage"] = "Thanh toán thành công! Đơn hàng của bạn đang được xử lý.";
-            return RedirectToAction("History");
+            return RedirectToAction("Index", "Home");
         }
 
         [HttpGet]
-        public IActionResult PaymentCancelled()
+        public async Task<IActionResult> PaymentCancelled(Guid? orderId)
         {
-            TempData["ErrorMessage"] = "Thanh toán đã bị hủy. Bạn có thể thử lại từ giỏ hàng.";
-            return RedirectToAction("Index", "Cart");
+            if (orderId.HasValue)
+            {
+                try
+                {
+                    var client = await CreateApiClientAsync();
+                    var response = await client.PostAsync(
+                        $"api/orders/cancel/{orderId.Value}",
+                        null
+                    );
+
+                    if (!response.IsSuccessStatusCode)
+                    {
+                        var errorContent = await response.Content.ReadAsStringAsync();
+
+                        TempData["ErrorMessage"] =
+                            "Thanh toán đã bị hủy, nhưng không thể tự động hủy đơn hàng. Vui lòng liên hệ hỗ trợ.";
+                        return RedirectToAction("Index", "Cart");
+                    }
+                }
+                catch (Exception)
+                {
+                    TempData["ErrorMessage"] =
+                        "Thanh toán đã bị hủy, nhưng đã xảy ra lỗi kết nối khi cố gắng hủy đơn hàng.";
+                    return RedirectToAction("Index", "Cart");
+                }
+            }
+
+            TempData["ErrorMessage"] = "Đơn hàng của bạn đã được hủy thành công.";
+            return RedirectToAction("Index", "Home");
         }
 
         // === BẮT ĐẦU THÊM MỚI ===

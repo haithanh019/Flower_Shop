@@ -2,6 +2,7 @@
 using BusinessLogic.DTOs;
 using BusinessLogic.DTOs.Orders;
 using BusinessLogic.Services.Interfaces;
+using CloudinaryDotNet.Actions;
 using DataAccess.Entities;
 using DataAccess.UnitOfWork;
 using Microsoft.EntityFrameworkCore;
@@ -188,6 +189,23 @@ namespace BusinessLogic.Services
 
             var oldStatus = orderToUpdate.Status;
             orderToUpdate.Status = newStatus;
+            if (newStatus == OrderStatus.Cancelled && oldStatus != OrderStatus.Cancelled)
+            {
+                _logger.LogInformation(
+                    "Restoring stock for cancelled order {OrderId}",
+                    orderToUpdate.OrderId
+                );
+                foreach (var item in orderToUpdate.Items)
+                {
+                    var product = await _unitOfWork.Product.GetAsync(p =>
+                        p.ProductId == item.ProductId
+                    );
+                    if (product != null)
+                    {
+                        product.StockQuantity += item.Quantity;
+                    }
+                }
+            }
 
             if (newStatus != oldStatus && orderToUpdate.User != null)
             {
@@ -252,43 +270,14 @@ namespace BusinessLogic.Services
                 data.orderCode
             );
 
-            var pendingOrders = await _unitOfWork.Order.GetRangeAsync(
-                o =>
-                    o.Status == OrderStatus.Pending
-                    && o.Payment != null
-                    && o.Payment.Method == PaymentMethod.PayOS,
-                "Payment,User"
+            // Chuyển đổi orderCode (số) từ PayOS thành chuỗi Hex để tìm trong DB
+            string orderNumberToFind = data.orderCode.ToString("x").ToUpper();
+
+            // Truy vấn trực tiếp đơn hàng bằng OrderNumber
+            var foundOrder = await _unitOfWork.Order.GetAsync(
+                o => o.OrderNumber.EndsWith(orderNumberToFind) && o.Status == OrderStatus.Pending,
+                "Items.Product,User,Payment"
             );
-
-            Order? foundOrder = null;
-            foreach (var order in pendingOrders)
-            {
-                try
-                {
-                    long orderCodeFromDb = long.Parse(
-                        order.OrderNumber,
-                        System.Globalization.NumberStyles.HexNumber
-                    );
-
-                    if (orderCodeFromDb == data.orderCode)
-                    {
-                        foundOrder = await _unitOfWork.Order.GetAsync(
-                            o => o.OrderId == order.OrderId,
-                            "Items.Product,User,Payment"
-                        );
-                        break;
-                    }
-                }
-                catch (Exception ex)
-                {
-                    _logger.LogWarning(
-                        ex,
-                        "Could not parse OrderNumber {OrderNumber} as a hex number.",
-                        order.OrderNumber
-                    );
-                    continue;
-                }
-            }
 
             if (foundOrder != null && foundOrder.Payment?.Status != PaymentStatus.Accepted)
             {
@@ -306,25 +295,20 @@ namespace BusinessLogic.Services
 
                 if (foundOrder.User != null)
                 {
-                    var subject =
+                    var subject = $"[FlowerShop] Đã tiếp nhận đơn hàng #{foundOrder.OrderNumber}";
+                    var subject_2 =
                         $"[FlowerShop] Thanh toán thành công cho đơn hàng #{foundOrder.OrderNumber}";
-                    var htmlMessage = EmailTemplateService.PaymentSuccessEmail(
+                    var htmlMessage = EmailTemplateService.OrderConfirmedEmail(
+                        foundOrder,
+                        foundOrder.User
+                    );
+                    var htmlMessage_2 = EmailTemplateService.PaymentSuccessEmail(
                         foundOrder,
                         foundOrder.User
                     );
                     _emailQueue.QueueEmail(foundOrder.User.Email, subject, htmlMessage);
 
-                    var confirmedSubject =
-                        $"[FlowerShop] Đơn hàng #{foundOrder.OrderNumber} đã được xác nhận";
-                    var confirmedHtmlMessage = EmailTemplateService.OrderConfirmedEmail(
-                        foundOrder,
-                        foundOrder.User
-                    );
-                    _emailQueue.QueueEmail(
-                        foundOrder.User.Email,
-                        confirmedSubject,
-                        confirmedHtmlMessage
-                    );
+                    _emailQueue.QueueEmail(foundOrder.User.Email, subject_2, htmlMessage_2);
                 }
 
                 await _unitOfWork.SaveAsync();
@@ -343,8 +327,9 @@ namespace BusinessLogic.Services
             else
             {
                 _logger.LogWarning(
-                    "Webhook received but no matching order found for PayOS orderCode {PayOSCode}",
-                    data.orderCode
+                    "Webhook received but no matching order found for PayOS orderCode {PayOSCode} (Hex: {OrderNumber})",
+                    data.orderCode,
+                    orderNumberToFind
                 );
             }
         }

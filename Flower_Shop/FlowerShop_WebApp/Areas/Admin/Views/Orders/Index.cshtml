@@ -5,34 +5,30 @@
     var currentStatusFilter = ViewBag.CurrentStatusFilter as string;
 }
 
-<div class="d-flex justify-content-between align-items-center pt-3 pb-2 mb-3 border-bottom">
-    <h1 class="h2"><i class="fas fa-receipt me-2"></i>@ViewData["Title"]</h1>
+<div class="page-header">
+    <h1 class="display-font">@ViewData["Title"]</h1>
 </div>
 
-<div class="card shadow-sm">
+<div class="card management-card">
     <div class="card-header">
-        <form id="filterForm" asp-action="Index" method="get" class="d-flex justify-content-end">
-            <div class="input-group w-50">
-                <select name="statusFilter" class="form-select">
-                    <option value="">-- Lọc theo trạng thái --</option>
-                    @foreach (var status in orderStatuses)
-                    {
-                        <option value="@status.Value" selected="@(status.Value == currentStatusFilter)">@status.DisplayName</option>
-                    }
-                </select>
-            </div>
+        <form id="filterForm" asp-action="Index" method="get" class="d-flex" style="width: 300px;">
+            <select name="statusFilter" class="form-select" onchange="this.form.submit()">
+                <option value="">-- Lọc theo trạng thái --</option>
+                @foreach (var status in orderStatuses)
+                {
+                    <option value="@status.Value" selected="@(status.Value == currentStatusFilter)">@status.DisplayName</option>
+                }
+            </select>
         </form>
     </div>
-    <div id="orderTableContainer">
+    <div id="orderTableContainer" class="table-responsive">
         @await Html.PartialAsync("_OrderTablePartial", Model)
     </div>
 </div>
 
 <div class="modal fade" id="orderModal" tabindex="-1" aria-labelledby="orderModalLabel" aria-hidden="true">
     <div class="modal-dialog modal-xl modal-dialog-centered">
-        <div class="modal-content" id="orderModalContent">
-            @* Nội dung sẽ được load bằng AJAX vào đây *@
-        </div>
+        <div class="modal-content" id="orderModalContent"></div>
     </div>
 </div>
 

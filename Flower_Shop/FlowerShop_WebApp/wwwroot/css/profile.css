@@ -1,70 +1,89 @@
 ﻿/*
- * CSS dành riêng cho Trang Cá nhân (Profile)
+ * CSS Trang Cá nhân (Profile) - Cải tiến
 */
 
 .profile-layout {
     display: flex;
-    gap: 30px;
+    gap: 2rem;
+    align-items: flex-start;
 }
 
+/* --- Profile Navigation --- */
 .profile-nav {
-    flex: 0 0 250px; /* Cố định chiều rộng của menu điều hướng */
+    flex: 0 0 280px;
+    background-color: var(--surface-color);
+    border-radius: 12px;
+    padding: 1.5rem;
+    box-shadow: var(--shadow-sm);
+    position: sticky;
+    top: 90px;
 }
 
+    .profile-nav .list-group-item {
+        border: none;
+        padding: 1rem 1.5rem;
+        font-weight: 600;
+        color: var(--text-secondary);
+        border-radius: 8px !important;
+        margin-bottom: 0.5rem;
+        transition: all 0.2s ease-in-out;
+    }
+
+        .profile-nav .list-group-item i {
+            margin-right: 15px;
+            width: 20px;
+        }
+
+        .profile-nav .list-group-item:hover {
+            background-color: var(--background-color);
+            color: var(--primary-color);
+        }
+
+        .profile-nav .list-group-item.active {
+            background: linear-gradient(90deg, var(--primary-color), #d966a0);
+            color: #fff;
+            box-shadow: 0 4px 15px rgba(217, 102, 131, 0.4);
+        }
+
+/* --- Profile Content --- */
 .profile-content {
-    flex-grow: 1; /* Phần nội dung chiếm phần còn lại */
+    flex-grow: 1;
 }
-
-.profile-nav .list-group-item {
-    border: none;
-    padding: 15px 20px;
-    font-weight: 700;
-    color: var(--text-light);
-    border-left: 3px solid transparent;
-}
-
-    .profile-nav .list-group-item i {
-        width: 20px;
-        margin-right: 10px;
-    }
-
-    .profile-nav .list-group-item.active {
-        background-color: #fdf2f4;
-        color: var(--primary-pink-dark);
-        border-left-color: var(--primary-pink-dark);
-    }
 
 .profile-card {
-    background-color: #fff;
+    background-color: var(--surface-color);
     border-radius: 12px;
-    border: 1px solid var(--border-color);
+    border: none;
+    box-shadow: var(--shadow-sm);
+    margin-bottom: 2rem;
 }
 
     .profile-card .card-header {
         background-color: transparent;
         border-bottom: 1px solid var(--border-color);
-        padding: 1rem 1.5rem;
+        padding: 1.5rem;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
     }
 
         .profile-card .card-header h5 {
             margin: 0;
-            font-family: var(--font-family-serif);
+            font-family: var(--font-display);
+            font-size: 1.6rem;
         }
 
     .profile-card .card-body {
         padding: 2rem;
     }
 
+/* --- Address Item --- */
 .address-item {
-    padding: 1rem;
+    padding: 1.5rem;
     border: 1px solid var(--border-color);
     border-radius: 8px;
     margin-bottom: 1rem;
     display: flex;
     justify-content: space-between;
     align-items: center;
-}
-
-.address-item-info {
-    font-size: 0.95rem;
 }

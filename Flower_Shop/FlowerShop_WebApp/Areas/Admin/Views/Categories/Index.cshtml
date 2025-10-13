@@ -4,17 +4,17 @@
 }
 
 <div class="page-header">
-    <h1 class="h2">@ViewData["Title"]</h1>
+    <h1 class="display-font">@ViewData["Title"]</h1>
 </div>
 
 <div class="card management-card">
     <div class="card-header">
+        <span class="card-title">Danh sách danh mục</span>
         <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#categoryModal" data-url="@Url.Action("_CreateOrEditPartial")">
             <i class="fas fa-plus me-2"></i>Thêm danh mục mới
         </button>
     </div>
-    <div class="card-body p-0" id="categoryTableContainer">
-        @* Bảng sẽ được tải vào đây *@
+    <div class="card-body" id="categoryTableContainer">
         @await Html.PartialAsync("_CategoryTablePartial", Model)
     </div>
 </div>
@@ -30,7 +30,6 @@
 @section Styles {
     <link rel="stylesheet" href="~/css/admin-management.css" asp-append-version="true" />
 }
-
 @section Scripts {
     <partial name="_ValidationScriptsPartial" />
     <script src="~/js/category-manager.js" asp-append-version="true"></script>
