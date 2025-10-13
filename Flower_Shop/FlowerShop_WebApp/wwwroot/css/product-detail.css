@@ -1,104 +1,130 @@
 ﻿/*
- * CSS dành riêng cho Trang Chi tiết sản phẩm
+ * CSS cho Trang Chi tiết sản phẩm - Cải tiến
 */
+
+.product-detail-section {
+    background-color: #fff;
+    padding: 3rem;
+    border-radius: 16px;
+    box-shadow: var(--shadow-md);
+}
 
 /* 1. Khu vực ảnh sản phẩm */
 .main-product-image {
     width: 100%;
-    height: 500px;
+    height: 550px;
     object-fit: cover;
     border-radius: 12px;
-    border: 1px solid var(--border-color);
 }
 
 .thumbnail-gallery {
     display: flex;
-    gap: 10px;
-    margin-top: 15px;
-    cursor: pointer;
+    gap: 1rem;
+    margin-top: 1rem;
 }
 
-.thumbnail-item img {
-    width: 80px;
-    height: 80px;
-    object-fit: cover;
-    border-radius: 8px;
+.thumbnail-item {
+    cursor: pointer;
     border: 2px solid transparent;
+    border-radius: 10px;
+    overflow: hidden;
     transition: border-color 0.2s ease;
 }
 
-    .thumbnail-item img:hover {
-        border-color: var(--primary-pink);
+    .thumbnail-item:hover {
+        border-color: var(--primary-color);
     }
 
-.thumbnail-item.active img {
-    border-color: var(--primary-pink-dark);
-    box-shadow: 0 0 10px rgba(231, 84, 128, 0.5);
-}
+    .thumbnail-item.active {
+        border-color: var(--primary-color);
+        box-shadow: 0 0 10px rgba(217, 102, 131, 0.5);
+    }
+
+    .thumbnail-item img {
+        width: 90px;
+        height: 90px;
+        object-fit: cover;
+        display: block;
+    }
 
 
 /* 2. Khu vực thông tin sản phẩm */
-.product-info h1 {
-    font-size: 2.8rem;
-    font-weight: 700;
-}
-
 .product-info .category-name {
     font-size: 1rem;
-    color: var(--text-light);
-    font-weight: 500;
+    color: var(--text-secondary);
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
+.product-info h1 {
+    font-size: 3rem;
+    margin: 0.5rem 0 1rem 0;
 }
 
 .product-info .price {
     font-size: 2.5rem;
     font-weight: 700;
-    color: var(--primary-pink-dark);
-    margin: 1rem 0;
+    color: var(--primary-color);
+    margin-bottom: 1.5rem;
 }
 
 .product-info .stock-status {
-    font-weight: 500;
+    font-weight: 600;
+    font-size: 1.1rem;
 }
 
 .stock-status .in-stock {
-    color: #1cc88a;
+    color: var(--accent-color);
 }
 
 .stock-status .out-of-stock {
     color: #e74a3b;
 }
 
-.product-info .btn-lg {
-    padding: 15px 30px;
-    font-size: 1.1rem;
+.product-info .quantity-selector {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
 }
+
+    .product-info .quantity-selector input {
+        width: 60px;
+        text-align: center;
+        border-radius: 8px;
+        border: 1px solid var(--border-color);
+    }
+
+    .product-info .quantity-selector .btn {
+        padding: 0.5rem 1rem;
+    }
 
 /* 3. Khu vực mô tả dạng Tab */
-.product-description-tabs {
+.product-tabs {
     margin-top: 4rem;
-    border-top: 1px solid var(--border-color);
-    padding-top: 2rem;
 }
 
-    .product-description-tabs .nav-tabs {
+    .product-tabs .nav-tabs {
         border-bottom: 2px solid var(--border-color);
     }
 
-        .product-description-tabs .nav-tabs .nav-link {
+        .product-tabs .nav-tabs .nav-link {
             border: none;
-            border-bottom: 2px solid transparent;
-            color: var(--text-light);
-            font-weight: 700;
-            padding: 10px 20px;
+            border-bottom: 3px solid transparent;
+            color: var(--text-secondary);
+            font-weight: 600;
+            padding: 1rem 0;
+            margin-right: 2rem;
+            font-size: 1.1rem;
         }
 
-            .product-description-tabs .nav-tabs .nav-link.active {
-                color: var(--primary-pink-dark);
-                border-bottom-color: var(--primary-pink-dark);
+            .product-tabs .nav-tabs .nav-link.active {
+                color: var(--primary-color);
+                border-bottom-color: var(--primary-color);
                 background-color: transparent;
             }
 
-    .product-description-tabs .tab-content {
+    .product-tabs .tab-content {
         padding: 2rem 0;
         line-height: 1.8;
     }

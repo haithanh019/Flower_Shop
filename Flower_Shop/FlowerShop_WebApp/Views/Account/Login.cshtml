@@ -6,32 +6,26 @@
 <div class="account-page">
     <div class="card account-card">
         <div class="card-body">
-            <h2 class="card-title text-center">@ViewData["Title"]</h2>
+            <h2 class="card-title">@ViewData["Title"]</h2>
             <form asp-route-returnurl="@ViewData["ReturnUrl"]" method="post">
-
                 <div asp-validation-summary="ModelOnly" class="text-danger mb-3" role="alert"></div>
-
                 <div class="form-floating mb-3">
-                    <input asp-for="Email" class="form-control" autocomplete="username" aria-required="true" placeholder="acb@gmail.com" />
-                    <label asp-for="Email" class="form-label"></label>
+                    <input asp-for="Email" class="form-control" placeholder="Email" autocomplete="username" />
+                    <label asp-for="Email"></label>
                     <span asp-validation-for="Email" class="text-danger"></span>
                 </div>
-
-                <div class="form-floating mb-3">
-                    <input asp-for="Password" class="form-control" autocomplete="current-password" aria-required="true" placeholder="   " />
-                    <label asp-for="Password" class="form-label"></label>
+                <div class="form-floating mb-4">
+                    <input asp-for="Password" class="form-control" placeholder="Mật khẩu" autocomplete="current-password" />
+                    <label asp-for="Password"></label>
                     <span asp-validation-for="Password" class="text-danger"></span>
                 </div>
-
                 <div class="d-grid mt-4">
-                    <button type="submit" class="btn btn-primary btn-lg">
-                        <i class="fas fa-sign-in-alt me-2"></i>Đăng nhập
-                    </button>
+                    <button type="submit" class="btn btn-primary btn-lg">Đăng nhập</button>
                 </div>
-
                 <div class="text-center mt-4">
-                    <p class="text-muted">
-                        Chưa có tài khoản? <a asp-action="Register" asp-route-returnurl="@ViewData["ReturnUrl"]">Đăng ký ngay</a>
+                    <p class="text-secondary">
+                        Chưa có tài khoản?
+                        <a asp-action="Register" asp-route-returnurl="@ViewData["ReturnUrl"]" class="fw-bold text-decoration-none" style="color: var(--primary-color);">Đăng ký ngay</a>
                     </p>
                 </div>
             </form>
@@ -42,7 +36,6 @@
 @section Styles {
     <link rel="stylesheet" href="~/css/account.css" asp-append-version="true" />
 }
-
 @section Scripts {
     <partial name="_ValidationScriptsPartial" />
 }

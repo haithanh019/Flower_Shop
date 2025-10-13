@@ -1,86 +1,82 @@
-﻿/*
- * CSS dành riêng cho Trang chủ (Home)
-*/
+﻿/* Giao diện Trang chủ - Lần 2 */
 
-/* 1. Hero Section - Banner chính */
+/* --- Hero Section --- */
 .hero-section {
-    position: relative;
-    padding: 8rem 0;
-    text-align: center;
-    color: white;
-    background: url('https://images.unsplash.com/photo-1533616688484-4b4a69441571?q=80&w=2070&auto=format&fit=crop') no-repeat center center;
+    background: linear-gradient(to right, rgba(0, 0, 0, 0.1), rgba(0, 0, 0, 0.4)), url('https://images.unsplash.com/photo-1490750967868-88aa4486c946?q=80&w=2070&auto=format&fit=crop');
     background-size: cover;
+    background-position: center 70%;
+    padding: 10rem 0;
+    color: white;
 }
 
-    /* Lớp phủ màu tối để làm nổi bật chữ */
-    .hero-section::before {
-        content: '';
-        position: absolute;
-        top: 0;
-        left: 0;
-        right: 0;
-        bottom: 0;
-        background-color: rgba(0, 0, 0, 0.4);
-    }
-
-    /* Đảm bảo nội dung nằm trên lớp phủ */
-    .hero-section .container {
-        position: relative;
-        z-index: 2;
-    }
-
-    .hero-section .display-4 {
-        font-family: var(--font-family-serif);
-        font-weight: 700;
-        text-shadow: 2px 2px 8px rgba(0,0,0,0.6);
-    }
-
-    .hero-section .lead {
-        font-size: 1.5rem;
-        margin-bottom: 2rem;
-        text-shadow: 1px 1px 4px rgba(0,0,0,0.5);
-    }
-
-
-/* 2. Các khối nội dung bổ sung */
-.feature-section {
-    padding: 4rem 0;
+.hero-content h1 {
+    font-size: 4.5rem;
+    font-weight: 700;
+    text-shadow: 0 3px 10px rgba(0,0,0,0.5);
 }
 
-.feature-icon {
-    font-size: 3rem;
-    color: var(--primary-pink-dark);
-    margin-bottom: 1.5rem;
+.hero-content .lead {
+    font-size: 1.3rem;
+    max-width: 600px;
+    margin: 1.5rem 0 2.5rem 0;
+    font-weight: 400;
 }
 
-.testimonial-section {
+/* --- Category Section --- */
+.category-section {
+    padding: 5rem 0;
+}
+
+.category-card {
+    text-align: center;
+    text-decoration: none;
+    color: var(--text-primary);
+    display: block;
+    transition: transform 0.2s ease;
+}
+
+    .category-card:hover {
+        transform: translateY(-8px);
+    }
+
+    .category-card .icon-wrapper {
+        width: 120px;
+        height: 120px;
+        margin: 0 auto 1.5rem auto;
+        border-radius: 50%;
+        background-color: #fff;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        box-shadow: var(--shadow-md);
+    }
+
+        .category-card .icon-wrapper img {
+            max-width: 60px;
+        }
+
+    .category-card h5 {
+        font-family: var(--font-primary);
+        font-weight: 600;
+    }
+
+/* --- Why Choose Us Section --- */
+.why-us-section {
     background-color: #fff;
-    padding: 4rem 0;
+    padding: 5rem 0;
 }
 
-.testimonial-item {
+.feature-item {
     text-align: center;
 }
 
-    .testimonial-item img {
-        width: 80px;
-        height: 80px;
-        border-radius: 50%;
+    .feature-item .icon {
+        font-size: 2.5rem;
+        color: var(--primary-color);
         margin-bottom: 1rem;
     }
 
-    .testimonial-item .lead {
-        font-style: italic;
-        color: var(--text-light);
+    .feature-item h5 {
+        font-family: var(--font-primary);
+        font-weight: 600;
     }
-
-    .testimonial-item .customer-name {
-        font-weight: 700;
-        color: var(--text-dark);
-    }
-
-.page-section-title {
-    text-align: center;
-    margin-bottom: 3rem;
-    font-size: 2.5rem;
-}

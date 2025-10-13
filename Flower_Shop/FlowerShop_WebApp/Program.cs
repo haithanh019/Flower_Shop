@@ -40,10 +40,7 @@ namespace FlowerShop_WebApp
                 options.Cookie.HttpOnly = true;
                 options.Cookie.IsEssential = true;
             });
-            builder
-                .Services.AddDataProtection()
-                .PersistKeysToFileSystem(new DirectoryInfo("keys"))
-                .SetDefaultKeyLifetime(TimeSpan.FromDays(7));
+
             builder
                 .Services.AddAuthentication("CookieAuth")
                 .AddCookie(

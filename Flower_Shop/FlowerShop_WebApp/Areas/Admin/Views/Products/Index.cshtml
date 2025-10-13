@@ -4,20 +4,20 @@
 }
 
 <div class="page-header">
-    <h1 class="h2">@ViewData["Title"]</h1>
+    <h1 class="display-font">@ViewData["Title"]</h1>
 </div>
 
 <div class="card management-card">
     <div class="card-header">
-        <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#productModal" data-url="@Url.Action("_CreateOrEditPartial")">
-            <i class="fas fa-plus me-2"></i>Thêm sản phẩm mới
-        </button>
         <form asp-action="Index" method="get" class="d-flex" style="width: 300px;">
             <input type="text" name="searchString" value="@ViewBag.CurrentFilter" class="form-control me-2" placeholder="Tìm theo tên..." />
             <button type="submit" class="btn btn-outline-primary"><i class="fas fa-search"></i></button>
         </form>
+        <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#productModal" data-url="@Url.Action("_CreateOrEditPartial")">
+            <i class="fas fa-plus me-2"></i>Thêm sản phẩm mới
+        </button>
     </div>
-    <div class="card-body p-0" id="productTableContainer">
+    <div class="card-body" id="productTableContainer">
         @await Html.PartialAsync("_ProductTablePartial", Model)
     </div>
 </div>
@@ -33,7 +33,6 @@
 @section Styles {
     <link rel="stylesheet" href="~/css/admin-management.css" asp-append-version="true" />
 }
-
 @section Scripts {
     <partial name="_ValidationScriptsPartial" />
     <script src="~/js/product-manager.js" asp-append-version="true"></script>

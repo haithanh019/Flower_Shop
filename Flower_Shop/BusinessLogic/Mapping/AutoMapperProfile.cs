@@ -111,6 +111,7 @@ public class AutoMapperProfile : Profile
             );
 
         CreateMap<Order, OrderDto>()
+            .ForMember(d => d.CustomerId, opt => opt.MapFrom(s => s.UserId))
             .ForMember(
                 d => d.CustomerEmail,
                 opt => opt.MapFrom(s => s.User != null ? s.User.Email : null)

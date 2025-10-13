@@ -105,6 +105,34 @@ namespace Flower_Shop_API.Controllers
             }
         }
 
+        [HttpPost("cancel/{id}")]
+        [Authorize]
+        public async Task<IActionResult> CancelOrder(Guid id)
+        {
+            var userId = GetUserIdFromClaims();
+            var order = await _facadeService.OrderService.GetOrderDetailsAsync(id);
+
+            if (order == null || order.CustomerId != userId)
+            {
+                return Forbid(); // Không cho phép hủy đơn hàng của người khác
+            }
+
+            // Chỉ cho phép hủy khi đang chờ xử lý
+            if (order.Status != "Chờ xử lý")
+            {
+                return BadRequest(new { message = "Không thể hủy đơn hàng ở trạng thái này." });
+            }
+
+            var request = new OrderUpdateStatusRequest
+            {
+                OrderId = id,
+                Status = "Cancelled", // Sử dụng tên của Enum
+            };
+
+            var updatedOrder = await _facadeService.OrderService.UpdateOrderStatusAsync(request);
+            return Ok(updatedOrder);
+        }
+
         private Guid GetUserIdFromClaims()
         {
             var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;

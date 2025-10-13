@@ -1,22 +1,36 @@
 ﻿/*
- * CSS dành riêng cho Trang Giỏ hàng (Bố cục ngang)
+ * CSS Trang Giỏ hàng - Cải tiến
 */
+
+.page-header {
+    text-align: center;
+    padding: 3rem 0;
+    background-color: var(--surface-color);
+    border-radius: 12px;
+    margin-bottom: 3rem;
+    box-shadow: var(--shadow-sm);
+}
+
+    .page-header h1 {
+        font-size: 3rem;
+    }
 
 /* 1. Bảng danh sách sản phẩm */
 .cart-table {
-    background-color: #fff;
+    background-color: var(--surface-color);
     border-radius: 12px;
-    padding: 1rem;
-    border: 1px solid var(--border-color);
+    padding: 1.5rem;
+    border: none;
+    box-shadow: var(--shadow-sm);
 }
 
     .cart-table thead th {
-        font-family: var(--font-family-serif);
-        font-weight: 700;
+        font-family: var(--font-primary);
+        font-weight: 600;
         text-transform: uppercase;
-        color: var(--text-light);
+        color: var(--text-secondary);
         border-bottom: 2px solid var(--border-color);
-        padding-bottom: 1rem;
+        padding: 1rem 1.5rem;
     }
 
     .cart-table tbody tr {
@@ -28,7 +42,7 @@
         }
 
     .cart-table td {
-        padding: 1.5rem 0.5rem;
+        padding: 1.5rem;
         vertical-align: middle;
     }
 
@@ -38,30 +52,30 @@
 }
 
     .product-info .product-image {
-        width: 80px;
-        height: 80px;
+        width: 90px;
+        height: 90px;
         object-fit: cover;
         border-radius: 8px;
-        margin-right: 1rem;
+        margin-right: 1.5rem;
+        box-shadow: var(--shadow-sm);
     }
 
     .product-info .product-name {
-        font-family: var(--font-family-serif);
-        font-weight: 700;
+        font-weight: 600;
         font-size: 1.1rem;
-        color: var(--text-dark);
+        color: var(--text-primary);
     }
 
 .unit-price, .line-total {
-    font-weight: 700;
+    font-weight: 600;
     font-size: 1.1rem;
 }
 
 .line-total {
-    color: var(--primary-pink-dark);
+    color: var(--primary-color);
 }
 
-/* --- Bộ điều chỉnh số lượng với JS --- */
+/* --- Bộ điều chỉnh số lượng --- */
 .quantity-adjuster {
     display: flex;
     align-items: center;
@@ -70,33 +84,30 @@
 
     .quantity-adjuster .btn-quantity {
         cursor: pointer;
-        border-radius: 50%;
-        width: 32px;
-        height: 32px;
-        padding: 0;
-        line-height: 30px;
-        text-align: center;
+        border-radius: 8px;
+        width: 38px;
+        height: 38px;
         border: 1px solid var(--border-color);
-        background-color: #f8f9fa;
-        color: var(--text-dark);
-        font-size: 1rem;
+        background-color: #f9f9f9;
+        color: var(--text-primary);
+        font-size: 1.2rem;
     }
 
         .quantity-adjuster .btn-quantity:hover {
-            background-color: #e9ecef;
+            background-color: #f1f1f1;
         }
 
     .quantity-adjuster .quantity-input {
-        width: 50px;
+        width: 60px;
         text-align: center;
         border: 1px solid var(--border-color);
         border-radius: 8px;
-        margin: 0 10px;
-        font-weight: 700;
+        margin: 0 0.5rem;
+        font-weight: 600;
+        height: 38px;
     }
-/* Ẩn mũi tên mặc định của input number */
-.quantity-input::-webkit-outer-spin-button,
-.quantity-input::-webkit-inner-spin-button {
+
+.quantity-input::-webkit-outer-spin-button, .quantity-input::-webkit-inner-spin-button {
     -webkit-appearance: none;
     margin: 0;
 }
@@ -106,7 +117,7 @@
 }
 
 .btn-remove {
-    color: var(--text-light);
+    color: var(--text-secondary);
     background: none;
     border: none;
     font-size: 1.2rem;
@@ -116,20 +127,20 @@
         color: #e74a3b;
     }
 
-
-/* 2. Tóm tắt đơn hàng (Giữ nguyên từ trước) */
+/* 2. Tóm tắt đơn hàng */
 .order-summary-card {
-    background-color: #fff;
+    background-color: var(--surface-color);
     border-radius: 12px;
-    padding: 1.5rem;
-    border: 1px solid var(--border-color);
+    padding: 2rem;
+    border: none;
+    box-shadow: var(--shadow-sm);
     position: sticky;
-    top: 20px;
+    top: 90px;
 }
 
-    .order-summary-card h5 {
-        font-family: var(--font-family-serif);
-        font-weight: 700;
+    .order-summary-card h4 {
+        font-family: var(--font-display);
+        font-size: 1.8rem;
         margin-bottom: 1.5rem;
     }
 
@@ -142,14 +153,44 @@
         display: flex;
         justify-content: space-between;
         margin-bottom: 1rem;
-        color: var(--text-light);
+        font-size: 1.05rem;
+        color: var(--text-secondary);
     }
+
+        .order-summary-card li span:last-child {
+            font-weight: 600;
+            color: var(--text-primary);
+        }
 
     .order-summary-card .total-row {
         font-size: 1.25rem;
         font-weight: 700;
-        color: var(--text-dark);
+        color: var(--text-primary);
         margin-top: 1.5rem;
         padding-top: 1.5rem;
-        border-top: 1px dashed var(--border-color);
+        border-top: 2px dashed var(--border-color);
+    }
+
+        .order-summary-card .total-row span:last-child {
+            color: var(--primary-color);
+            font-size: 1.5rem;
+        }
+
+/* Giỏ hàng trống */
+.cart-empty {
+    text-align: center;
+    padding: 5rem 0;
+    background-color: var(--surface-color);
+    border-radius: 12px;
+    box-shadow: var(--shadow-sm);
+}
+
+    .cart-empty i {
+        font-size: 4rem;
+        color: var(--secondary-color);
+        margin-bottom: 1.5rem;
+    }
+
+    .cart-empty h4 {
+        font-family: var(--font-primary);
     }
