@@ -9,7 +9,7 @@
 
 <div class="card management-card">
     <div class="card-header">
-         <form asp-action="Index" method="get" class="d-flex" style="width: 300px;">
+        <form asp-action="Index" method="get" class="d-flex" style="width: 300px;">
             <input type="text" name="searchString" value="@ViewBag.CurrentFilter" class="form-control me-2" placeholder="Tìm theo tên..." />
             <button type="submit" class="btn btn-outline-primary"><i class="fas fa-search"></i></button>
         </form>
@@ -31,7 +31,7 @@
 </div>
 
 @section Styles {
-   <link rel="stylesheet" href="~/css/admin-management.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/css/admin-management.css" asp-append-version="true" />
 }
 @section Scripts {
     <partial name="_ValidationScriptsPartial" />

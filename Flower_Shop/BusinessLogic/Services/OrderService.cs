@@ -188,6 +188,23 @@ namespace BusinessLogic.Services
 
             var oldStatus = orderToUpdate.Status;
             orderToUpdate.Status = newStatus;
+            if (newStatus == OrderStatus.Cancelled && oldStatus != OrderStatus.Cancelled)
+            {
+                _logger.LogInformation(
+                    "Restoring stock for cancelled order {OrderId}",
+                    orderToUpdate.OrderId
+                );
+                foreach (var item in orderToUpdate.Items)
+                {
+                    var product = await _unitOfWork.Product.GetAsync(p =>
+                        p.ProductId == item.ProductId
+                    );
+                    if (product != null)
+                    {
+                        product.StockQuantity += item.Quantity;
+                    }
+                }
+            }
 
             if (newStatus != oldStatus && orderToUpdate.User != null)
             {

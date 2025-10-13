@@ -55,7 +55,8 @@ namespace BusinessLogic.Services
                     (int)order.TotalAmount,
                     $"Đơn hàng #{order.OrderNumber}",
                     items,
-                    _configuration["WebApp:BaseUrl"] + "/Orders/PaymentCancelled",
+                    _configuration["WebApp:BaseUrl"]
+                        + $"/Orders/PaymentCancelled?orderId={order.OrderId}",
                     _configuration["WebApp:BaseUrl"] + "/Orders/PaymentSuccess"
                 );
 

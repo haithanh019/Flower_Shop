@@ -201,8 +201,17 @@ namespace FlowerShop_WebApp.Controllers
         }
 
         [HttpGet]
-        public IActionResult PaymentCancelled()
+        public async Task<IActionResult> PaymentCancelled(Guid? orderId)
         {
+            if (orderId.HasValue)
+            {
+                try
+                {
+                    var client = await CreateApiClientAsync();
+                    await client.PostAsync($"api/orders/cancel/{orderId.Value}", null);
+                }
+                catch (Exception) { }
+            }
             TempData["ErrorMessage"] = "Thanh toán đã bị hủy. Bạn có thể thử lại từ giỏ hàng.";
             return RedirectToAction("Index", "Cart");
         }
