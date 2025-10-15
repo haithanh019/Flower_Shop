@@ -136,7 +136,7 @@ namespace FlowerShop_WebApp.Controllers
                     return Redirect(createdOrder.TransactionId);
                 }
 
-                return RedirectToAction("History");
+                return RedirectToAction("Index", "Profile");
             }
             else
             {

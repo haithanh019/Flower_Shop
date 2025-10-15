@@ -59,19 +59,26 @@
 
                         <h4 class="mt-4">Phương thức thanh toán</h4>
                         <hr />
-                        <div class="form-check">
-                            <input class="form-check-input" type="radio" asp-for="PaymentMethod" value="CashOnDelivery" id="cod" checked>
-                            <label class="form-check-label" for="cod">
-                                Thanh toán khi nhận hàng (COD)
-                            </label>
-                        </div>
-                        <div class="form-check">
-                            <input class="form-check-input" type="radio" asp-for="PaymentMethod" value="PayOS" id="payos">
-                            <label class="form-check-label" for="payos">
-                                Thanh toán qua PayOS (Thẻ ATM, Ví điện tử,...)
-                            </label>
-                        </div>
                         <span asp-validation-for="PaymentMethod" class="text-danger"></span>
+                        <div class="choice-item payment-method-item">
+                            <div class="form-check">
+                                <input class="form-check-input" type="radio" asp-for="PaymentMethod" value="CashOnDelivery" id="cod" checked>
+                                <label class="form-check-label w-100" for="cod">
+                                    <h6><i class="fas fa-money-bill-wave me-2"></i>Thanh toán khi nhận hàng (COD)</h6>
+                                    <small class="text-muted">Trả tiền mặt trực tiếp cho nhân viên giao hàng.</small>
+                                </label>
+                            </div>
+                        </div>
+
+                        <div class="choice-item payment-method-item">
+                            <div class="form-check">
+                                <input class="form-check-input" type="radio" asp-for="PaymentMethod" value="PayOS" id="payos">
+                                <label class="form-check-label w-100" for="payos">
+                                    <h6><i class="fas fa-credit-card me-2"></i>Thanh toán qua PayOS</h6>
+                                    <small class="text-muted">Hỗ trợ Thẻ ATM, Ví điện tử, VietQR...</small>
+                                </label>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
