@@ -41,7 +41,7 @@ namespace DataAccess.Repositories
                     )
                 )
                 {
-                    query = query.Include(includeProp);
+                    query = query.Include(includeProp.Trim());
                 }
             }
             return await query.FirstOrDefaultAsync();

@@ -18,6 +18,7 @@ namespace BusinessLogic.Services.FacadeService
         public IDashboardService DashboardService { get; }
         public IAddressService AddressService { get; }
         public IPayOSService PayOSService { get; }
+        public IEventPublisher EventPublisher { get; }
 
         public FacadeService(
             CoreDependencies coreDependencies,
@@ -25,7 +26,7 @@ namespace BusinessLogic.Services.FacadeService
             IOptions<JwtOptions> jwtOptions,
             IPayOSService payOSService,
             IHttpClientFactory httpClientFactory,
-            ILogger<OrderService> logger
+            IEventPublisher eventPublisher
         )
         {
             CategoryService = new CategoryService(
@@ -44,6 +45,8 @@ namespace BusinessLogic.Services.FacadeService
             );
             CartService = new CartService(coreDependencies.UnitOfWork, coreDependencies.Mapper);
             PayOSService = payOSService;
+            EventPublisher = eventPublisher;
+
             OrderService = new OrderService(
                 coreDependencies.UnitOfWork,
                 coreDependencies.Mapper,
@@ -51,7 +54,7 @@ namespace BusinessLogic.Services.FacadeService
                 payOSService,
                 httpClientFactory,
                 infraDependencies.Configuration,
-                logger
+                eventPublisher
             );
             UserService = new UserService(coreDependencies.UnitOfWork, coreDependencies.Mapper);
             PaymentService = new PaymentService(
