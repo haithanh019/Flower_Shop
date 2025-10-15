@@ -5,7 +5,6 @@ using BusinessLogic.Services.FacadeService;
 using BusinessLogic.Services.Interfaces;
 using DataAccess.Data;
 using DataAccess.UnitOfWork;
-using Flower_Shop_API.Services;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
@@ -63,7 +62,7 @@ namespace Flower_Shop_API
             builder.Services.AddEndpointsApiExplorer();
             builder.Services.AddSwaggerGen();
             builder.Services.AddHttpContextAccessor();
-            builder.Services.AddHttpClient();
+
             /// Register Options
             builder.Services.Configure<JwtOptions>(builder.Configuration.GetSection("Jwt"));
             builder.Services.Configure<CloudinaryOptions>(
@@ -90,9 +89,7 @@ namespace Flower_Shop_API
                 client.BaseAddress = new Uri(baseUrl, UriKind.Absolute);
                 client.DefaultRequestHeaders.Accept.ParseAdd("application/json");
             });
-            builder.Services.AddScoped<INotificationService, TelegramNotificationService>();
-            builder.Services.AddSingleton<IEventPublisher, InMemoryEventBus>();
-            builder.Services.AddHostedService<NotificationHandler>();
+
             builder.Services.AddDistributedMemoryCache();
             builder.Services.AddCors(options =>
             {

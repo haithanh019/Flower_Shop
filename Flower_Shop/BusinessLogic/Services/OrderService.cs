@@ -1,7 +1,6 @@
 ﻿using AutoMapper;
 using BusinessLogic.DTOs;
 using BusinessLogic.DTOs.Orders;
-using BusinessLogic.Events;
 using BusinessLogic.Services.Interfaces;
 using CloudinaryDotNet.Actions;
 using DataAccess.Entities;
@@ -23,7 +22,7 @@ namespace BusinessLogic.Services
         private readonly IPayOSService _payOSService;
         private readonly IHttpClientFactory _httpClientFactory;
         private readonly IConfiguration _configuration;
-        private readonly IEventPublisher _eventPublisher;
+        private readonly ILogger<OrderService> _logger;
 
         public OrderService(
             IUnitOfWork unitOfWork,
@@ -32,7 +31,7 @@ namespace BusinessLogic.Services
             IPayOSService payOSService,
             IHttpClientFactory httpClientFactory,
             IConfiguration configuration,
-            IEventPublisher eventPublisher
+            ILogger<OrderService> logger
         )
         {
             _unitOfWork = unitOfWork;
@@ -41,7 +40,7 @@ namespace BusinessLogic.Services
             _payOSService = payOSService;
             _httpClientFactory = httpClientFactory;
             _configuration = configuration;
-            _eventPublisher = eventPublisher;
+            _logger = logger;
         }
 
         public async Task<OrderDto> CreateOrderFromCartAsync(
@@ -49,7 +48,8 @@ namespace BusinessLogic.Services
             OrderCreateRequest request
         )
         {
-            var cart = await _unitOfWork.Cart.GetAsync(c => c.UserId == userId, "   Items.Product");
+            // ... (Phần logic kiểm tra giỏ hàng, người dùng, địa chỉ giữ nguyên)
+            var cart = await _unitOfWork.Cart.GetAsync(c => c.UserId == userId, "Items.Product");
             if (cart == null || !cart.Items.Any())
             {
                 throw new CustomValidationException(
@@ -78,6 +78,7 @@ namespace BusinessLogic.Services
             var fullShippingAddress =
                 $"{address.Detail}, {address.Ward}, {address.District}, {address.City}";
 
+            // ... (Phần logic tạo đơn hàng và trừ kho giữ nguyên)
             var newOrder = new Order
             {
                 UserId = userId,
@@ -139,6 +140,7 @@ namespace BusinessLogic.Services
                 o => o.OrderId == newOrder.OrderId,
                 includeProperties: "Payment,Items.Product,User"
             );
+
             if (
                 createdOrder?.Payment?.Method == PaymentMethod.CashOnDelivery
                 && createdOrder.User != null
@@ -159,16 +161,6 @@ namespace BusinessLogic.Services
                     createdOrder.Payment.TransactionId = paymentResult.checkoutUrl;
                     await _unitOfWork.SaveAsync();
                 }
-            }
-            if (createdOrder?.Payment?.Method == PaymentMethod.CashOnDelivery)
-            {
-                var orderCreatedEvent = new OrderCreatedEvent
-                {
-                    OrderNumber = createdOrder.OrderNumber,
-                    TotalAmount = createdOrder.TotalAmount,
-                    CustomerName = request.ShippingFullName,
-                };
-                await _eventPublisher.PublishAsync(orderCreatedEvent);
             }
 
             return _mapper.Map<OrderDto>(createdOrder ?? newOrder);
@@ -199,6 +191,10 @@ namespace BusinessLogic.Services
             orderToUpdate.Status = newStatus;
             if (newStatus == OrderStatus.Cancelled && oldStatus != OrderStatus.Cancelled)
             {
+                _logger.LogInformation(
+                    "Restoring stock for cancelled order {OrderId}",
+                    orderToUpdate.OrderId
+                );
                 foreach (var item in orderToUpdate.Items)
                 {
                     var product = await _unitOfWork.Product.GetAsync(p =>
@@ -269,6 +265,11 @@ namespace BusinessLogic.Services
 
         public async Task HandlePayOSWebhook(WebhookData data)
         {
+            _logger.LogInformation(
+                "Webhook received for PayOS orderCode {PayOSCode}, searching for a matching order.",
+                data.orderCode
+            );
+
             // Chuyển đổi orderCode (số) từ PayOS thành chuỗi Hex để tìm trong DB
             string orderNumberToFind = data.orderCode.ToString("x").ToUpper();
 
@@ -280,6 +281,11 @@ namespace BusinessLogic.Services
 
             if (foundOrder != null && foundOrder.Payment?.Status != PaymentStatus.Accepted)
             {
+                _logger.LogInformation(
+                    "Order ID {OrderId} found. Updating status to Confirmed/Accepted.",
+                    foundOrder.OrderId
+                );
+
                 foundOrder.Status = OrderStatus.Confirmed;
                 if (foundOrder.Payment != null)
                 {
@@ -301,18 +307,30 @@ namespace BusinessLogic.Services
                         foundOrder.User
                     );
                     _emailQueue.QueueEmail(foundOrder.User.Email, subject, htmlMessage);
-                    _emailQueue.QueueEmail(foundOrder.User.Email, subject_2, htmlMessage_2);
 
-                    var orderCreatedEvent = new OrderCreatedEvent
-                    {
-                        OrderNumber = foundOrder.OrderNumber,
-                        TotalAmount = foundOrder.TotalAmount,
-                        CustomerName = foundOrder.User?.FullName ?? "Khách hàng",
-                    };
-                    await _eventPublisher.PublishAsync(orderCreatedEvent);
+                    _emailQueue.QueueEmail(foundOrder.User.Email, subject_2, htmlMessage_2);
                 }
 
                 await _unitOfWork.SaveAsync();
+                _logger.LogInformation(
+                    "Successfully updated status for Order ID {OrderId}.",
+                    foundOrder.OrderId
+                );
+            }
+            else if (foundOrder != null)
+            {
+                _logger.LogWarning(
+                    "Webhook received for already processed Order ID {OrderId}.",
+                    foundOrder.OrderId
+                );
+            }
+            else
+            {
+                _logger.LogWarning(
+                    "Webhook received but no matching order found for PayOS orderCode {PayOSCode} (Hex: {OrderNumber})",
+                    data.orderCode,
+                    orderNumberToFind
+                );
             }
         }
 

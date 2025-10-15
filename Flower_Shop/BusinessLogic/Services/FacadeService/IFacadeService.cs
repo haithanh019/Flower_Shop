@@ -15,6 +15,5 @@ namespace BusinessLogic.Services.FacadeService
         IDashboardService DashboardService { get; }
         IAddressService AddressService { get; }
         IPayOSService PayOSService { get; }
-        IEventPublisher EventPublisher { get; }
     }
 }
