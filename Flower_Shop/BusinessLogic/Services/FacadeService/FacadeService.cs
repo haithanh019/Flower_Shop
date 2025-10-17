@@ -41,7 +41,8 @@ namespace BusinessLogic.Services.FacadeService
             AuthService = new AuthService(
                 coreDependencies.UnitOfWork,
                 coreDependencies.Mapper,
-                tokenService
+                tokenService,
+                infraDependencies.EmailQueue
             );
             CartService = new CartService(coreDependencies.UnitOfWork, coreDependencies.Mapper);
             PayOSService = payOSService;

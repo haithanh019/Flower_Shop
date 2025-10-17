@@ -21,6 +21,8 @@ namespace DataAccess.Entities
 
         [MaxLength(20)]
         public string? PhoneNumber { get; set; }
+        public string? PasswordResetToken { get; set; }
+        public DateTime? ResetTokenExpiry { get; set; }
 
         public ICollection<Order> Orders { get; set; } = new List<Order>();
         public Cart? Cart { get; set; }
