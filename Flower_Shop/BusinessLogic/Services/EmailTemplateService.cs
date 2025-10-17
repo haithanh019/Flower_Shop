@@ -140,6 +140,20 @@ namespace BusinessLogic.Services
             return BuildBaseEmail(title, content);
         }
 
+        public static string PasswordResetOtpEmail(User user, string otp)
+        {
+            var title = "Mã OTP đặt lại mật khẩu của bạn";
+            var content =
+                $@"
+        <p>Xin chào <strong>{user.FullName}</strong>,</p>
+        <p>Bạn (hoặc ai đó) đã yêu cầu đặt lại mật khẩu cho tài khoản FlowerShop của bạn.</p>
+        <p>Vui lòng sử dụng mã OTP sau để hoàn tất quá trình. Mã này sẽ hết hạn sau 5 phút:</p>
+        <p style='font-size: 24px; font-weight: bold; color: #d15a7c; text-align: center; letter-spacing: 5px; border: 1px dashed #ffc0cb; padding: 15px; background-color: #fff8f9;'>{otp}</p>
+        <p>Nếu bạn không yêu cầu đặt lại mật khẩu, vui lòng bỏ qua email này.</p>
+        <p>Trân trọng,<br>Đội ngũ FlowerShop</p>";
+            return BuildBaseEmail(title, content); // Nhớ đảm bảo bạn có phương thức BuildBaseEmail
+        }
+
         private static string BuildOrderDetailsHtml(Order order)
         {
             // ... (Phần helper này giữ nguyên, không thay đổi)

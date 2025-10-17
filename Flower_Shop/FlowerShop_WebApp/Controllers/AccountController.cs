@@ -4,6 +4,7 @@ using System.Text;
 using System.Text.Json;
 using FlowerShop_WebApp.Models.Auth;
 using Microsoft.AspNetCore.Authentication;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace FlowerShop_WebApp.Controllers
@@ -131,6 +132,135 @@ namespace FlowerShop_WebApp.Controllers
             HttpContext.Session.Remove("JWToken");
             await HttpContext.SignOutAsync("CookieAuth");
             return RedirectToAction("Index", "Home");
+        }
+
+        // --- BẮT ĐẦU THÊM MỚI ---
+
+        [HttpGet]
+        [AllowAnonymous] // Cho phép truy cập khi chưa đăng nhập
+        public IActionResult ForgotPassword()
+        {
+            return View();
+        }
+
+        [HttpPost]
+        [AllowAnonymous]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> ForgotPassword(ForgotPasswordViewModel model)
+        {
+            if (!ModelState.IsValid)
+            {
+                return View(model);
+            }
+
+            try
+            {
+                var client = _httpClientFactory.CreateClient("ApiClient");
+                var requestBody = new { model.Email };
+                var response = await client.PostAsJsonAsync(
+                    "api/auth/forgot-password",
+                    requestBody
+                );
+
+                TempData["SuccessMessage"] =
+                    "Yêu cầu đặt lại mật khẩu đã được gửi. Nếu email của bạn tồn tại, bạn sẽ nhận được mã OTP.";
+                return RedirectToAction(nameof(ResetPassword), new { email = model.Email });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error requesting password reset for {Email}", model.Email);
+                ModelState.AddModelError(string.Empty, "Đã có lỗi xảy ra, vui lòng thử lại.");
+                return View(model);
+            }
+        }
+
+        [HttpGet]
+        [AllowAnonymous]
+        public IActionResult ResetPassword(string email)
+        {
+            if (string.IsNullOrEmpty(email))
+            {
+                return RedirectToAction(nameof(ForgotPassword));
+            }
+            var model = new ResetPasswordViewModel
+            {
+                Email = email,
+                Otp = string.Empty,
+                NewPassword = string.Empty,
+                ConfirmNewPassword = string.Empty,
+            };
+            return View(model);
+        }
+
+        [HttpPost]
+        [AllowAnonymous]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> ResetPassword(ResetPasswordViewModel model)
+        {
+            if (!ModelState.IsValid)
+            {
+                return View(model);
+            }
+
+            try
+            {
+                var client = _httpClientFactory.CreateClient("ApiClient");
+                var response = await client.PostAsJsonAsync("api/auth/reset-password", model);
+
+                if (response.IsSuccessStatusCode)
+                {
+                    TempData["SuccessMessage"] =
+                        "Đặt lại mật khẩu thành công! Bạn có thể đăng nhập bằng mật khẩu mới.";
+                    return RedirectToAction(nameof(Login));
+                }
+                else
+                {
+                    var errorContent = await response.Content.ReadAsStringAsync();
+                    try
+                    {
+                        var errorResponse = JsonSerializer.Deserialize<ValidationProblemDetails>(
+                            errorContent,
+                            _jsonOptions
+                        );
+                        if (errorResponse?.Errors != null)
+                        {
+                            foreach (var key in errorResponse.Errors.Keys)
+                            {
+                                foreach (var error in errorResponse.Errors[key])
+                                {
+                                    var propName =
+                                        key.Length > 0
+                                            ? char.ToUpper(key[0]) + key.Substring(1)
+                                            : "";
+                                    ModelState.AddModelError(propName, error);
+                                }
+                            }
+                        }
+                        else
+                        {
+                            ModelState.AddModelError(
+                                string.Empty,
+                                "Đặt lại mật khẩu thất bại. Vui lòng kiểm tra lại thông tin."
+                            );
+                        }
+                    }
+                    catch
+                    {
+                        ModelState.AddModelError(
+                            string.Empty,
+                            "Đặt lại mật khẩu thất bại. Vui lòng kiểm tra lại thông tin."
+                        );
+                    }
+
+                    return View(model);
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error resetting password for {Email}", model.Email);
+                ModelState.AddModelError(string.Empty, "Đã có lỗi xảy ra, vui lòng thử lại.");
+                return View(model);
+            }
         }
 
         private ClaimsPrincipal CreateClaimsPrincipalFromToken(string token)
